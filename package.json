@@ -5,7 +5,7 @@
   "main": "build/remote-controller-server-core.min.js",
   "scripts": {
     "test": "eslint src/**/*.test.js && jest src",
-    "doc": "jsdoc -c jsdoc.config.js src",
+    "docs": "jsdoc -c jsdoc.config.js src",
     "build": "NODE_ENV=production webpack",
     "start": "node build/remote-controller-server-core.min.js",
     "build:dev": "NODE_ENV=development webpack",
