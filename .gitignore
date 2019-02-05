@@ -84,3 +84,6 @@ typings/
 
 # Jetbrains configs
 .idea/
+
+# API Documentations
+docs/
