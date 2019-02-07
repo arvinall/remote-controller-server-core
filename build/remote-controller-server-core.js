@@ -96,6 +96,17 @@ return /******/ (function(modules) { // webpackBootstrap
 /************************************************************************/
 /******/ ({
 
+/***/ "../package.json":
+/*!***********************!*\
+  !*** ../package.json ***!
+  \***********************/
+/*! exports provided: name, version, description, main, scripts, repository, keywords, author, license, bugs, homepage, devDependencies, dependencies, optionalDependencies, default */
+/***/ (function(module) {
+
+eval("module.exports = {\"name\":\"@remote-controller-server/core\",\"version\":\"0.1.0\",\"description\":\"Remote Controller Server's Core module\",\"main\":\"build/remote-controller-server-core.min.js\",\"scripts\":{\"test\":\"eslint src/**/*.test.js && jest src\",\"docs\":\"jsdoc -c jsdoc.config.js -P package.json -R README.md src/main.js\",\"build\":\"NODE_ENV=production webpack\",\"start\":\"node build/remote-controller-server-core.min.js\",\"build:dev\":\"NODE_ENV=development webpack\",\"start:dev\":\"node $NODE_DEBUG_OPTION build/remote-controller-server-core.js\"},\"repository\":{\"type\":\"git\",\"url\":\"git+https://github.com/arvinall/remote-controller-server-core.git\"},\"keywords\":[\"remote-controller\",\"server\",\"core\"],\"author\":\"Arvinall <arvinall021@gmail.com>\",\"license\":\"SEE LICENSE IN LICENSE.md\",\"bugs\":{\"url\":\"https://github.com/arvinall/remote-controller-server-core/issues\"},\"homepage\":\"https://github.com/arvinall/remote-controller-server-core#readme\",\"devDependencies\":{\"@babel/core\":\"^7.2.2\",\"@babel/plugin-proposal-class-properties\":\"^7.3.0\",\"@babel/plugin-proposal-private-methods\":\"^7.3.0\",\"@babel/plugin-syntax-dynamic-import\":\"^7.2.0\",\"@babel/plugin-transform-runtime\":\"^7.2.0\",\"@babel/preset-env\":\"^7.3.1\",\"babel-eslint\":\"^10.0.1\",\"babel-loader\":\"^8.0.5\",\"eslint\":\"^5.12.1\",\"eslint-config-standard\":\"^12.0.0\",\"eslint-loader\":\"^2.1.1\",\"eslint-plugin-babel\":\"^5.3.0\",\"eslint-plugin-import\":\"^2.16.0\",\"eslint-plugin-node\":\"^8.0.1\",\"eslint-plugin-promise\":\"^4.0.1\",\"eslint-plugin-standard\":\"^4.0.0\",\"jest\":\"^24.0.0\",\"jsdoc\":\"^3.5.5\",\"jsdoc-babel\":\"^0.5.0\",\"webpack\":\"^4.29.0\",\"webpack-cli\":\"^3.2.1\"},\"dependencies\":{\"@babel/polyfill\":\"^7.2.5\",\"@babel/runtime\":\"^7.3.1\",\"engine.io\":\"^3.3.2\"},\"optionalDependencies\":{\"bufferutil\":\"^4.0.1\",\"supports-color\":\"^6.1.0\",\"utf-8-validate\":\"^5.0.2\"}};//# sourceURL=[module]\n//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiLi4vcGFja2FnZS5qc29uLmpzIiwic291cmNlcyI6W10sIm1hcHBpbmdzIjoiIiwic291cmNlUm9vdCI6IiJ9\n//# sourceURL=webpack-internal:///../package.json\n");
+
+/***/ }),
+
 /***/ "./main.js":
 /*!*****************!*\
   !*** ./main.js ***!
@@ -104,7 +115,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-eval("__webpack_require__.r(__webpack_exports__);\n/* harmony default export */ __webpack_exports__[\"default\"] = (() => 'Hello world');//# sourceURL=[module]\n//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiLi9tYWluLmpzLmpzIiwic291cmNlcyI6WyJ3ZWJwYWNrOi8vcmVtb3RlLWNvbnRyb2xsZXItc2VydmVyLWNvcmUvLi9tYWluLmpzP2MyMGMiXSwic291cmNlc0NvbnRlbnQiOlsiZXhwb3J0IGRlZmF1bHQgKCgpID0+ICdIZWxsbyB3b3JsZCcpOyJdLCJtYXBwaW5ncyI6IkFBQUE7QUFBQSIsInNvdXJjZVJvb3QiOiIifQ==\n//# sourceURL=webpack-internal:///./main.js\n");
+eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, \"default\", function() { return serverCore; });\nconst PACKAGE_JSON = __webpack_require__(/*! ../package */ \"../package.json\");\n/**\n * Main Server Core class\n */\n\n\nclass serverCore {\n  /**\n   * Make the core ready\n   *\n   * @param {object} configs\n   * @param {string} [configs.mode='production'] (production|development) If set to development, developmentTool parameter attached to developmentServer start a new activity\n   */\n  constructor(configs = {}) {\n    this.version = PACKAGE_JSON.version;\n    this.mode = configs.mode || 'production';\n  }\n\n}//# sourceURL=[module]\n//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiLi9tYWluLmpzLmpzIiwic291cmNlcyI6WyJ3ZWJwYWNrOi8vcmVtb3RlLWNvbnRyb2xsZXItc2VydmVyLWNvcmUvLi9tYWluLmpzP2MyMGMiXSwic291cmNlc0NvbnRlbnQiOlsiY29uc3QgUEFDS0FHRV9KU09OID0gcmVxdWlyZSgnLi4vcGFja2FnZScpO1xuLyoqXG4gKiBNYWluIFNlcnZlciBDb3JlIGNsYXNzXG4gKi9cblxuXG5leHBvcnQgZGVmYXVsdCBjbGFzcyBzZXJ2ZXJDb3JlIHtcbiAgLyoqXG4gICAqIE1ha2UgdGhlIGNvcmUgcmVhZHlcbiAgICpcbiAgICogQHBhcmFtIHtvYmplY3R9IGNvbmZpZ3NcbiAgICogQHBhcmFtIHtzdHJpbmd9IFtjb25maWdzLm1vZGU9J3Byb2R1Y3Rpb24nXSAocHJvZHVjdGlvbnxkZXZlbG9wbWVudCkgSWYgc2V0IHRvIGRldmVsb3BtZW50LCBkZXZlbG9wbWVudFRvb2wgcGFyYW1ldGVyIGF0dGFjaGVkIHRvIGRldmVsb3BtZW50U2VydmVyIHN0YXJ0IGEgbmV3IGFjdGl2aXR5XG4gICAqL1xuICBjb25zdHJ1Y3Rvcihjb25maWdzID0ge30pIHtcbiAgICB0aGlzLnZlcnNpb24gPSBQQUNLQUdFX0pTT04udmVyc2lvbjtcbiAgICB0aGlzLm1vZGUgPSBjb25maWdzLm1vZGUgfHwgJ3Byb2R1Y3Rpb24nO1xuICB9XG5cbn0iXSwibWFwcGluZ3MiOiJBQUFBO0FBQUE7QUFBQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQSIsInNvdXJjZVJvb3QiOiIifQ==\n//# sourceURL=webpack-internal:///./main.js\n");
 
 /***/ })
 
