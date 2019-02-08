@@ -1,5 +1,16 @@
 
 module.exports = {
+  source: {
+    include: [
+      'src',
+      'src/storages'
+    ],
+    exclude: [
+      'node_modules'
+    ],
+    includePattern: '.+\\.js(doc|x)?$',
+    excludePattern: '(^|\\/|\\\\)_'
+  },
   plugins: [
     'node_modules/jsdoc-babel'
   ],
