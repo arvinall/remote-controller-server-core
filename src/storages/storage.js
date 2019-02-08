@@ -31,6 +31,8 @@ export default class Storage extends EventEmitter {
     let storageAccessible
     let storageAddress
 
+    if (configs === undefined) throw new Error('configs parameter is require')
+
     super()
 
     if (configs.path === undefined) configs.path = process.cwd()
@@ -39,10 +41,8 @@ export default class Storage extends EventEmitter {
     else if (configs.body !== undefined && typeof configs.body !== 'object') throw new Error('configs.body must be object')
     else if (typeof configs.path !== 'string') throw new Error('configs.path must be string')
 
-    if (configs.body !== undefined) {
-      // Mark as must initial if configs.body property is defined
-      initial = true
-    }
+    // Mark as must initial if configs.body property is defined
+    if (configs.body !== undefined) initial = true
 
     /**
      * Address of the storage json file
