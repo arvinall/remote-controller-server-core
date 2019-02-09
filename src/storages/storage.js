@@ -3,6 +3,7 @@
  * @module storages/storage
  */
 
+import { promisify } from 'util'
 import fs from 'fs'
 import path from 'path'
 import EventEmitter from 'events'
@@ -98,5 +99,23 @@ export default class Storage extends EventEmitter {
    */
   get name () {
     return this.#name
+  }
+
+  /**
+   * Remove storage json file
+   *
+   * @param {object} [configs={}]
+   * @param {boolean} [configs.sync=true] Async or sync
+   *
+   * @return {(void|Promise)} Return promise if configs.sync equal to false
+   */
+  remove (configs = Object.create(null)) {
+    const {
+      sync = true
+    } = configs
+
+    if (sync) return fs.unlinkSync(this.#address)
+
+    return promisify(fs.unlink)(this.#address)
   }
 }
