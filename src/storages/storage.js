@@ -71,14 +71,19 @@ export default class Storage extends EventEmitter {
         encoding: ENCODING,
         flag: 'w'
       })
-    } else if (!storageAccessible) throw new Error(`${configs.name} is not accessible`)
 
-    // Read storage and convert it to object
-    this.#body = JSON.parse(fs
-      .readFileSync(storageAddress, {
-        encoding: ENCODING,
-        flag: 'r'
-      }))
+      this.#body = configs.body
+    } else {
+      if (!storageAccessible) throw new Error(`${configs.name} is not accessible`)
+
+      // Read storage and convert it to object
+      this.#body = JSON.parse(fs
+        .readFileSync(storageAddress, {
+          encoding: ENCODING,
+          flag: 'r'
+        }))
+    }
+
     this.#name = configs.name
     this.#address = storageAddress
   }
@@ -89,7 +94,7 @@ export default class Storage extends EventEmitter {
    * @return {object} Storage content object
    */
   get body () {
-    return JSON.parse(JSON.stringify(this.#body))
+    return this.#body ? JSON.parse(JSON.stringify(this.#body)) : undefined
   }
 
   /**
@@ -107,6 +112,8 @@ export default class Storage extends EventEmitter {
    * @param {object} [configs={}]
    * @param {boolean} [configs.sync=true] Async or sync
    *
+   * @throws Will throw an error if the storage's json file doesn't accessible
+   *
    * @return {(void|Promise)} Return promise if configs.sync equal to false
    */
   remove (configs = Object.create(null)) {
@@ -114,8 +121,81 @@ export default class Storage extends EventEmitter {
       sync = true
     } = configs
 
-    if (sync) return fs.unlinkSync(this.#address)
+    const clearProperties = () => {
+      this.#body = undefined
+      this.#name = undefined
+    }
 
-    return promisify(fs.unlink)(this.#address)
+    if (sync) {
+      try {
+        fs.accessSync(this.#address, fs.constants.F_OK | fs.constants.W_OK)
+      } catch (error) {
+        throw new Error('Storage is not accessible')
+      }
+
+      fs.unlinkSync(this.#address)
+
+      clearProperties()
+
+      return
+    }
+
+    return promisify(fs.access)(this.#address, fs.constants.F_OK | fs.constants.W_OK)
+      .then(() => {
+        return promisify(fs.unlink)(this.#address)
+          .then(clearProperties, error => Promise.reject(error))
+      }, () => Promise.reject(new Error('Storage is not accessible')))
+  }
+
+  /**
+   * Update storage content
+   *
+   * @param {object} body Updated Storage body
+   * @param {object} [configs={}]
+   * @param {boolean} [configs.sync=true] Async or sync
+   *
+   * @throws Will throw an error if the storage's json file doesn't accessible
+   *
+   * @return {(void|Promise)} Return promise if configs.sync equal to false
+   */
+  update (body, configs = Object.create(null)) {
+    const {
+      sync = true
+    } = configs
+
+    if (body === undefined || (typeof body !== 'object' && typeof body !== 'function')) {
+      throw new Error('body parameter is required and must be object/function')
+    }
+
+    if (typeof body === 'function') body = body(this.body)
+
+    const setProperties = () => {
+      this.#body = body
+    }
+
+    if (sync) {
+      try {
+        fs.accessSync(this.#address, fs.constants.F_OK | fs.constants.W_OK)
+      } catch (error) {
+        throw new Error('Storage is not accessible')
+      }
+
+      fs.writeFileSync(this.#address, JSON.stringify(body), {
+        encoding: ENCODING,
+        flag: 'w'
+      })
+
+      setProperties()
+
+      return
+    }
+
+    return promisify(fs.access)(this.#address, fs.constants.F_OK | fs.constants.W_OK)
+      .then(() => {
+        return promisify(fs.writeFile)(this.#address, JSON.stringify(body), {
+          encoding: ENCODING,
+          flag: 'w'
+        }).then(setProperties, error => Promise.reject(error))
+      }, () => Promise.reject(new Error('Storage is not accessible')))
   }
 }
