@@ -13,8 +13,12 @@ const ENCODING = 'utf8'
  * Storage is a json file Manager
  */
 export default class Storage extends EventEmitter {
-  // Storage body holder
-  #body = undefined
+  // Storage name
+  #name
+  // Storage json file address
+  #address
+  // Storage body
+  #body
 
   /**
    * Initialize/Read json file
@@ -74,14 +78,25 @@ export default class Storage extends EventEmitter {
         encoding: ENCODING,
         flag: 'r'
       }))
+    this.#name = configs.name
+    this.#address = storageAddress
   }
 
   /**
-   * Storage body holder
+   * Take a copy from Storage body
    *
-   * @return {string}
+   * @return {object} Storage content object
    */
   get body () {
-    return this.#body
+    return JSON.parse(JSON.stringify(this.#body))
+  }
+
+  /**
+   * Take a copy from Storage name
+   *
+   * @return {string} Storage name
+   */
+  get name () {
+    return this.#name
   }
 }
