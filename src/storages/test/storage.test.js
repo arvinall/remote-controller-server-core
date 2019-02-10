@@ -93,9 +93,9 @@ describe('Storage remove method', () => {
         body
       })
 
-      expect(storage.body).toEqual(body)
-
       storage.remove()
+
+      expect(storage.body).toBeUndefined()
 
       expect(storage.remove.bind(storage)).toThrow('Storage is not accessible')
     })
@@ -110,9 +110,9 @@ describe('Storage remove method', () => {
         body
       })
 
-      expect(storage.body).toEqual(body)
-
       await storage.remove()
+
+      expect(storage.body).toBeUndefined()
 
       try {
         await storage.remove()
@@ -133,15 +133,13 @@ describe('Storage remove method', () => {
         body
       })
 
-      expect(storage.body).toEqual(body)
-
       expect(storage.remove()).toBeUndefined()
 
       expect(storage.body).toBeUndefined()
     })
 
     test('Remove storage without error (async)', async () => {
-      expect.assertions(3)
+      expect.assertions(2)
 
       let body = {
         test: 'Remove storage without error (async)'
@@ -152,15 +150,175 @@ describe('Storage remove method', () => {
         body
       })
 
-      expect(storage.body).toEqual(body)
-
-      try {
-        expect(await storage.remove({ sync: false })).toBeUndefined()
-      } catch (error) {
-        throw error
-      }
+      expect(await storage.remove({ sync: false })).toBeUndefined()
 
       expect(storage.body).toBeUndefined()
+    })
+  })
+})
+
+describe('Storage update method', () => {
+  describe('Errors', () => {
+    test('Must throw error when body parameter is undefined', () => {
+      let body = {
+        test: 'Update storage without body parameter'
+      }
+      let storage = new Storage({
+        name: timestamp(),
+        path: TMP_PATH,
+        body
+      })
+
+      expect(storage.update.bind(storage)).toThrow('body parameter is required and must be object/function')
+
+      storage.remove()
+    })
+
+    test('Must throw error when body parameter is not object/function', () => {
+      let body = {
+        test: 'Update storage with non object/function body parameter'
+      }
+      let storage = new Storage({
+        name: timestamp(),
+        path: TMP_PATH,
+        body
+      })
+
+      expect(storage.update.bind(storage, body.test)).toThrow('body parameter is required and must be object/function')
+
+      storage.remove()
+    })
+
+    test('Must throw error when storage is deleted and not accessible (sync)', () => {
+      let body = {
+        test: 'Update deleted storage (sync)'
+      }
+      let storage = new Storage({
+        name: timestamp(),
+        path: TMP_PATH,
+        body
+      })
+
+      storage.remove()
+
+      expect(storage.update.bind(storage, Object.assign({}, body, {
+        update: 'Ops'
+      }))).toThrow('Storage is not accessible')
+    })
+
+    test('Must throw error when storage is deleted and not accessible (async)', async () => {
+      expect.assertions(1)
+
+      let body = {
+        test: 'Update deleted storage (async)'
+      }
+      let storage = new Storage({
+        name: timestamp(),
+        path: TMP_PATH,
+        body
+      })
+
+      await storage.remove({ sync: false })
+
+      try {
+        await storage.update(storage, Object.assign({}, body, {
+          update: 'Ops'
+        }), { sync: false })
+      } catch (error) {
+        expect(error.message).toBe('Storage is not accessible')
+      }
+    })
+  })
+
+  describe('Success', () => {
+    test('Update via object without error (sync)', () => {
+      let body = {
+        test: 'Update storage with object body parameter (sync)'
+      }
+      let storage = new Storage({
+        name: timestamp(),
+        path: TMP_PATH,
+        body
+      })
+
+      expect(storage.update(Object.assign(body, {
+        update: 'Updated'
+      }))).toBeUndefined()
+
+      expect(storage.body).toEqual(body)
+
+      storage.remove()
+    })
+
+    test('Update via object without error (async)', async () => {
+      expect.assertions(2)
+
+      let body = {
+        test: 'Update storage with object body parameter (async)'
+      }
+      let storage = new Storage({
+        name: timestamp(),
+        path: TMP_PATH,
+        body
+      })
+
+      expect(await storage.update(Object.assign(body, {
+        update: 'Updated'
+      }), { sync: false })).toBeUndefined()
+
+      expect(storage.body).toEqual(body)
+
+      await storage.remove({ sync: false })
+    })
+
+    test('Update via function without error (sync)', () => {
+      let updatedBody
+      let body = {
+        test: 'Update storage with function body parameter (sync)'
+      }
+      let storage = new Storage({
+        name: timestamp(),
+        path: TMP_PATH,
+        body
+      })
+
+      expect(storage.update(body => {
+        body.update = 'Updated'
+
+        updatedBody = body
+
+        return body
+      })).toBeUndefined()
+
+      expect(storage.body).toEqual(updatedBody)
+
+      storage.remove()
+    })
+
+    test('Update via function without error (async)', async () => {
+      expect.assertions(2)
+
+      let updatedBody
+      let body = {
+        test: 'Update storage with function body parameter (async)'
+      }
+      let storage = new Storage({
+        name: timestamp(),
+        path: TMP_PATH,
+        body
+      })
+
+      expect(await storage.update(body => {
+        body.update = 'Updated'
+
+        updatedBody = body
+
+        return body
+      }, { sync: false })).toBeUndefined()
+
+      expect(storage.body).toEqual(updatedBody)
+
+      await storage.remove()
     })
   })
 })
