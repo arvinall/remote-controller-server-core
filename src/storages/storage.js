@@ -16,7 +16,11 @@ const ENCODING = 'utf8'
 export default class Storage extends EventEmitter {
   // Storage name
   #name
-  // Storage json file address
+  /**
+   * Storage json file address
+   *
+   * @type {(undefined|string)}
+   */
   #address
   // Storage body
   #body
@@ -49,11 +53,6 @@ export default class Storage extends EventEmitter {
     // Mark as must initial if configs.body property is defined
     if (configs.body !== undefined) initial = true
 
-    /**
-     * Address of the storage json file
-     *
-     * @type {string}
-     */
     storageAddress = path.join(configs.path, configs.name + '.json')
 
     // Check storage accessibility
@@ -90,18 +89,18 @@ export default class Storage extends EventEmitter {
   }
 
   /**
-   * Take a copy from Storage body
+   * Storage's content object
    *
-   * @return {object} Storage content object
+   * @type {object}
    */
   get body () {
     return this.#body ? JSON.parse(JSON.stringify(this.#body)) : undefined
   }
 
   /**
-   * Take a copy from Storage name
+   * Storage's name
    *
-   * @return {string} Storage name
+   * @type {string}
    */
   get name () {
     return this.#name
@@ -115,6 +114,8 @@ export default class Storage extends EventEmitter {
    *
    * @throws Will throw an error if the storage's json file doesn't accessible
    *
+   * @emits module:storages/storage#event:removed
+   *
    * @return {(void|Promise)} Return promise if configs.sync equal to false
    */
   remove (configs = Object.create(null)) {
@@ -123,8 +124,24 @@ export default class Storage extends EventEmitter {
     } = configs
 
     const clearProperties = () => {
+      const EVENT = {
+        name: this.#name,
+        body: this.#body
+      }
+
       this.#body = undefined
       this.#name = undefined
+
+      /**
+       * storage removed event
+       *
+       * @event module:storages/storage#event:removed
+       *
+       * @type {object}
+       * @property {string} name Name of the removed storage
+       * @property {object} body Last body of the removed storage
+       */
+      this.emit('removed', EVENT)
     }
 
     if (sync) {
@@ -157,6 +174,8 @@ export default class Storage extends EventEmitter {
    *
    * @throws Will throw an error if the storage's json file doesn't accessible
    *
+   * @emits module:storages/storage#event:updated
+   *
    * @return {(void|Promise)} Return promise if configs.sync equal to false
    */
   update (body, configs = Object.create(null)) {
@@ -171,7 +190,23 @@ export default class Storage extends EventEmitter {
     }
 
     const setProperties = () => {
+      const EVENT = {
+        lastBody: this.#body,
+        updatedBody: JSON.parse(JSON.stringify(body))
+      }
+
       this.#body = body
+
+      /**
+       * storage updated event
+       *
+       * @event module:storages/storage#event:updated
+       *
+       * @type {object}
+       * @property {object} lastBody storage body before update
+       * @property {object} updatedBody A copy of updated body object
+       */
+      this.emit('updated', EVENT)
     }
 
     if (sync) {
