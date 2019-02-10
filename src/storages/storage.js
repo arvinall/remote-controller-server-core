@@ -72,7 +72,8 @@ export default class Storage extends EventEmitter {
         flag: 'w'
       })
 
-      this.#body = configs.body
+      // Take a copy of body
+      this.#body = JSON.parse(JSON.stringify(configs.body))
     } else {
       if (!storageAccessible) throw new Error(`${configs.name} is not accessible`)
 
@@ -150,7 +151,7 @@ export default class Storage extends EventEmitter {
   /**
    * Update storage content
    *
-   * @param {object} body Updated Storage body
+   * @param {(object|function)} body Updated Storage body, if body is a function, a copy of last body passed to it, then have to return object as storage body
    * @param {object} [configs={}]
    * @param {boolean} [configs.sync=true] Async or sync
    *
@@ -163,11 +164,11 @@ export default class Storage extends EventEmitter {
       sync = true
     } = configs
 
+    if (typeof body === 'function') body = body(this.body)
+
     if (body === undefined || (typeof body !== 'object' && typeof body !== 'function')) {
       throw new Error('body parameter is required and must be object/function')
     }
-
-    if (typeof body === 'function') body = body(this.body)
 
     const setProperties = () => {
       this.#body = body
