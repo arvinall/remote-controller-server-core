@@ -3,22 +3,21 @@
  * @module storages
  */
 
-import EventEmitter from 'events'
 import Storage from './storage'
 
 /**
- * storageManager is a function that can create storages module
+ * storagesMaker creates storages module
  *
  * @param {object} [configs={}]
  * @param {string} [configs.path=process.cwd()] Storages path address
  *
  * @return {module:storages~Storages}
  */
-export default function storageManager (configs = { path: process.cwd() }) {
+export default function storagesMaker (configs = { path: process.cwd() }) {
   /**
    * Storages module is a Storage holder/manager
    */
-  class Storages extends EventEmitter {
+  class Storages {
     /**
      * A list that hold Storage classes
      *
@@ -38,14 +37,13 @@ export default function storageManager (configs = { path: process.cwd() }) {
 
       // Return Storage from list if exist
       if (this.#storagesList[name] !== undefined) return this.#storagesList[name]
-      else {
-        this.#storagesList[name] = new Storage({
-          name,
-          path: configs.path
-        })
 
-        return this.#storagesList[name]
-      }
+      this.#storagesList[name] = new Storage({
+        name,
+        path: configs.path
+      })
+
+      return this.#storagesList[name]
     }
 
     /**
@@ -53,6 +51,8 @@ export default function storageManager (configs = { path: process.cwd() }) {
      *
      * @param {string} name Storage's name
      * @param {object} [body={}] Storage's initial content
+     *
+     * @throws Will throw an error if Storage is already exist in list
      *
      * @return {Storage}
      */
