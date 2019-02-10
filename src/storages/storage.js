@@ -118,11 +118,7 @@ export default class Storage extends EventEmitter {
    *
    * @return {(void|Promise)} Return promise if configs.sync equal to false
    */
-  remove (configs = Object.create(null)) {
-    const {
-      sync = true
-    } = configs
-
+  remove (configs = { sync: true }) {
     const clearProperties = () => {
       const EVENT = {
         name: this.#name,
@@ -144,7 +140,7 @@ export default class Storage extends EventEmitter {
       this.emit('removed', EVENT)
     }
 
-    if (sync) {
+    if (configs.sync) {
       try {
         fs.accessSync(this.#address, fs.constants.F_OK | fs.constants.W_OK)
       } catch (error) {
@@ -178,11 +174,7 @@ export default class Storage extends EventEmitter {
    *
    * @return {(void|Promise)} Return promise if configs.sync equal to false
    */
-  update (body, configs = Object.create(null)) {
-    const {
-      sync = true
-    } = configs
-
+  update (body, configs = { sync: true }) {
     if (typeof body === 'function') body = body(this.body)
 
     if (body === undefined || (typeof body !== 'object' && typeof body !== 'function')) {
@@ -209,7 +201,7 @@ export default class Storage extends EventEmitter {
       this.emit('updated', EVENT)
     }
 
-    if (sync) {
+    if (configs.sync) {
       try {
         fs.accessSync(this.#address, fs.constants.F_OK | fs.constants.W_OK)
       } catch (error) {
