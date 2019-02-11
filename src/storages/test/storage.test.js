@@ -5,10 +5,8 @@ import Storage from '../storage'
 
 const TMP_PATH = path.join(process.cwd(), 'tmp')
 
-function timestamp (length = 6) {
-  let timeStamp = String(Date.now())
-
-  return timeStamp.slice(timeStamp.length - length, timeStamp.length)
+function timestamp () {
+  return String(Date.now())
 }
 
 describe('Storage constructor', () => {
