@@ -12,6 +12,8 @@ const ENCODING = 'utf8'
 
 /**
  * Storage is a json file Manager
+ *
+ * @mixes module:remote-controller-server-core~external:EventEmitter
  */
 export default class Storage extends EventEmitter {
   // Storage name

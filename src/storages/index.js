@@ -30,7 +30,7 @@ export default function storagesMaker (configs = { path: process.cwd() }) {
      *
      * @param {string} name Target storage's name
      *
-     * @return {Storage}
+     * @return {module:storages/storage}
      */
     get (name) {
       if (typeof name !== 'string') throw new Error('name parameter is required and must be string')
@@ -54,7 +54,7 @@ export default function storagesMaker (configs = { path: process.cwd() }) {
      *
      * @throws Will throw an error if Storage is already exist in list
      *
-     * @return {Storage}
+     * @return {module:storages/storage}
      */
     initialize (name, body = Object.create(null)) {
       if (typeof name !== 'string') throw new Error('name parameter is required and must be string')
