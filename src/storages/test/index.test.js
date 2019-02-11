@@ -98,3 +98,106 @@ describe('storages initialize method', () => {
     })
   })
 })
+
+describe('storages remove method', () => {
+  describe('Errors', () => {
+    test('Must throw error when storage parameter is not string/Storage', () => {
+      const ERROR = 'storage parameter is required and must be string/Storage'
+
+      expect(storages.remove.bind(storages)).toThrow(ERROR)
+      expect(storages.remove.bind(storages, 111)).toThrow(ERROR)
+    })
+
+    test('Must throw error when storage parameter is instance of Storage and deleted before (sync)', () => {
+      const ERROR = 'storage is not accessible'
+      let storage = new Storage({
+        name: timestamp(),
+        body: { test: 'Delete a deleted storage (sync)' },
+        path: TMP_PATH
+      })
+
+      storage.remove()
+
+      expect(storages.remove.bind(storages, storage)).toThrow(ERROR)
+    })
+
+    test('Must throw error when storage parameter is instance of Storage and deleted before (async)', async () => {
+      expect.assertions(1)
+
+      const ERROR = 'storage is not accessible'
+      let storage = new Storage({
+        name: timestamp(),
+        body: { test: 'Delete a deleted storage (sync)' },
+        path: TMP_PATH
+      })
+
+      await storage.remove({ sync: false })
+
+      try {
+        await storages.remove(storage, { sync: false })
+      } catch (error) {
+        expect(error.message).toBe(ERROR)
+      }
+    })
+
+    test('Must throw error when Storage is not exist in list (sync)', () => {
+      const name = timestamp()
+      const ERROR = `${name} is not exist in list`
+
+      expect(storages.remove.bind(storages, name)).toThrow(ERROR)
+    })
+
+    test('Must throw error when Storage is not exist in list (async)', async () => {
+      expect.assertions(1)
+
+      const name = timestamp()
+      const ERROR = `${name} is not exist in list`
+
+      try {
+        await storages.remove(name, { sync: false })
+      } catch (error) {
+        expect(error.message).toBe(ERROR)
+      }
+    })
+  })
+
+  describe('Success', () => {
+    test('Remove storage via name without error (sync)', () => {
+      const name = timestamp()
+
+      storages.initialize(name, { test: 'Delete Storage via name (sync)' })
+
+      expect(storages.remove(name)).toBeUndefined()
+    })
+
+    test('Remove storage via name without error (async)', async () => {
+      expect.assertions(1)
+
+      const name = timestamp()
+
+      storages.initialize(name, { test: 'Delete Storage via name (async)' })
+
+      expect(await storages.remove(name, { sync: false })).toBeUndefined()
+    })
+
+    test('Remove storage via Storage instance without error (sync)', () => {
+      const name = timestamp()
+      const storage = storages.initialize(name, { test: 'Delete Storage via Storage instance (sync)' })
+
+      expect(storages.remove(storage)).toBeUndefined()
+      expect(storage.name).toBeUndefined()
+      expect(storage.body).toBeUndefined()
+    })
+
+    test('Remove storage via Storage instance without error (async)', async () => {
+      expect.assertions(3)
+
+      const name = timestamp()
+      const storage = storages.initialize(name, { test: 'Delete Storage via Storage instance (async)' })
+
+      expect(await storages.remove(storage, { sync: false })).toBeUndefined()
+      expect(storage.name).toBeUndefined()
+      expect(storage.body).toBeUndefined()
+    })
+  })
+})
