@@ -91,6 +91,10 @@ export default function storagesMaker (configs = { path: process.cwd() }) {
 
       storage = this.#storagesList[name]
 
+      const deleteStorage = () => {
+        delete this.#storagesList[name]
+      }
+
       const ERRORS = {
         accessibility: new Error(`storage is not accessible`),
         existence: new Error(`${name} is not exist in list`)
@@ -102,7 +106,7 @@ export default function storagesMaker (configs = { path: process.cwd() }) {
 
         storage.remove()
 
-        delete this.#storagesList[name]
+        deleteStorage()
 
         return
       }
@@ -112,9 +116,7 @@ export default function storagesMaker (configs = { path: process.cwd() }) {
         if (storage === undefined) reject(ERRORS.existence)
 
         resolve(storage.remove({ sync: false })
-          .then(() => {
-            delete this.#storagesList[name]
-          }, error => Promise.reject(error)))
+          .then(deleteStorage, error => Promise.reject(error)))
       })
     }
   }
