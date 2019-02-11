@@ -1,7 +1,16 @@
 /* global test, expect */
 
-import main from '../main'
+import path from 'path'
+import Core from '../main'
 
-test('Just say hello world', () => {
-  expect(main()).toBe('Hello world')
+const TMP_PATH = path.join(process.cwd(), 'tmp')
+
+test('Core must return core module correctly', () => {
+  let core = Core({
+    storagePath: TMP_PATH
+  })
+
+  expect(core).toEqual(expect.objectContaining({
+    storages: expect.any(Object)
+  }))
 })
