@@ -1,18 +1,46 @@
 
-import packageJson from '../package'
+/**
+ * @module remote-controller-server-core
+ */
 
 /**
- * Main Server Core class
+ * Nodejs EventEmitter class
+ * @external module:remote-controller-server-core~EventEmitter
+ * @see {@link https://nodejs.org/docs/latest-v10.x/api/events.html#events_class_eventemitter|EventEmitter}
  */
-export default class ServerCore {
+
+import storages from './storages'
+
+/**
+ * core function creates main core module
+ *
+ * @param {object} [configs={}]
+ * @param {string} [configs.storagePath=process.cwd()] Storages path address
+ *
+ * @return {module:remote-controller-server-core~core}
+ */
+export default function coreMaker (configs = {}) {
   /**
-   * Make the core ready
-   *
-   * @param {object} configs
-   * @param {string} [configs.mode='production'] (production|development) If set to development, development.tool attached to development.server and start a new activity
+   * @namespace module:remote-controller-server-core~core
    */
-  constructor (configs = {}) {
-    this.version = packageJson.version
-    this.mode = configs.mode || 'production'
-  }
+  const MODULE = Object.create(null)
+
+  if (typeof configs !== 'object') throw new Error('configs parameter must be object')
+
+  // Set default configs
+  configs = Object.assign({
+    storagePath: process.cwd()
+  }, configs)
+
+  /**
+   * Storage manager module
+   *
+   * @name storages
+   * @memberOf module:remote-controller-server-core~core
+   *
+   * @type {module:storages~Storages}
+   */
+  MODULE.storages = storages({ path: configs.storagePath })
+
+  return MODULE
 }
