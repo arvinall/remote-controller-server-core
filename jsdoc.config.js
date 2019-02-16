@@ -3,7 +3,8 @@ module.exports = {
   source: {
     include: [
       'src',
-      'src/storages'
+      'src/storages',
+      'src/preferences'
     ],
     exclude: [
       'node_modules'
