@@ -179,9 +179,7 @@ export default class Storage extends EventEmitter {
   update (body, configs = { sync: true }) {
     if (typeof body === 'function') body = body(this.body)
 
-    if (body === undefined || (typeof body !== 'object' && typeof body !== 'function')) {
-      throw new Error('body parameter is required and must be object/function')
-    }
+    if (body === undefined || typeof body !== 'object') throw new Error('body parameter is required and must be object/function')
 
     const setProperties = () => {
       const EVENT = {
@@ -197,7 +195,7 @@ export default class Storage extends EventEmitter {
        * @event module:storages/storage#event:updated
        *
        * @type {object}
-       * @property {object} lastBody storage body before update
+       * @property {object} lastBody storage's body before update
        * @property {object} updatedBody A copy of updated body object
        */
       this.emit('updated', EVENT)
