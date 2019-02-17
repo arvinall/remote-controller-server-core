@@ -35,14 +35,16 @@ export default class Storage extends EventEmitter {
    * @param {object} configs.body json file initial content
    * @param {object} [configs.path=process.cwd()] json file initial content
    *
-   * @throws Will throw an error if the requested storage's json file doesn't accessible
+   * @throws Will throw an error if the requested storage's json file is not accessible
+   * @throws Will throw an error if the body property provided but storage is already exist
+   * @throws Will throw an error if the body property not provided and storage is not accessible
    */
   constructor (configs) {
     let initial = false
     let storageAccessible
     let storageAddress
 
-    if (configs === undefined) throw new Error('configs parameter is require')
+    if (typeof configs !== 'object') throw new Error('configs parameter is required and must be object')
 
     super()
 

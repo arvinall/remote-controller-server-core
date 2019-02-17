@@ -11,8 +11,11 @@ function timestamp () {
 
 describe('Storage constructor', () => {
   describe('Errors', () => {
-    test('Must throw error without configs parameter', () => {
-      expect(() => new Storage()).toThrow('configs parameter is require')
+    test('Must throw error when configs parameter is not object', () => {
+      const ERROR = 'configs parameter is required and must be object'
+
+      expect(() => new Storage()).toThrow(ERROR)
+      expect(() => new Storage('wrong')).toThrow(ERROR)
     })
 
     test('Must throw error when configs.name property is not string', () => {
@@ -94,7 +97,6 @@ describe('Storage remove method', () => {
       storage.remove()
 
       expect(storage.body).toBeUndefined()
-
       expect(storage.remove.bind(storage)).toThrow('Storage is not accessible')
     })
 
@@ -108,12 +110,12 @@ describe('Storage remove method', () => {
         body
       })
 
-      await storage.remove()
+      await storage.remove({ sync: false })
 
       expect(storage.body).toBeUndefined()
 
       try {
-        await storage.remove()
+        await storage.remove({ sync: false })
       } catch (error) {
         expect(error.message).toBe('Storage is not accessible')
       }
