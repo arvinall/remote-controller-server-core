@@ -322,3 +322,55 @@ describe('Storage update method', () => {
     })
   })
 })
+
+describe('Storage events', () => {
+  test('Must emit removed event when Storage removed', done => {
+    expect.assertions(1)
+
+    const configs = {
+      name: timestamp(),
+      body: { test: 'removed event' },
+      path: TMP_PATH
+    }
+    const storage = new Storage(configs)
+
+    storage.once('removed', event => {
+      expect(event).toEqual({
+        name: configs.name,
+        body: configs.body
+      })
+
+      done()
+    })
+
+    storage.remove()
+  })
+
+  test('Must emit updated event when Storage updated', done => {
+    expect.assertions(1)
+
+    const configs = {
+      name: timestamp(),
+      body: { test: 'updated event' },
+      path: TMP_PATH
+    }
+    const storage = new Storage(configs)
+
+    let updatedBody = Object.assign({}, configs.body, {
+      update: 'Updated successfully'
+    })
+
+    storage.once('updated', event => {
+      expect(event).toEqual({
+        lastBody: configs.body,
+        updatedBody
+      })
+
+      done()
+    })
+
+    storage.update(updatedBody)
+
+    storage.remove()
+  })
+})
