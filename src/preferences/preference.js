@@ -157,6 +157,8 @@ export default class Preference extends EventEmitter {
   remove (configs = { sync: true }) {
     if (this.#storage === undefined) throw new Error('Preference is not accessible')
 
+    const lastBody = this.body
+
     const deletePreference = body => {
       delete body[this.name]
 
@@ -165,7 +167,7 @@ export default class Preference extends EventEmitter {
     const clearProperties = () => {
       const EVENT = {
         name: this.name,
-        body: this.#storage.body[this.name]
+        body: lastBody
       }
 
       this.#storage = undefined
