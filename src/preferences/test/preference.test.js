@@ -337,7 +337,6 @@ describe('Preference events', () => {
     })
 
     preference.once('updated', event => {
-      console.log(event)
       expect(event).toEqual({
         lastBody: configs.body,
         updatedBody
