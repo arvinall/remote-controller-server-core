@@ -4,7 +4,7 @@
   "description": "Remote Controller Server's Core module",
   "main": "build/remote-controller-server-core.min.js",
   "scripts": {
-    "test": "eslint src/**/*.test.js && jest src",
+    "test": "eslint **/*.test.js && jest src",
     "docs": "jsdoc -c jsdoc.config.js -P package.json -R README.md",
     "build": "NODE_ENV=production webpack",
     "build:dev": "NODE_ENV=development webpack"
