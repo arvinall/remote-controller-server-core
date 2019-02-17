@@ -298,3 +298,56 @@ describe('Preference update method', () => {
     })
   })
 })
+
+describe('Preference events', () => {
+  test('Must emit removed event when Preference removed', done => {
+    expect.assertions(1)
+
+    const configs = {
+      name: timestamp(),
+      storage: preferencesStorage,
+      body: { test: 'removed event' }
+    }
+    const preference = new Preference(configs)
+
+    preference.once('removed', event => {
+      expect(event).toEqual({
+        name: configs.name,
+        body: configs.body
+      })
+
+      done()
+    })
+
+    preference.remove()
+  })
+
+  test('Must emit updated event when Preference updated', done => {
+    expect.assertions(1)
+
+    const configs = {
+      name: timestamp(),
+      storage: preferencesStorage,
+      body: { test: 'updated event' }
+    }
+    const preference = new Preference(configs)
+
+    let updatedBody = Object.assign({}, configs.body, {
+      update: 'Updated successfully'
+    })
+
+    preference.once('updated', event => {
+      console.log(event)
+      expect(event).toEqual({
+        lastBody: configs.body,
+        updatedBody
+      })
+
+      done()
+    })
+
+    preference.update(updatedBody)
+
+    preference.remove()
+  })
+})
