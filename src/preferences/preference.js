@@ -28,37 +28,40 @@ export default class Preference extends EventEmitter {
   /**
    * Initialize/Read Preference
    *
-   * @param {string} name Preference's name
    * @param {object} configs
+   * @param {string} configs.name Preference's name
    * @param {module:storages/storage} configs.storage Storage that use for preferences
    * @param {object} [configs.body={}] Preference's initial content
+   *
+   * @throws Will throw an error if the storage is not accessible
+   * @throws Will throw an error if the body property provided but storage is already exist
+   * @throws Will throw an error if the body property not provided and storage is not accessible
    */
-  constructor (name, configs) {
-    if (typeof name !== 'string') throw new Error('name parameter is required and must be string')
-    else if (typeof configs !== 'object') throw new Error('configs parameter is required and must be object')
+  constructor (configs) {
+    let initial = false
 
-    // Set default configs
-    configs = Object.assign({
-      body: Object.create(null)
-    }, configs)
-
-    if (configs.storage.constructor.name !== Storage.name) throw new Error('configs.storage is required and must be Storage')
+    if (typeof configs !== 'object') throw new Error('configs parameter is required and must be object')
+    else if (typeof configs.name !== 'string') throw new Error('configs.name is required and must be string')
+    if (configs.storage === undefined || configs.storage.constructor.name !== Storage.name) throw new Error('configs.storage is required and must be Storage')
     else if (configs.storage.body === undefined) throw new Error('Storage is not accessible')
-    else if (typeof configs.body !== 'object') throw new Error('configs.body must be object')
+    else if (configs.body !== undefined && typeof configs.body !== 'object') throw new Error('configs.body must be object')
 
     super()
 
     this.#storage = configs.storage
+    this.#name = configs.name
 
-    this.#name = name
+    if (configs.body) initial = true
 
-    if (typeof this.#storage.body[this.#name] !== 'object') {
+    if (initial) {
+      if (typeof this.#storage.body[this.#name] === 'object') throw new Error(`${this.#name} is already exist`)
+
       this.#storage.update(body => {
         body[this.#name] = configs.body
 
         return body
       })
-    }
+    } else if (typeof this.#storage.body[this.#name] !== 'object') throw new Error(`${this.#name} is not accessible`)
   }
 
   /**
@@ -95,11 +98,11 @@ export default class Preference extends EventEmitter {
    * @return {(void|Promise)} Return promise if configs.sync equal to false
    */
   update (body, configs = { sync: true }) {
-    if (this.#storage === undefined) throw new Error('Preference is not accessible')
-
+    // Make body object from function
     if (typeof body === 'function') body = body(this.body)
 
-    if (body === undefined || typeof body !== 'object') throw new Error('body parameter is required and must be object/function')
+    if (typeof body !== 'object') throw new Error('body parameter is required and must be object/function')
+    if (this.#storage === undefined) throw new Error('Preference is not accessible')
 
     const updateBody = storageBody => {
       storageBody[this.#name] = body
