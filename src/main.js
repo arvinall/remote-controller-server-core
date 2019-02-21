@@ -42,12 +42,12 @@ export default function coreMaker (configs = Object.create(null)) {
   }
 
   /**
-   * Storage manager module
+   * Preference manager module
    *
-   * @name storages
+   * @name preferences
    * @memberOf module:remote-controller-server-core~core
    *
-   * @type {module:storages~Storages}
+   * @type {module:preferences~Preferences}
    */
   MODULE.preferences = preferences({
     storages,
