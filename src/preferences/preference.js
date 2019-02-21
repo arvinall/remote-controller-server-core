@@ -109,24 +109,22 @@ export default class Preference extends EventEmitter {
 
       return storageBody
     }
-
     const currentBody = this.body
-
+    /**
+     * Preference updated event
+     *
+     * @event module:preferences/preference#event:updated
+     *
+     * @type {object}
+     * @property {object} lastBody Preference's body before update
+     * @property {object} updatedBody A copy of updated body object
+     */
     const fireEvent = () => {
       const EVENT = {
         lastBody: currentBody,
         updatedBody: this.body
       }
 
-      /**
-       * Preference updated event
-       *
-       * @event module:preferences/preference#event:updated
-       *
-       * @type {object}
-       * @property {object} lastBody Preference's body before update
-       * @property {object} updatedBody A copy of updated body object
-       */
       this.emit('updated', EVENT)
     }
 
@@ -158,12 +156,20 @@ export default class Preference extends EventEmitter {
     if (this.#storage === undefined) throw new Error('Preference is not accessible')
 
     const lastBody = this.body
-
     const deletePreference = body => {
       delete body[this.name]
 
       return body
     }
+    /**
+     * Preference removed event
+     *
+     * @event module:preferences/preference#event:removed
+     *
+     * @type {object}
+     * @property {string} name Name of the removed Preference
+     * @property {object} body Last body of the removed Preference
+     */
     const clearProperties = () => {
       const EVENT = {
         name: this.name,
@@ -173,15 +179,6 @@ export default class Preference extends EventEmitter {
       this.#storage = undefined
       this.#name = undefined
 
-      /**
-       * Preference removed event
-       *
-       * @event module:preferences/preference#event:removed
-       *
-       * @type {object}
-       * @property {string} name Name of the removed Preference
-       * @property {object} body Last body of the removed Preference
-       */
       this.emit('removed', EVENT)
     }
 
