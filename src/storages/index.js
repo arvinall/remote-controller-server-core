@@ -14,6 +14,8 @@ import Storage from './storage'
  * @return {module:storages~Storages}
  */
 export default function storagesMaker (configs = { path: process.cwd() }) {
+  if (typeof configs.path !== 'string') throw new Error('configs.path must be string')
+
   /**
    * Storages module is a Storage holder/manager
    */
@@ -26,7 +28,7 @@ export default function storagesMaker (configs = { path: process.cwd() }) {
     #storagesList = {}
 
     /**
-     * Get Storage instance via its name
+     * Get Storage instance via it's name
      *
      * @param {string} name Target storage's name
      *
@@ -36,7 +38,7 @@ export default function storagesMaker (configs = { path: process.cwd() }) {
       if (typeof name !== 'string') throw new Error('name parameter is required and must be string')
 
       // Return Storage from list if exist
-      if (this.#storagesList[name] !== undefined) return this.#storagesList[name]
+      if (this.#storagesList.hasOwnProperty(name)) return this.#storagesList[name]
 
       this.#storagesList[name] = new Storage({
         name,
@@ -58,9 +60,9 @@ export default function storagesMaker (configs = { path: process.cwd() }) {
      */
     initialize (name, body = Object.create(null)) {
       if (typeof name !== 'string') throw new Error('name parameter is required and must be string')
-      if (typeof body !== 'object') throw new Error('body parameter must be object')
+      else if (typeof body !== 'object') throw new Error('body parameter must be object')
 
-      if (this.#storagesList[name] !== undefined) throw new Error(`${name} is already exist`)
+      if (this.#storagesList.hasOwnProperty(name)) throw new Error(`${name} is already exist`)
 
       this.#storagesList[name] = new Storage({
         name,
@@ -72,9 +74,9 @@ export default function storagesMaker (configs = { path: process.cwd() }) {
     }
 
     /**
-     * Remove Storage from list and its file
+     * Remove Storage from list and it's file
      *
-     * @param {string|Storage} storage Storage or storage's name to remove
+     * @param {(string|module:storages/storage)} storage Storage or storage's name to remove
      * @param {object} [configs={}]
      * @param {boolean} [configs.sync=true] Async or sync
      *
@@ -118,6 +120,28 @@ export default function storagesMaker (configs = { path: process.cwd() }) {
         resolve(storage.remove({ sync: false })
           .then(deleteStorage, error => Promise.reject(error)))
       })
+    }
+
+    /**
+     * Check Storage is already exist
+     *
+     * @param {string} storageName Storage's name to check
+     *
+     * @return {boolean}
+     */
+    has (storageName) {
+      if (typeof storageName !== 'string') throw new Error('storageName parameter is required and must be string')
+
+      return this.#storagesList.hasOwnProperty(storageName)
+    }
+
+    /**
+     * Return storage's path
+     *
+     * @return {string}
+     */
+    get _path () {
+      return configs.path
     }
   }
 
