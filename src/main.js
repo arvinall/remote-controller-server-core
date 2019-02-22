@@ -12,7 +12,7 @@
 import storagesMaker from './storages'
 import preferences from './preferences'
 
-var storages
+const storagesList = new Map()
 
 /**
  * core function creates main core module
@@ -37,8 +37,11 @@ export default function coreMaker (configs = Object.create(null)) {
    */
   const MODULE = Object.create(null)
 
-  if (storages === undefined || storages._path !== configs.storagePath) {
+  let storages = storagesList.get(configs.storagePath)
+  if (storages === undefined) {
     storages = storagesMaker({ path: configs.storagePath })
+
+    storagesList.set(configs.storagePath, storages)
   }
 
   /**
