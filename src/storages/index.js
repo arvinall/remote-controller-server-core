@@ -130,8 +130,6 @@ export default function storagesMaker (configs = { path: process.cwd() }) {
      * @return {boolean}
      */
     has (storageName) {
-      if (typeof storageName !== 'string') throw new Error('storageName parameter is required and must be string')
-
       return this.#storagesList.hasOwnProperty(storageName)
     }
 
