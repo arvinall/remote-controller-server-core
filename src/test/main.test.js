@@ -11,6 +11,6 @@ test('Core must return core module correctly', () => {
   })
 
   expect(core).toEqual(expect.objectContaining({
-    storages: expect.any(Object)
+    preferences: expect.any(Object)
   }))
 })
