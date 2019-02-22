@@ -191,14 +191,12 @@ export default function preferencesMaker (configs) {
     /**
      * Check Preference is already exist
      *
-     * @param {string} PreferenceName Storage's name to check
+     * @param {string} preferenceName Storage's name to check
      *
      * @return {boolean}
      */
-    has (PreferenceName) {
-      if (typeof PreferenceName !== 'string') throw new Error('PreferenceName parameter is required and must be string')
-
-      return this.#preferencesList.hasOwnProperty(PreferenceName)
+    has (preferenceName) {
+      return this.#preferencesList.hasOwnProperty(preferenceName)
     }
   }
 
