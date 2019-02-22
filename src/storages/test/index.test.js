@@ -10,7 +10,7 @@ function timestamp () {
   return String(Date.now())
 }
 
-test('storages default must return storages module without error', () => {
+test('storagesMaker must return storages module without error', () => {
   let storages = storagesMaker({ path: TMP_PATH })
 
   expect(storages).toEqual(expect.any(Object))
