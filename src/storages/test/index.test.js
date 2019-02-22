@@ -201,3 +201,18 @@ describe('storages remove method', () => {
     })
   })
 })
+
+test('storages has method must return right value', () => {
+  const storage = storages.initialize(timestamp())
+  const name = storage.name
+
+  expect(storages.has(name)).toBe(true)
+
+  storages.remove(name)
+
+  expect(storages.has(name)).toBe(false)
+})
+
+test(`storages path property must return ${TMP_PATH}`, () => {
+  expect(storages.path).toBe(TMP_PATH)
+})
