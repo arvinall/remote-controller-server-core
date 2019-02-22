@@ -140,7 +140,7 @@ export default function storagesMaker (configs = { path: process.cwd() }) {
      *
      * @return {string}
      */
-    get _path () {
+    get path () {
       return configs.path
     }
   }
