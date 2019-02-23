@@ -65,7 +65,7 @@ CONFIG.development = Object.create(null)
 
 Object.assign(CONFIG.development, CONFIG.production, {
   mode: 'development',
-  devtool: 'cheap-eval-source-map',
+  devtool: 'eval',
   watch: true,
   watchOptions: {
     ignored: EXCLUDE
@@ -73,5 +73,6 @@ Object.assign(CONFIG.development, CONFIG.production, {
 })
 
 CONFIG.development.performance.hints = 'warning'
+CONFIG.development.output.devtoolModuleFilenameTemplate = info => path.join(info.resourcePath)
 
 module.exports = CONFIG[MODE] || CONFIG.production
