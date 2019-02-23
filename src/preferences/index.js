@@ -96,7 +96,6 @@ export default function preferencesMaker (configs) {
         name,
         ...event
       }))
-
       this.#preferencesList[name].on('removed', event => this.emit('removed', event))
 
       return this.#preferencesList[name]
@@ -133,7 +132,6 @@ export default function preferencesMaker (configs) {
         name,
         ...event
       }))
-
       this.#preferencesList[name].on('removed', event => this.emit('removed', event))
 
       return this.#preferencesList[name]
@@ -156,24 +154,21 @@ export default function preferencesMaker (configs) {
       }
 
       const name = preference.name || preference
-
-      preference = this.#preferencesList[name]
-
       const deletePreference = () => {
         delete this.#preferencesList[name]
       }
-
       const ERRORS = {
         accessibility: new Error(`Preference is not accessible`),
         existence: new Error(`${name} is not exist in list`)
       }
+
+      preference = this.#preferencesList[name]
 
       if (configs.sync) {
         if (typeof name !== 'string') throw ERRORS.accessibility
         if (preference === undefined) throw ERRORS.existence
 
         preference.remove()
-
         deletePreference()
 
         return

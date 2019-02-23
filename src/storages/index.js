@@ -61,8 +61,7 @@ export default function storagesMaker (configs = { path: process.cwd() }) {
     initialize (name, body = Object.create(null)) {
       if (typeof name !== 'string') throw new Error('name parameter is required and must be string')
       else if (typeof body !== 'object') throw new Error('body parameter must be object')
-
-      if (this.#storagesList.hasOwnProperty(name)) throw new Error(`${name} is already exist`)
+      else if (this.#storagesList.hasOwnProperty(name)) throw new Error(`${name} is already exist`)
 
       this.#storagesList[name] = new Storage({
         name,
@@ -90,24 +89,21 @@ export default function storagesMaker (configs = { path: process.cwd() }) {
       }
 
       const name = storage.name || storage
-
-      storage = this.#storagesList[name]
-
       const deleteStorage = () => {
         delete this.#storagesList[name]
       }
-
       const ERRORS = {
         accessibility: new Error(`storage is not accessible`),
         existence: new Error(`${name} is not exist in list`)
       }
+
+      storage = this.#storagesList[name]
 
       if (configs.sync) {
         if (typeof name !== 'string') throw ERRORS.accessibility
         if (storage === undefined) throw ERRORS.existence
 
         storage.remove()
-
         deleteStorage()
 
         return

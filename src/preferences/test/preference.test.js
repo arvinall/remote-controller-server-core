@@ -318,7 +318,6 @@ describe('Preference events', () => {
 
       done()
     })
-
     preference.remove()
   })
 
@@ -331,8 +330,7 @@ describe('Preference events', () => {
       body: { test: 'updated event' }
     }
     const preference = new Preference(configs)
-
-    let updatedBody = Object.assign({}, configs.body, {
+    const updatedBody = Object.assign({}, configs.body, {
       update: 'Updated successfully'
     })
 
@@ -344,9 +342,6 @@ describe('Preference events', () => {
 
       done()
     })
-
     preference.update(updatedBody)
-
-    preference.remove()
   })
 })

@@ -1,4 +1,4 @@
-/* global test, expect, describe */
+/* global test, expect, describe, afterAll */
 
 import path from 'path'
 import Storage from '../storage'
@@ -6,22 +6,28 @@ import storagesMaker from '../index'
 
 const TMP_PATH = path.join(process.cwd(), 'tmp')
 
+let storages
+
 function timestamp () {
   return String(Date.now())
 }
 
-test('storagesMaker must return storages module without error', () => {
-  let storages = storagesMaker({ path: TMP_PATH })
+describe('preferencesMaker', () => {
+  test('storagesMaker must return storages module without error', () => {
+    let storages = storagesMaker({ path: TMP_PATH })
 
-  expect(storages).toEqual(expect.any(Object))
-  expect(storages).toEqual(expect.objectContaining({
-    get: expect.any(Function),
-    initialize: expect.any(Function),
-    remove: expect.any(Function)
-  }))
+    expect(storages).toEqual(expect.any(Object))
+    expect(storages).toEqual(expect.objectContaining({
+      get: expect.any(Function),
+      initialize: expect.any(Function),
+      remove: expect.any(Function)
+    }))
+  })
+
+  afterAll(() => {
+    storages = storagesMaker({ path: TMP_PATH })
+  })
 })
-
-const storages = storagesMaker({ path: TMP_PATH })
 
 describe('storages get method', () => {
   describe('Errors', () => {
@@ -163,47 +169,55 @@ describe('storages remove method', () => {
 
   describe('Success', () => {
     test('Remove storage via name without error (sync)', () => {
-      const name = timestamp()
+      const storage = storages.initialize(timestamp(), { test: 'Delete Storage via name (sync)' })
 
-      storages.initialize(name, { test: 'Delete Storage via name (sync)' })
-
-      expect(storages.remove(name)).toBeUndefined()
+      expect(storages.remove(storage.name)).toBeUndefined()
+      expect(storage).toEqual(expect.objectContaining({
+        name: undefined,
+        body: undefined
+      }))
     })
 
     test('Remove storage via name without error (async)', async () => {
-      expect.assertions(1)
+      expect.assertions(2)
 
-      const name = timestamp()
+      const storage = storages.initialize(timestamp(), { test: 'Delete Storage via name (async)' })
 
-      storages.initialize(name, { test: 'Delete Storage via name (async)' })
-
-      expect(await storages.remove(name, { sync: false })).toBeUndefined()
+      expect(await storages.remove(storage.name, { sync: false })).toBeUndefined()
+      expect(storage).toEqual(expect.objectContaining({
+        name: undefined,
+        body: undefined
+      }))
     })
 
     test('Remove storage via Storage instance without error (sync)', () => {
-      const name = timestamp()
-      const storage = storages.initialize(name, { test: 'Delete Storage via Storage instance (sync)' })
+      const storage = storages.initialize(timestamp(), {
+        test: 'Delete Storage via Storage instance (sync)'
+      })
 
       expect(storages.remove(storage)).toBeUndefined()
-      expect(storage.name).toBeUndefined()
-      expect(storage.body).toBeUndefined()
+      expect(storage).toEqual(expect.objectContaining({
+        name: undefined,
+        body: undefined
+      }))
     })
 
     test('Remove storage via Storage instance without error (async)', async () => {
-      expect.assertions(3)
+      expect.assertions(2)
 
-      const name = timestamp()
-      const storage = storages.initialize(name, { test: 'Delete Storage via Storage instance (async)' })
+      const storage = storages.initialize(timestamp(), { test: 'Delete Storage via Storage instance (async)' })
 
       expect(await storages.remove(storage, { sync: false })).toBeUndefined()
-      expect(storage.name).toBeUndefined()
-      expect(storage.body).toBeUndefined()
+      expect(storage).toEqual(expect.objectContaining({
+        name: undefined,
+        body: undefined
+      }))
     })
   })
 })
 
 test('storages has method must return right value', () => {
-  const storage = storages.initialize(timestamp())
+  const storage = storages.initialize(timestamp(), { test: 'has method' })
   const name = storage.name
 
   expect(storages.has(name)).toBe(true)
