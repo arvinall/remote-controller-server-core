@@ -73,6 +73,11 @@ Object.assign(CONFIG.development, CONFIG.production, {
 })
 
 CONFIG.development.performance.hints = 'warning'
-CONFIG.development.output.devtoolModuleFilenameTemplate = info => path.join(info.resourcePath)
+CONFIG.development.output.devtoolModuleFilenameTemplate = info => {
+  let context = CONTEXT.split('/')
+  context = context[context.length - 1]
+
+  return path.join(context, info.resourcePath)
+}
 
 module.exports = CONFIG[MODE] || CONFIG.production
