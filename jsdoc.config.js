@@ -4,7 +4,8 @@ module.exports = {
     include: [
       'src',
       'src/storages',
-      'src/preferences'
+      'src/preferences',
+      'src/engine'
     ],
     exclude: [
       'node_modules'
