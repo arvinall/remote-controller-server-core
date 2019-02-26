@@ -15,16 +15,10 @@ import engineIO from 'engine.io'
  * @param {number} [configs.port=7777] Server's port
  * @param {string} [configs.path="/"] WebSocket's path
  *
- * @throws Will throw an error if there is no Network
- *
  * @return {module:engine~Engine}
  */
 export default function engineMaker (configs = {}) {
   if (typeof configs !== 'object') throw new Error('configs parameter is required and must be object')
-
-  const networkIP = getNetworkIP()
-
-  if (networkIP === null) throw new Error('Network is not available')
 
   // Set default configs
   configs = Object.assign({
@@ -40,6 +34,7 @@ export default function engineMaker (configs = {}) {
 
   // Attach websocket to http server
   webSocketServer.attach(httpServer, { path: configs.path })
+  webSocketServer.generateId = idGenerator
 
   /**
    * Engine module control web server and its websocket
@@ -53,25 +48,55 @@ export default function engineMaker (configs = {}) {
      * @param {number} [port=engineMaker~configs.port]
      *
      * @throws Will throw an error if engine started before
+     * @throws Will throw an error if there is no network
+     *
+     * @emits module:engine#event:started
      *
      * @returns {Promise}
      */
     start (port = configs.port) {
       if (this.status) throw new Error('Engine already started')
+      else if (getNetworkIP() === null) throw new Error('Network is not available')
       else if (typeof port !== 'number') throw new Error('port parameter must be number')
 
-      return new Promise(resolve => httpServer.listen({ port, host: '0.0.0.0' }, resolve))
+      configs.port = port
+
+      /**
+       * Engine started event
+       *
+       * @event module:engine#event:started
+       */
+      const fireEvent = () => this.emit('started')
+
+      return new Promise(resolve => httpServer.listen({ port, host: '0.0.0.0' }, () => {
+        fireEvent()
+
+        resolve()
+      }))
     }
 
     /**
      * Stop engine
+     *
+     * @emits module:engine#event:stopped
      *
      * @returns {Promise}
      */
     stop () {
       webSocketServer.close()
 
-      return new Promise(resolve => httpServer.close(resolve))
+      /**
+       * Engine stopped event
+       *
+       * @event module:engine#event:stopped
+       */
+      const fireEvent = () => this.emit('stopped')
+
+      return new Promise(resolve => httpServer.close(() => {
+        fireEvent()
+
+        resolve()
+      }))
     }
 
     /**
@@ -80,7 +105,7 @@ export default function engineMaker (configs = {}) {
      * @type {{address: string, port: (number|null)}}
      */
     get address () {
-      return { port: httpServer.address() ? httpServer.address().port : null, address: networkIP }
+      return { port: configs.port, address: getNetworkIP() }
     }
 
     /**
@@ -98,6 +123,7 @@ export default function engineMaker (configs = {}) {
   return new Engine()
 }
 
+// Get Network IP
 function getNetworkIP () {
   const networkInterfaces = os.networkInterfaces()
   let ip = null
@@ -113,3 +139,10 @@ function getNetworkIP () {
 
   return ip
 }
+
+// Socket ID generator
+const idGenerator = (() => {
+  let counter = 0
+
+  return () => counter++
+})()
