@@ -79,6 +79,15 @@ export default class Connection extends EventEmitter {
   }
 
   /**
+   * Disconnect Connection
+   *
+   * @return {void}
+   */
+  disconnect () {
+    if (this.status !== 'closed' || this.status !== 'closing') this.#socket.close()
+  }
+
+  /**
    * Mark this Connection as confirmed
    *
    * @param {boolean} [confirmation=true]
