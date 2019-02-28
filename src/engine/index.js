@@ -55,7 +55,7 @@ export default function engineMaker (configs = {}) {
      * @returns {Promise}
      */
     start (port = configs.port) {
-      if (this.status) throw new Error('Engine already started')
+      if (this.isActive) throw new Error('Engine already started')
       else if (getNetworkIP() === null) throw new Error('Network is not available')
       else if (typeof port !== 'number') throw new Error('port parameter must be number')
 
@@ -78,11 +78,15 @@ export default function engineMaker (configs = {}) {
     /**
      * Stop engine
      *
+     * @throws Will throw an error if engine stopped before
+     *
      * @emits module:engine#event:stopped
      *
      * @returns {Promise}
      */
     stop () {
+      if (!this.isActive) throw new Error('Engine already stopped')
+
       webSocketServer.close()
 
       /**
@@ -110,13 +114,11 @@ export default function engineMaker (configs = {}) {
 
     /**
      * Get server listening status
-     * 0 as Off
-     * 1 as On
      *
-     * @type {number}
+     * @type {boolean}
      */
-    get status () {
-      return Number(httpServer.listening)
+    get isActive () {
+      return httpServer.listening
     }
   }
 
