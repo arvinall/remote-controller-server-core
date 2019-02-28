@@ -5,7 +5,8 @@ module.exports = {
       'src',
       'src/storages',
       'src/preferences',
-      'src/engine'
+      'src/engine',
+      'src/connections'
     ],
     exclude: [
       'node_modules'
