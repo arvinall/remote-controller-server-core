@@ -48,7 +48,10 @@ export default class Storage extends EventEmitter {
 
     super()
 
-    if (configs.path === undefined) configs.path = process.cwd()
+    // Set default configs
+    configs = Object.assign({
+      path: process.cwd()
+    }, configs)
 
     if (typeof configs.name !== 'string') throw new Error('configs.name is required and must be string')
     else if (configs.body !== undefined && typeof configs.body !== 'object') throw new Error('configs.body must be object')

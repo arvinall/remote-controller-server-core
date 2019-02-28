@@ -42,7 +42,7 @@ export default class Preference extends EventEmitter {
 
     if (typeof configs !== 'object') throw new Error('configs parameter is required and must be object')
     else if (typeof configs.name !== 'string') throw new Error('configs.name is required and must be string')
-    if (configs.storage === undefined || configs.storage.constructor.name !== Storage.name) throw new Error('configs.storage is required and must be Storage')
+    else if (configs.storage === undefined || !(configs.storage instanceof Storage)) throw new Error('configs.storage is required and must be Storage')
     else if (configs.storage.body === undefined) throw new Error('Storage is not accessible')
     else if (configs.body !== undefined && typeof configs.body !== 'object') throw new Error('configs.body must be object')
 
