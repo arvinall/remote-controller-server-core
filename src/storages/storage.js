@@ -136,7 +136,7 @@ export default class Storage extends EventEmitter {
       this.#name = undefined
 
       /**
-       * storage removed event
+       * Storage removed event
        *
        * @event module:storages/storage#event:removed
        *
@@ -195,7 +195,7 @@ export default class Storage extends EventEmitter {
       this.#body = body
 
       /**
-       * storage updated event
+       * Storage updated event
        *
        * @event module:storages/storage#event:updated
        *

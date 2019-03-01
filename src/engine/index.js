@@ -50,7 +50,7 @@ export default function engineMaker (configs = {}) {
      * @throws Will throw an error if engine started before
      * @throws Will throw an error if there is no network
      *
-     * @emits module:engine#event:started
+     * @emits module:engine~Engine#event:started
      *
      * @returns {Promise}
      */
@@ -64,7 +64,7 @@ export default function engineMaker (configs = {}) {
       /**
        * Engine started event
        *
-       * @event module:engine#event:started
+       * @event module:engine~Engine#event:started
        */
       const fireEvent = () => this.emit('started')
 
@@ -80,7 +80,7 @@ export default function engineMaker (configs = {}) {
      *
      * @throws Will throw an error if engine stopped before
      *
-     * @emits module:engine#event:stopped
+     * @emits module:engine~Engine#event:stopped
      *
      * @returns {Promise}
      */
@@ -92,7 +92,7 @@ export default function engineMaker (configs = {}) {
       /**
        * Engine stopped event
        *
-       * @event module:engine#event:stopped
+       * @event module:engine~Engine#event:stopped
        */
       const fireEvent = () => this.emit('stopped')
 

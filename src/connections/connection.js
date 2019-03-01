@@ -26,7 +26,7 @@ export default class Connection extends EventEmitter {
    * @param {module:remote-controller-server-core~engineIO.Socket} configs.socket
    * @param {boolean} [configs.confirmation=true] Must Connection confirm before interact?
    *
-   * @emits module:connections/connection:askConfirmation
+   * @emits module:connections/connection#event:askConfirmation
    */
   constructor (configs) {
     if (typeof configs !== 'object') throw new Error('configs parameter is required and must be object')
@@ -73,7 +73,7 @@ export default class Connection extends EventEmitter {
      * Connection askConfirmation event
      * Fire if Connection needs confirmation
      *
-     * @event module:connections/connection:askConfirmation
+     * @event module:connections/connection#event:askConfirmation
      */
     if (this.#mustConfirm) setImmediate(() => this.emit('askConfirmation'))
   }
@@ -103,12 +103,12 @@ export default class Connection extends EventEmitter {
    *
    * @type {boolean}
    */
-  get isIdentify () {
-    let identified = true
+  get isAuthenticate () {
+    let authenticated = true
 
-    if (this.#mustConfirm && !this.#confirmed) identified = false
+    if (this.#mustConfirm && !this.#confirmed) authenticated = false
 
-    return identified
+    return authenticated
   }
 
   /**
