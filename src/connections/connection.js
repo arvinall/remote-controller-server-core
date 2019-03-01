@@ -18,6 +18,14 @@ export default class Connection extends EventEmitter {
   #address
   #mustConfirm
   #confirmed = false
+  #fireAuthenticatedEvent = () => {
+    /**
+     * Connection authenticated event
+     *
+     * @event module:connections/connection#event:authenticated
+     */
+    if (this.isAuthenticate) this.localEmit('authenticated')
+  }
 
   /**
    * Listen to EngineIO.Socket events
@@ -47,7 +55,11 @@ export default class Connection extends EventEmitter {
     this.#socket.emit = (eventName, ...args) => {
       const chain = EventEmitter.prototype.emit.call(this.#socket, eventName, ...args)
 
-      if (eventName !== 'message') this.emit(eventName, ...args)
+      if (!this.isAuthenticate) return chain
+
+      if (eventName === 'close') eventName = 'disconnected'
+
+      if (eventName !== 'message') this.localEmit(eventName, ...args)
       else {
         let message = args[0]
 
@@ -55,15 +67,13 @@ export default class Connection extends EventEmitter {
           try {
             message = JSON.parse(message)
 
-            if (message.name === undefined || message.body === undefined) message = null
+            if (message.name === undefined) message = null
           } catch (error) {
             message = null
           }
         }
 
-        if (this.isIdentify) {
-          if (message !== null) this.emit(message.name, message.body)
-        }
+        if (message !== null) this.localEmit(message.name, message.body)
       }
 
       return chain
@@ -75,15 +85,55 @@ export default class Connection extends EventEmitter {
      *
      * @event module:connections/connection#event:askConfirmation
      */
-    if (this.#mustConfirm) setImmediate(() => this.emit('askConfirmation'))
+    if (this.#mustConfirm) setImmediate(() => this.localEmit('askConfirmation'))
+  }
+
+  /**
+   * emit sends message to client
+   * If body is instanceof Buffer, then it convert to Uint8Array
+   *
+   * @param {string} name Message's name
+   * @param {*} [body] Message's content
+   *
+   * @return {Promise}
+   */
+  emit (name, body) {
+    let message = Object.create(null)
+
+    message.name = name
+    message.body = body
+
+    if (body instanceof Buffer) {
+      message.body = Object.create(null)
+
+      message.body.type = 'Uint8Array'
+      message.body.data = Array.from(new Uint8Array(body.buffer))
+    }
+
+    message = JSON.stringify(message)
+
+    return new Promise((resolve, reject) => {
+      if (!this.isAuthenticate) return reject(new Error('Connection is not authenticated'))
+
+      this.#socket.send(message, undefined, () => resolve())
+    })
   }
 
   /**
    * Disconnect Connection
    *
+   * @emits module:connections/connection#event:disconnected
+   *
    * @return {void}
    */
   disconnect () {
+    /**
+     * Connection disconnected event same as engineIO.Socket#event:close
+     *
+     * @event module:connections/connection#event:disconnected
+     * @see {@link https://github.com/socketio/engine.io/blob/master/README.md#events-2|Engine.io's Github page}
+     * @see module:remote-controller-server-core~engineIO.Socket
+     */
     if (this.status !== 'closed' || this.status !== 'closing') this.#socket.close()
   }
 
@@ -92,10 +142,24 @@ export default class Connection extends EventEmitter {
    *
    * @param {boolean} [confirmation=true]
    *
+   * @emits module:connections/connection#event:authenticated
+   *
    * @return {void}
    */
   confirm (confirmation = true) {
     this.#confirmed = Boolean(confirmation)
+
+    this.#fireAuthenticatedEvent()
+  }
+
+  /**
+   * localEmit is a alias for EventEmitter.prototype.emit
+   *
+   * @see module:remote-controller-server-core~EventEmitter
+   * @see {@link https://nodejs.org/api/events.html#events_emitter_emit_eventname_args|Events}
+   */
+  get localEmit () {
+    return EventEmitter.prototype.emit.bind(this)
   }
 
   /**
