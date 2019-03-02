@@ -69,7 +69,7 @@ export default function engineMaker (configs = {}) {
        */
       const fireEvent = () => { this.emit('started') }
 
-      return promisify(httpServer.listen)({ port, host: '0.0.0.0' })
+      return promisify(httpServer.listen.bind(httpServer))({ port, host: '0.0.0.0' })
         .then(fireEvent, error => Promise.reject(error))
     }
 
@@ -94,7 +94,7 @@ export default function engineMaker (configs = {}) {
 
       webSocketServer.close()
 
-      return promisify(httpServer.close)()
+      return promisify(httpServer.close.bind(httpServer))()
         .then(fireEvent, error => Promise.reject(error))
     }
 
