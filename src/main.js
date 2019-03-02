@@ -36,7 +36,8 @@
  */
 
 import storagesMaker from './storages'
-import preferences from './preferences'
+import preferencesMaker from './preferences'
+import engineMaker from './engine'
 
 const storagesList = new Map()
 
@@ -78,10 +79,12 @@ export default function coreMaker (configs = Object.create(null)) {
    *
    * @type {module:preferences~Preferences}
    */
-  MODULE.preferences = preferences({
+  MODULE.preferences = preferencesMaker({
     storages,
     name: configs.preferencesStorageName
   })
+
+  MODULE.engine = engineMaker()
 
   return MODULE
 }
