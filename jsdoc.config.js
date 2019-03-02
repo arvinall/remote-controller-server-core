@@ -15,7 +15,8 @@ module.exports = {
     excludePattern: '(^|\\/|\\\\)_'
   },
   plugins: [
-    'node_modules/jsdoc-babel'
+    'node_modules/jsdoc-babel',
+    'plugins/markdown'
   ],
   tags: {
     allowUnknownTags: false,
