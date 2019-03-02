@@ -55,8 +55,6 @@ export default class Connection extends EventEmitter {
     this.#socket.emit = (eventName, ...args) => {
       const chain = EventEmitter.prototype.emit.call(this.#socket, eventName, ...args)
 
-      if (!this.isAuthenticate) return chain
-
       if (eventName === 'close') eventName = 'disconnected'
 
       if (eventName !== 'message') this.localEmit(eventName, ...args)
@@ -73,7 +71,9 @@ export default class Connection extends EventEmitter {
           }
         }
 
-        if (message !== null) this.localEmit(message.name, message.body)
+        if (this.isAuthenticate) {
+          if (message !== null) this.localEmit(message.name, message.body)
+        }
       }
 
       return chain
