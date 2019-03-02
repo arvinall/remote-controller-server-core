@@ -22,6 +22,7 @@ module.exports = {
     dictionaries: ['jsdoc']
   },
   opts: {
-    destination: './docs'
+    destination: './docs',
+    template: 'node_modules/minami'
   }
 }
