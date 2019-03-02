@@ -59,6 +59,9 @@ export default function coreMaker (configs = Object.create(null)) {
     preferencesStorageName: 'preferences'
   }, configs)
 
+  if (typeof configs.storagePath !== 'string') throw new Error('configs.storagePath must be string')
+  else if (typeof configs.preferencesStorageName !== 'string') throw new Error('configs.preferencesStorageName must be string')
+
   /**
    * @namespace module:remote-controller-server-core~core
    */
