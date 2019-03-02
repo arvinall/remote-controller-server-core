@@ -115,7 +115,7 @@ describe('storages remove method', () => {
     })
 
     test('Must throw error when storage parameter is instance of Storage and deleted before (sync)', () => {
-      const ERROR = 'storage is not accessible'
+      const ERROR = 'Storage is not accessible'
       let storage = new Storage({
         name: timestamp(),
         body: { test: 'Delete a deleted storage (sync)' },
@@ -130,7 +130,7 @@ describe('storages remove method', () => {
     test('Must throw error when storage parameter is instance of Storage and deleted before (async)', async () => {
       expect.assertions(1)
 
-      const ERROR = 'storage is not accessible'
+      const ERROR = 'Storage is not accessible'
       let storage = new Storage({
         name: timestamp(),
         body: { test: 'Delete a deleted storage (sync)' },

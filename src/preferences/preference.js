@@ -6,6 +6,10 @@
 import EventEmitter from 'events'
 import Storage from '../storages/storage'
 
+const GLOBAL_ERRORS = {
+  accessibility: new Error('Preference is not accessible')
+}
+
 /**
  * Preference is a holder for modules preferences
  *
@@ -91,11 +95,13 @@ export default class Preference extends EventEmitter {
    * @param {object} [configs={}]
    * @param {boolean} [configs.sync=true] Async or sync
    *
-   * @throws Will throw an error if the Preference doesn't accessible
+   * @throws Will throw an error if the Preference is not accessible
    *
    * @emits module:preferences/preference#event:updated
    *
-   * @return {(void|Promise)} Return promise if configs.sync equal to false
+   * @return {(void|Promise<(void|Error)>)} Return promise if configs.sync equal to false
+   * * Rejection
+   *  * Reject an error if the Preference is not accessible
    */
   update (body, configs = { sync: true }) {
     // Make body object from function
@@ -146,11 +152,13 @@ export default class Preference extends EventEmitter {
    * @param {object} [configs={}]
    * @param {boolean} [configs.sync=true] Async or sync
    *
-   * @throws Will throw an error if the Preference doesn't accessible
+   * @throws Will throw an error if the Preference is not accessible
    *
    * @emits module:preferences/preference#event:removed
    *
-   * @return {(void|Promise)} Return promise if configs.sync equal to false
+   * @return {(void|Promise<(void|Error)>)} Return promise if configs.sync equal to false
+   * * Rejection
+   *  * Reject an error if the Preference is not accessible
    */
   remove (configs = { sync: true }) {
     if (this.#storage === undefined) throw new Error('Preference is not accessible')

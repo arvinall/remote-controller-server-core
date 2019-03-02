@@ -16,6 +16,11 @@ import Storage from './storage'
 export default function storagesMaker (configs = { path: process.cwd() }) {
   if (typeof configs.path !== 'string') throw new Error('configs.path must be string')
 
+  const STORAGES_GLOBAL_ERRORS = {
+    accessibility: new Error('Storage is not accessible'),
+    existence: name => new Error(`${name} is not exist in list`)
+  }
+
   /**
    * Storages module is a Storage holder/manager
    */
@@ -79,9 +84,13 @@ export default function storagesMaker (configs = { path: process.cwd() }) {
      * @param {object} [configs={}]
      * @param {boolean} [configs.sync=true] Async or sync
      *
-     * @throws Will throw error if storage is not accessible or not exist in list
+     * @throws Will throw an error if Storage is not accessible
+     * @throws Will throw an error if Storage is not exist in list
      *
-     * @return {(void|Promise)} Return promise if configs.sync equal to false
+     * @return {(void|Promise<(void|Error)>)} Return promise if configs.sync equal to false
+     * * Rejection
+     *  * Reject an error if Storage is not accessible
+     *  * Reject an error if Storage is not exist in list
      */
     remove (storage, configs = { sync: true }) {
       if (storage === undefined || (typeof storage !== 'string' && !(storage instanceof Storage))) {
@@ -93,8 +102,8 @@ export default function storagesMaker (configs = { path: process.cwd() }) {
         delete this.#storagesList[name]
       }
       const ERRORS = {
-        accessibility: new Error(`storage is not accessible`),
-        existence: new Error(`${name} is not exist in list`)
+        accessibility: STORAGES_GLOBAL_ERRORS.accessibility,
+        existence: STORAGES_GLOBAL_ERRORS.existence(name)
       }
 
       storage = this.#storagesList[name]

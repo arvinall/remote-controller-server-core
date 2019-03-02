@@ -9,6 +9,9 @@ import path from 'path'
 import EventEmitter from 'events'
 
 const ENCODING = 'utf8'
+const GLOBAL_ERRORS = {
+  accessibility: new Error('Storage is not accessible')
+}
 
 /**
  * Storage is a json file Manager
@@ -123,7 +126,9 @@ export default class Storage extends EventEmitter {
    *
    * @emits module:storages/storage#event:removed
    *
-   * @return {(void|Promise)} Return promise if configs.sync equal to false
+   * @return {(void|Promise<(void|Error)>)} Return promise if configs.sync equal to false
+   * * Rejection
+   *  * Reject an error if the storage's json file doesn't accessible
    */
   remove (configs = { sync: true }) {
     const clearProperties = () => {
@@ -151,7 +156,7 @@ export default class Storage extends EventEmitter {
       try {
         fs.accessSync(this.#address, fs.constants.F_OK | fs.constants.W_OK)
       } catch (error) {
-        throw new Error('Storage is not accessible')
+        throw GLOBAL_ERRORS.accessibility
       }
 
       fs.unlinkSync(this.#address)
@@ -165,7 +170,7 @@ export default class Storage extends EventEmitter {
       .then(() => {
         return promisify(fs.unlink)(this.#address)
           .then(clearProperties, error => Promise.reject(error))
-      }, () => Promise.reject(new Error('Storage is not accessible')))
+      }, () => Promise.reject(GLOBAL_ERRORS.accessibility))
   }
 
   /**
@@ -179,7 +184,9 @@ export default class Storage extends EventEmitter {
    *
    * @emits module:storages/storage#event:updated
    *
-   * @return {(void|Promise)} Return promise if configs.sync equal to false
+   * @return {(void|Promise<(void|Error)>)} Return promise if configs.sync equal to false
+   * * Rejection
+   *  * Reject an error if the storage's json file doesn't accessible
    */
   update (body, configs = { sync: true }) {
     if (typeof body === 'function') body = body(this.body)
@@ -210,7 +217,7 @@ export default class Storage extends EventEmitter {
       try {
         fs.accessSync(this.#address, fs.constants.F_OK | fs.constants.W_OK)
       } catch (error) {
-        throw new Error('Storage is not accessible')
+        throw GLOBAL_ERRORS.accessibility
       }
 
       fs.writeFileSync(this.#address, JSON.stringify(body), {
@@ -229,6 +236,6 @@ export default class Storage extends EventEmitter {
           encoding: ENCODING,
           flag: 'w'
         }).then(setProperties, error => Promise.reject(error))
-      }, () => Promise.reject(new Error('Storage is not accessible')))
+      }, () => Promise.reject(GLOBAL_ERRORS.accessibility))
   }
 }

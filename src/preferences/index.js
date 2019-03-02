@@ -29,6 +29,10 @@ export default function preferencesMaker (configs) {
   if (typeof configs.name !== 'string') throw new Error('configs.name is required and must be string')
   else if (configs.storages.has(configs.name)) throw new Error(`${configs.name} is already in use`)
 
+  const PREFERENCES_GLOBAL_ERRORS = {
+    accessibility: new Error(`Preference is not accessible`),
+    existence: name => new Error(`${name} is not exist in list`)
+  }
   const preferencesStorage = (() => {
     try {
       return configs.storages.get(configs.name)
@@ -144,9 +148,13 @@ export default function preferencesMaker (configs) {
      * @param {object} [configs={}]
      * @param {boolean} [configs.sync=true] Async or sync
      *
-     * @throws Will throw error if Preference is not accessible or not exist in list
+     * @throws Will throw an error if Preference is not accessible
+     * @throws Will throw an error if Preference is not exist in list
      *
-     * @return {(void|Promise)} Return promise if configs.sync equal to false
+     * @return {(void|Promise<(void|Error)>)} Return promise if configs.sync equal to false
+     * * Rejection
+     *  * Reject an error if Preference is not accessible
+     *  * Reject an error if Preference is not exist in list
      */
     remove (preference, configs = { sync: true }) {
       if (preference === undefined || (typeof preference !== 'string' && !(preference instanceof Preference))) {
@@ -158,8 +166,8 @@ export default function preferencesMaker (configs) {
         delete this.#preferencesList[name]
       }
       const ERRORS = {
-        accessibility: new Error(`Preference is not accessible`),
-        existence: new Error(`${name} is not exist in list`)
+        accessibility: PREFERENCES_GLOBAL_ERRORS.accessibility,
+        existence: PREFERENCES_GLOBAL_ERRORS.existence(name)
       }
 
       preference = this.#preferencesList[name]
@@ -169,6 +177,7 @@ export default function preferencesMaker (configs) {
         if (preference === undefined) throw ERRORS.existence
 
         preference.remove()
+
         deletePreference()
 
         return

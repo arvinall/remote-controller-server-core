@@ -47,12 +47,12 @@ export default function engineMaker (configs = {}) {
      *
      * @param {number} [port=engineMaker~configs.port]
      *
-     * @throws Will throw an error if engine started before
-     * @throws Will throw an error if there is no network
-     *
      * @emits module:engine~Engine#event:started
      *
-     * @returns {Promise}
+     * @returns {Promise<(void|Error)>}
+     * * Rejection
+     *  * Reject an error if engine started before
+     *  * Reject an error if there is no network
      */
     start (port = configs.port) {
       if (this.isActive) throw new Error('Engine already started')
@@ -78,11 +78,11 @@ export default function engineMaker (configs = {}) {
     /**
      * Stop engine
      *
-     * @throws Will throw an error if engine stopped before
-     *
      * @emits module:engine~Engine#event:stopped
      *
-     * @returns {Promise}
+     * @returns {Promise<(void|Error)>}
+     * * Rejection
+     *  * Reject an error if engine stopped before
      */
     stop () {
       if (!this.isActive) throw new Error('Engine already stopped')
