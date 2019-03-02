@@ -3,6 +3,7 @@
  * @module engine
  */
 
+import { promisify } from 'util'
 import EventEmitter from 'events'
 import os from 'os'
 import http from 'http'
@@ -55,9 +56,9 @@ export default function engineMaker (configs = {}) {
      *  * Reject an error if there is no network
      */
     start (port = configs.port) {
-      if (this.isActive) throw new Error('Engine already started')
-      else if (getNetworkIP() === null) throw new Error('Network is not available')
-      else if (typeof port !== 'number') throw new Error('port parameter must be number')
+      if (typeof port !== 'number') throw new Error('port parameter must be number')
+      else if (this.isActive) return Promise.reject(new Error('Engine already started'))
+      else if (getNetworkIP() === null) return Promise.reject(new Error('Network is not available'))
 
       configs.port = port
 
@@ -66,13 +67,10 @@ export default function engineMaker (configs = {}) {
        *
        * @event module:engine~Engine#event:started
        */
-      const fireEvent = () => this.emit('started')
+      const fireEvent = () => { this.emit('started') }
 
-      return new Promise(resolve => httpServer.listen({ port, host: '0.0.0.0' }, () => {
-        fireEvent()
-
-        resolve()
-      }))
+      return promisify(httpServer.listen)({ port, host: '0.0.0.0' })
+        .then(fireEvent, error => Promise.reject(error))
     }
 
     /**
@@ -85,22 +83,19 @@ export default function engineMaker (configs = {}) {
      *  * Reject an error if engine stopped before
      */
     stop () {
-      if (!this.isActive) throw new Error('Engine already stopped')
-
-      webSocketServer.close()
+      if (!this.isActive) return Promise.reject(new Error('Engine already stopped'))
 
       /**
        * Engine stopped event
        *
        * @event module:engine~Engine#event:stopped
        */
-      const fireEvent = () => this.emit('stopped')
+      const fireEvent = () => { this.emit('stopped') }
 
-      return new Promise(resolve => httpServer.close(() => {
-        fireEvent()
+      webSocketServer.close()
 
-        resolve()
-      }))
+      return promisify(httpServer.close)()
+        .then(fireEvent, error => Promise.reject(error))
     }
 
     /**

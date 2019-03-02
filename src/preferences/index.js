@@ -183,13 +183,11 @@ export default function preferencesMaker (configs) {
         return
       }
 
-      return new Promise((resolve, reject) => {
-        if (typeof name !== 'string') reject(ERRORS.accessibility)
-        if (preference === undefined) reject(ERRORS.existence)
+      if (typeof name !== 'string') return Promise.reject(ERRORS.accessibility)
+      if (preference === undefined) return Promise.reject(ERRORS.existence)
 
-        resolve(preference.remove({ sync: false })
-          .then(deletePreference, error => Promise.reject(error)))
-      })
+      return preference.remove({ sync: false })
+        .then(deletePreference, error => Promise.reject(error))
     }
 
     /**

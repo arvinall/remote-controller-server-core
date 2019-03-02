@@ -108,7 +108,6 @@ export default class Preference extends EventEmitter {
     if (typeof body === 'function') body = body(this.body)
 
     if (typeof body !== 'object') throw new Error('body parameter is required and must be object/function')
-    if (this.#storage === undefined) throw new Error('Preference is not accessible')
 
     const updateBody = storageBody => {
       storageBody[this.#name] = body
@@ -135,12 +134,16 @@ export default class Preference extends EventEmitter {
     }
 
     if (configs.sync) {
+      if (this.#storage === undefined) throw GLOBAL_ERRORS.accessibility
+
       this.#storage.update(updateBody)
 
       fireEvent()
 
       return
     }
+
+    if (this.#storage === undefined) return Promise.reject(GLOBAL_ERRORS.accessibility)
 
     return this.#storage.update(updateBody, { sync: false })
       .then(fireEvent, error => Promise.reject(error))
@@ -161,8 +164,6 @@ export default class Preference extends EventEmitter {
    *  * Reject an error if the Preference is not accessible
    */
   remove (configs = { sync: true }) {
-    if (this.#storage === undefined) throw new Error('Preference is not accessible')
-
     const lastBody = this.body
     const deletePreference = body => {
       delete body[this.name]
@@ -191,12 +192,16 @@ export default class Preference extends EventEmitter {
     }
 
     if (configs.sync) {
+      if (this.#storage === undefined) throw GLOBAL_ERRORS.accessibility
+
       this.#storage.update(deletePreference)
 
       clearProperties()
 
       return
     }
+
+    if (this.#storage === undefined) return Promise.reject(GLOBAL_ERRORS.accessibility)
 
     return this.#storage.update(deletePreference, { sync: false })
       .then(clearProperties, error => Promise.reject(error))

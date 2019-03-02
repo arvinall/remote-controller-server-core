@@ -118,13 +118,11 @@ export default function storagesMaker (configs = { path: process.cwd() }) {
         return
       }
 
-      return new Promise((resolve, reject) => {
-        if (typeof name !== 'string') reject(ERRORS.accessibility)
-        if (storage === undefined) reject(ERRORS.existence)
+      if (typeof name !== 'string') return Promise.reject(ERRORS.accessibility)
+      if (storage === undefined) return Promise.reject(ERRORS.existence)
 
-        resolve(storage.remove({ sync: false })
-          .then(deleteStorage, error => Promise.reject(error)))
-      })
+      return storage.remove({ sync: false })
+        .then(deleteStorage, error => Promise.reject(error))
     }
 
     /**
