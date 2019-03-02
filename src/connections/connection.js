@@ -195,4 +195,11 @@ export default class Connection extends EventEmitter {
   get address () {
     return this.#address
   }
+
+  /**
+   * @type {boolean}
+   */
+  get isConnected () {
+    return this.status === 'open'
+  }
 }
