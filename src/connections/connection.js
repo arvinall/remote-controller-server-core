@@ -95,9 +95,13 @@ export default class Connection extends EventEmitter {
    * @param {string} name Message's name
    * @param {*} [body] Message's content
    *
-   * @return {Promise}
+   * @return {Promise<(void|Error)>}
+   * * Rejection
+   *  * Reject an error if Connection is not authenticated
    */
   emit (name, body) {
+    if (!this.isAuthenticate) return Promise.reject(new Error('Connection is not authenticated'))
+
     let message = Object.create(null)
 
     message.name = name
@@ -112,11 +116,7 @@ export default class Connection extends EventEmitter {
 
     message = JSON.stringify(message)
 
-    return new Promise((resolve, reject) => {
-      if (!this.isAuthenticate) return reject(new Error('Connection is not authenticated'))
-
-      this.#socket.send(message, undefined, () => resolve())
-    })
+    return new Promise(resolve => this.#socket.send(message, undefined, () => resolve()))
   }
 
   /**
