@@ -19,7 +19,7 @@ import engineIO from 'engine.io'
  * @return {module:engine~Engine}
  */
 export default function engineMaker (configs = {}) {
-  if (typeof configs !== 'object') throw new Error('configs parameter is required and must be object')
+  if (typeof configs !== 'object') throw new Error('configs parameter must be object')
 
   // Set default configs
   configs = Object.assign({
@@ -101,10 +101,10 @@ export default function engineMaker (configs = {}) {
     /**
      * Get server address
      *
-     * @type {{address: string, port: (number|null)}}
+     * @type {{port: number, ip: (string|null)}}
      */
     get address () {
-      return { port: configs.port, address: getNetworkIP() }
+      return { port: configs.port, ip: getNetworkIP() }
     }
 
     /**
