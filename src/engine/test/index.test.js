@@ -140,4 +140,20 @@ describe('engine stop method', () => {
   })
 })
 
+describe('engine events', () => {
+  test('Must emit started event when engine started', async done => {
+    engine.once('started', done)
+
+    await engine.start()
+    await engine.stop()
+  })
+
+  test('Must emit stopped event when engine stopped', async done => {
+    engine.once('stopped', done)
+
+    await engine.start()
+    await engine.stop()
+  })
+})
+
 afterAll(async () => { if (engine.isActive) await engine.stop() })
