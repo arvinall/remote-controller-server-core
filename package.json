@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "description": "Remote Controller Server's Core module",
   "main": "build/index.js",
-    "scripts": {
+  "scripts": {
     "test": "eslint **/*.test.js && jest src",
     "docs": "jsdoc -c jsdoc.config.js -P package.json -R README.md",
     "build:dev": "NODE_ENV=development webpack",
@@ -27,6 +27,7 @@
   "devDependencies": {
     "@babel/core": "^7.2.2",
     "@babel/plugin-proposal-class-properties": "^7.3.0",
+    "@babel/plugin-proposal-export-default-from": "^7.2.0",
     "@babel/plugin-proposal-private-methods": "^7.3.0",
     "@babel/plugin-syntax-dynamic-import": "^7.2.0",
     "@babel/plugin-transform-runtime": "^7.2.0",
