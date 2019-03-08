@@ -89,5 +89,11 @@ export default function coreMaker (configs = Object.create(null)) {
 
   MODULE.engine = engineMaker()
 
-  return MODULE
+  return Object.freeze(MODULE)
 }
+
+export storagesMaker from './storages'
+export Storage from './storages/storage'
+export preferencesMaker from './preferences'
+export Preference from './preferences/preference'
+export engineMaker from './engine'
