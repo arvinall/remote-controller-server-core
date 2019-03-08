@@ -14,8 +14,7 @@ const CONFIG = {
   output: {
     path: path.resolve(__dirname, 'build'),
     filename: 'index.js',
-    libraryTarget: 'umd',
-    umdNamedDefine: true
+    libraryTarget: 'umd'
   },
   stats: { colors: true },
   performance: {
