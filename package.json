@@ -1,13 +1,13 @@
 {
-  "name": "@remote-controller-server/core",
+  "name": "remote-controller-server-core",
   "version": "0.1.0",
   "description": "Remote Controller Server's Core module",
-  "main": "build/remote-controller-server-core.min.js",
-  "scripts": {
+  "main": "build/index.js",
+    "scripts": {
     "test": "eslint **/*.test.js && jest src",
     "docs": "jsdoc -c jsdoc.config.js -P package.json -R README.md",
-    "build": "NODE_ENV=production webpack",
-    "build:dev": "NODE_ENV=development webpack"
+    "build:dev": "NODE_ENV=development webpack",
+    "build": "webpack"
   },
   "repository": {
     "type": "git",

@@ -2,11 +2,11 @@
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory();
 	else if(typeof define === 'function' && define.amd)
-		define("remote-controller-server-core", [], factory);
-	else if(typeof exports === 'object')
-		exports["remote-controller-server-core"] = factory();
-	else
-		root["remote-controller-server-core"] = factory();
+		define([], factory);
+	else {
+		var a = factory();
+		for(var i in a) (typeof exports === 'object' ? exports : root)[i] = a[i];
+	}
 })(global, function() {
 return /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache

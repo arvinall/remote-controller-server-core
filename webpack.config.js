@@ -1,83 +1,57 @@
 
 const path = require('path')
-const pkg = require('./package')
 
-const NAME = pkg.name.replace('@', '').replace('/', '-')
-const MODE = process.env.NODE_ENV
-const CONTEXT = path.resolve(__dirname, 'src')
-const ENTRY = './main.js'
-const OUTPUT_PATH = path.resolve(__dirname, 'build')
-const OUTPUT_FILENAME = NAME + (MODE === 'production' ? '.min' : '') + '.js'
-const OUTPUT_LIBRARY = NAME
-const OUTPUT_LIBRARYTARGET = 'umd'
-const OUTPUT_UMDNAMEDDEFINE = true
-const STATS_COLORS = true
+const isDevelopment = process.env.NODE_ENV === 'development'
 const EXCLUDE = [/node_modules/]
-const MAXASSETSIZE = 2500000
-const MAXENTRYPOINTSIZE = 2500000
-const MODULE = {
-  rules: [
-    {
-      test: /\.js$/,
-      exclude: EXCLUDE,
-      use: [
-        'babel-loader',
-        'eslint-loader'
-      ]
-    }
-  ]
-}
 const CONFIG = {
-  production: {
-    context: CONTEXT,
-    entry: ENTRY,
-    mode: 'production',
-    target: 'node',
-    output: {
-      path: OUTPUT_PATH,
-      filename: OUTPUT_FILENAME,
-      library: OUTPUT_LIBRARY,
-      libraryTarget: OUTPUT_LIBRARYTARGET,
-      umdNamedDefine: OUTPUT_UMDNAMEDDEFINE
-    },
-    performance: {
-      hints: 'error',
-      maxAssetSize: MAXASSETSIZE,
-      maxEntrypointSize: MAXENTRYPOINTSIZE
-    },
-    stats: {
-      colors: STATS_COLORS
-    },
-    module: MODULE,
-    resolve: {
-      alias: {
-        /*
-        uws pkg is deprecated
-        this line is a temporary solution
-        */
-        uws: 'ws'
-      }
-    }
-  }
-}
-
-CONFIG.development = Object.create(null)
-
-Object.assign(CONFIG.development, CONFIG.production, {
+  context: path.resolve(__dirname, 'src'),
+  entry: './main.js',
   mode: 'development',
+  target: 'node',
   devtool: 'eval',
   watch: true,
-  watchOptions: {
-    ignored: EXCLUDE
+  watchOptions: { ignored: EXCLUDE },
+  output: {
+    path: path.resolve(__dirname, 'build'),
+    filename: 'index.js',
+    libraryTarget: 'umd',
+    umdNamedDefine: true
+  },
+  stats: { colors: true },
+  performance: {
+    hints: isDevelopment ? 'warning' : 'error',
+    maxAssetSize: 2500000,
+    maxEntrypointSize: 2500000
+  },
+  module: {
+    rules: [
+      {
+        test: /\.js$/,
+        exclude: EXCLUDE,
+        use: [
+          'babel-loader',
+          'eslint-loader'
+        ]
+      }
+    ]
+  },
+  resolve: {
+    alias: {
+      /*
+      uws pkg is deprecated
+      this line is a temporary solution
+      */
+      uws: 'ws'
+    }
   }
-})
+}
 
-CONFIG.development.performance.hints = 'warning'
-CONFIG.development.output.devtoolModuleFilenameTemplate = info => {
-  let context = CONTEXT.split('/')
+// Clear source maps links
+CONFIG.output.devtoolModuleFilenameTemplate = info => {
+  let context = CONFIG.context.split('/')
   context = context[context.length - 1]
 
   return path.join(context, info.resourcePath)
 }
 
-module.exports = CONFIG[MODE] || CONFIG.production
+module.exports = CONFIG
