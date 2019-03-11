@@ -92,8 +92,6 @@ export default function coreMaker (configs = Object.create(null)) {
   return Object.freeze(MODULE)
 }
 
-export storagesMaker from './storages'
-export Storage from './storages/storage'
-export preferencesMaker from './preferences'
-export Preference from './preferences/preference'
-export engineMaker from './engine'
+export * as storages from './storages'
+export * as preferences from './preferences'
+export * as engine from './engine'

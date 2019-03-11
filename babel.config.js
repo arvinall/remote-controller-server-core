@@ -7,7 +7,8 @@ module.exports = {
     '@babel/plugin-syntax-dynamic-import',
     '@babel/plugin-proposal-class-properties',
     '@babel/plugin-proposal-private-methods',
-    '@babel/plugin-proposal-export-default-from'
+    '@babel/plugin-proposal-export-default-from',
+    '@babel/plugin-proposal-export-namespace-from'
   ],
   env: {
     test: {

@@ -148,3 +148,5 @@ export default function storagesMaker (configs = { path: process.cwd() }) {
 
   return new Storages()
 }
+
+export Storage from './storage'

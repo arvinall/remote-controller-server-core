@@ -204,3 +204,5 @@ export default function preferencesMaker (configs) {
 
   return new Preferences()
 }
+
+export Preference from './preference'
