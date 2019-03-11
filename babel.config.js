@@ -4,12 +4,6 @@ module.exports = {
     [ '@babel/preset-env', { modules: false } ]
   ],
   plugins: [
-    [ '@babel/plugin-transform-runtime', {
-      corejs: false,
-      helpers: true,
-      regenerator: true,
-      useESModules: false
-    } ],
     '@babel/plugin-syntax-dynamic-import',
     '@babel/plugin-proposal-class-properties',
     '@babel/plugin-proposal-private-methods',
