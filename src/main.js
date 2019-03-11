@@ -95,3 +95,4 @@ export default function coreMaker (configs = Object.create(null)) {
 export * as storages from './storages'
 export * as preferences from './preferences'
 export * as engine from './engine'
+export * as passport from './passport'
