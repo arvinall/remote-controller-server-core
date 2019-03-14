@@ -72,8 +72,11 @@ export default class Passport {
    */
   static from (type, passport) {
     if (typeof passport === 'object') {
-      if (typeof passport.salt === 'object') passport.salt = Buffer.from(passport.salt)
-      if (typeof passport.hash === 'object') passport.hash = Buffer.from(passport.hash)
+      if (typeof passport.salt === 'object' && !(passport.salt instanceof Buffer)) {
+        passport.salt = Buffer.from(passport.salt)
+      } if (typeof passport.hash === 'object' && !(passport.hash instanceof Buffer)) {
+        passport.hash = Buffer.from(passport.hash)
+      }
     }
 
     return new Passport(type, null, passport)
