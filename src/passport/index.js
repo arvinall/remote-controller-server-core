@@ -50,7 +50,7 @@ export default class Passport {
   /**
    * Check passport equality
    *
-   * @param {*} passportInput This parameter can be a passport object or passport[type] input
+   * @param {*} passportInput This parameter can be a instance of Passport or passport[type] input
    *
    * @return {boolean}
    */
