@@ -7,11 +7,11 @@ export const password = (size = 8) => {
   let pass = ''
   let charType = 0
 
-  for (let counter = 1; counter <= size; counter++) {
-    if (charType >= characters.length) charType = 0
+  for (let counter = 0; counter < size; counter++) {
+    if (counter >= characters.length) charType = randomNumber(characters.length)
 
     pass += characters[charType][randomNumber(characters[charType].length)]
-    charType++
+    if (counter < characters.length) charType++
   }
 
   return pass
