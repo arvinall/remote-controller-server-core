@@ -5,6 +5,9 @@
 
 import EventEmitter from 'events'
 import engineIO from 'engine.io'
+import Passport from '../passport'
+
+const CLIENT_AUTHENTICATION_FACTORS = ['passport']
 
 /**
  * Connection is a Engine.io socket wrapper
@@ -14,17 +17,53 @@ import engineIO from 'engine.io'
  */
 export default class Connection extends EventEmitter {
   #socket
-  // Client IP address
-  #address
-  #mustConfirm
-  #confirmed = false
-  #fireAuthenticatedEvent = () => {
-    /**
-     * Connection authenticated event
-     *
-     * @event module:connections/connection#event:authenticated
-     */
-    if (this.isAuthenticate) this.localEmit('authenticated')
+  /**
+   * Client IP address
+   * @type {(string|null)}
+   */
+  #address = null
+  /**
+   * @type {{passport: boolean[], confirmation: boolean[]}}
+   */
+  #authenticationFactors = {
+    confirmation: [false],
+    passport: [false]
+  }
+  /**
+   * @type {(module:passport|null)}
+   */
+  #passport = null
+
+  #fireAuthenticatedEvent = (() => {
+    let isAuthenticateCache = this.isAuthenticate
+
+    return () => {
+      const EVENT_PROPS = ['authentication', { status: 1 }]
+
+      if (!this.isAuthenticate) EVENT_PROPS[1].status = 2
+
+      if (isAuthenticateCache === this.isAuthenticate) return
+      isAuthenticateCache = this.isAuthenticate
+
+      this.localEmit(...EVENT_PROPS)
+      this.emit(...EVENT_PROPS)
+    }
+  })()
+  #passportChecker = passportInput => {
+    try {
+      this.#authenticationFactors.passport[1] = this.#passport.isEqual(passportInput)
+    } catch (error) {
+      this.#authenticationFactors.passport[1] = false
+    }
+
+    const EVENT_PROPS = ['authentication', {
+      factor: 'passport',
+      status: this.#authenticationFactors.passport[1] ? 1 : 2
+    }]
+
+    this.localEmit(...EVENT_PROPS)
+    this.emit(...EVENT_PROPS)
+    this.#fireAuthenticatedEvent()
   }
 
   /**
@@ -41,25 +80,47 @@ export default class Connection extends EventEmitter {
    *
    * @param {object} configs
    * @param {module:remote-controller-server-core~engineIO.Socket} configs.socket
-   * @param {boolean} [configs.confirmation=true] Must Connection confirm before interact?
+   * @param {object} [configs.authenticationFactors={}] Authentication factors
+   * @param {boolean} [configs.authenticationFactors.confirmation=true] Must Connection confirm before interact?
+   * @param {boolean} [configs.authenticationFactors.passport=false]
+   * @param {module:passport} [configs.passport] Required if configs.authenticationFactors.passport === true
    *
-   * @emits module:connections/connection#event:askConfirmation
    * @emits module:connections/connection#event:disconnected
    */
   constructor (configs) {
     if (typeof configs !== 'object') throw new Error('configs parameter is required and must be object')
     else if (!(configs.socket instanceof engineIO.Socket)) throw new Error('configs.socket is required and must be EngineIO.Socket')
+    else if (
+      (configs.authenticationFactors !== undefined &&
+        typeof configs.authenticationFactors !== 'object') ||
+      ((configs.authenticationFactors && configs.authenticationFactors.confirmation) !== undefined &&
+        typeof (configs.authenticationFactors && configs.authenticationFactors.confirmation) !== 'boolean') ||
+      ((configs.authenticationFactors && configs.authenticationFactors.passport) !== undefined &&
+        typeof (configs.authenticationFactors && configs.authenticationFactors.passport) !== 'boolean')
+    ) throw new Error('configs.authenticationFactors must be object with boolean values')
 
     super()
 
     // Set default configs
     configs = Object.assign({
-      confirmation: true
+      authenticationFactors: {}
     }, configs)
+    // Set default authentication factors
+    configs.authenticationFactors = Object.assign({
+      confirmation: true,
+      passport: false
+    }, configs)
+
+    if (configs.authenticationFactors.passport === true && !(configs.passport instanceof Passport)) {
+      throw new Error('configs.passport is required and must be Passport')
+    }
 
     this.#socket = configs.socket
     this.#address = this.#socket.request.socket.remoteAddress
-    this.#mustConfirm = configs.confirmation
+    for (let factor in this.#authenticationFactors) {
+      this.#authenticationFactors[factor].unshift(configs.authenticationFactors[factor])
+    }
+    this.#passport = configs.authenticationFactors.passport ? configs.passport : null
 
     // Transform Socket events to Connection
     this.#socket.emit = (eventName, ...args) => {
@@ -88,7 +149,9 @@ export default class Connection extends EventEmitter {
           body = message[1]
         }
 
-        if (name && this.isAuthenticate && !necessaryEvents.includes(name)) {
+        if (name &&
+          (name === 'authenticate' || this.isAuthenticate) &&
+          !necessaryEvents.includes(name)) {
           this.localEmit(name, body)
         }
       }
@@ -96,13 +159,35 @@ export default class Connection extends EventEmitter {
       return chain
     }
 
-    /**
-     * Connection askConfirmation event
-     * Fire if Connection needs confirmation
-     *
-     * @event module:connections/connection#event:askConfirmation
-     */
-    if (this.#mustConfirm) setImmediate(() => this.localEmit('askConfirmation'))
+    setImmediate(() => {
+      for (let factor in this.#authenticationFactors) {
+        if (this.#authenticationFactors[factor][0]) {
+          const EVENT_PROPS = ['authentication', {
+            factor,
+            status: 0
+          }]
+
+          if (factor === 'passport') EVENT_PROPS[1].type = this.#passport.type
+
+          this.localEmit(...EVENT_PROPS)
+          this.emit(...EVENT_PROPS)
+        }
+      }
+
+      this.on('authenticate', event => {
+        if (this.#authenticationFactors[event.factor][1]) return
+
+        if (this.#authenticationFactors[event.factor] && this.#authenticationFactors[event.factor][0]) {
+          if (!CLIENT_AUTHENTICATION_FACTORS.includes(event.factor)) return
+
+          switch (event.factor) {
+            case 'passport':
+              this.#passportChecker(event.passportInput)
+              break
+          }
+        }
+      })
+    })
   }
 
   /**
@@ -123,7 +208,7 @@ export default class Connection extends EventEmitter {
    */
   emit (name, body) {
     if (typeof name !== 'string') throw new Error('name parameter is required and must be string')
-    else if (!this.isAuthenticate) return Promise.reject(new Error('Connection is not authenticated'))
+    else if (name !== 'authentication' && !this.isAuthenticate) return Promise.reject(new Error('Connection is not authenticated'))
 
     let message = [ name ]
 
@@ -170,8 +255,15 @@ export default class Connection extends EventEmitter {
    * @return {void}
    */
   confirm (confirmation = true) {
-    this.#confirmed = Boolean(confirmation)
+    this.#authenticationFactors.confirmation[1] = Boolean(confirmation)
 
+    const EVENT_PROPS = ['authentication', {
+      factor: 'confirmation',
+      status: this.#authenticationFactors.confirmation[1] ? 1 : 2
+    }]
+
+    this.localEmit(...EVENT_PROPS)
+    this.emit(...EVENT_PROPS)
     this.#fireAuthenticatedEvent()
   }
 
@@ -191,9 +283,14 @@ export default class Connection extends EventEmitter {
    * @type {boolean}
    */
   get isAuthenticate () {
-    let authenticated = true
+    let authenticated = false
 
-    if (this.#mustConfirm && !this.#confirmed) authenticated = false
+    for (let factor in this.#authenticationFactors) {
+      if (this.#authenticationFactors[factor][0]) {
+        authenticated = this.#authenticationFactors[factor][1]
+        if (!authenticated) break
+      }
+    }
 
     return authenticated
   }
@@ -224,5 +321,14 @@ export default class Connection extends EventEmitter {
    */
   get isConnected () {
     return this.status === 'open'
+  }
+
+  /**
+   * Connection id
+   *
+   * @return {number}
+   */
+  get id () {
+    return this.#socket.id
   }
 }
