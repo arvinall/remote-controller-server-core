@@ -87,6 +87,14 @@ export default function coreMaker (configs = Object.create(null)) {
     name: configs.preferencesStorageName
   })
 
+  /**
+   * Core engine
+   *
+   * @name engine
+   * @memberOf module:remote-controller-server-core~core
+   *
+   * @type {module:engine~Engine}
+   */
   MODULE.engine = engineMaker()
 
   return Object.freeze(MODULE)
