@@ -109,7 +109,16 @@ export default class Connection extends EventEmitter {
     configs.authenticationFactors = Object.assign({
       confirmation: true,
       passport: false
-    }, configs)
+    }, configs.authenticationFactors)
+
+    let withOutFactor = true
+    for (let factor in configs.authenticationFactors) {
+      if (this.#authenticationFactors[factor] && configs.authenticationFactors[factor]) {
+        withOutFactor = false
+        break
+      }
+    }
+    if (withOutFactor) throw new Error('One authentication factor require at least')
 
     if (configs.authenticationFactors.passport === true && !(configs.passport instanceof Passport)) {
       throw new Error('configs.passport is required and must be Passport')
@@ -149,6 +158,10 @@ export default class Connection extends EventEmitter {
           body = message[1]
         }
 
+        if (body && body[0] === 'Uint8Array' && typeof body[1] === 'object') {
+          body = uint8ArrayLikeToBuffer(body[1])
+        }
+
         if (name &&
           (name === 'authenticate' || this.isAuthenticate) &&
           !necessaryEvents.includes(name)) {
@@ -161,30 +174,35 @@ export default class Connection extends EventEmitter {
 
     setImmediate(() => {
       for (let factor in this.#authenticationFactors) {
-        if (this.#authenticationFactors[factor][0]) {
-          const EVENT_PROPS = ['authentication', {
-            factor,
-            status: 0
-          }]
+        if (!this.#authenticationFactors[factor][0]) continue
 
-          if (factor === 'passport') EVENT_PROPS[1].type = this.#passport.type
+        const EVENT_PROPS = ['authentication', {
+          factor,
+          status: 0
+        }]
 
-          this.localEmit(...EVENT_PROPS)
-          this.emit(...EVENT_PROPS)
+        switch (factor) {
+          case 'passport':
+            EVENT_PROPS[1].type = this.#passport.type
+            break
         }
+
+        this.localEmit(...EVENT_PROPS)
+        this.emit(...EVENT_PROPS)
       }
 
       this.on('authenticate', event => {
-        if (this.#authenticationFactors[event.factor][1]) return
+        if (
+          !this.#authenticationFactors[event.factor] ||
+          !this.#authenticationFactors[event.factor][0] ||
+          this.#authenticationFactors[event.factor][1] ||
+          !CLIENT_AUTHENTICATION_FACTORS.includes(event.factor)
+        ) return
 
-        if (this.#authenticationFactors[event.factor] && this.#authenticationFactors[event.factor][0]) {
-          if (!CLIENT_AUTHENTICATION_FACTORS.includes(event.factor)) return
-
-          switch (event.factor) {
-            case 'passport':
-              this.#passportChecker(event.passportInput)
-              break
-          }
+        switch (event.factor) {
+          case 'passport':
+            this.#passportChecker(event.passportInput)
+            break
         }
       })
     })
@@ -213,10 +231,7 @@ export default class Connection extends EventEmitter {
     let message = [ name ]
 
     if (body instanceof Buffer) {
-      message[1] = [
-        'Uint8Array',
-        Array.from(new Uint8Array(body.buffer))
-      ]
+      message[1] = bufferToUint8ArrayLike(body)
     } else message[1] = body
 
     message = JSON.stringify(message)
@@ -331,4 +346,17 @@ export default class Connection extends EventEmitter {
   get id () {
     return this.#socket.id
   }
+}
+
+export function bufferToUint8ArrayLike (buffer) {
+  let ab = new ArrayBuffer(buffer.length)
+  let view = new Uint8Array(ab)
+  for (var i = 0; i < buffer.length; ++i) {
+    view[i] = buffer[i]
+  }
+  return ['Uint8Array', Array.from(view)]
+}
+
+export function uint8ArrayLikeToBuffer (uint8ArrayLike) {
+  return ['Buffer', Buffer.from(Uint8Array.from(uint8ArrayLike))]
 }
