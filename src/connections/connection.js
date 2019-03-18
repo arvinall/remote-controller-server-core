@@ -270,7 +270,11 @@ export default class Connection extends EventEmitter {
    * @return {void}
    */
   confirm (confirmation = true) {
-    this.#authenticationFactors.confirmation[1] = Boolean(confirmation)
+    confirmation = Boolean(confirmation)
+
+    if (this.#authenticationFactors.confirmation[1] === confirmation) return
+
+    this.#authenticationFactors.confirmation[1] = confirmation
 
     const EVENT_PROPS = ['authentication', {
       factor: 'confirmation',
