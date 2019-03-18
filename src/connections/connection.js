@@ -111,14 +111,14 @@ export default class Connection extends EventEmitter {
       passport: false
     }, configs.authenticationFactors)
 
-    let withOutFactor = true
+    let withOutAuthFactor = true
     for (let factor in configs.authenticationFactors) {
-      if (this.#authenticationFactors[factor] && configs.authenticationFactors[factor]) {
-        withOutFactor = false
-        break
-      }
+      if (!this.#authenticationFactors[factor] || !configs.authenticationFactors[factor]) continue
+
+      withOutAuthFactor = false
+      break
     }
-    if (withOutFactor) throw new Error('One authentication factor require at least')
+    if (withOutAuthFactor) throw new Error('One authentication factor require at least')
 
     if (configs.authenticationFactors.passport === true && !(configs.passport instanceof Passport)) {
       throw new Error('configs.passport is required and must be Passport')
