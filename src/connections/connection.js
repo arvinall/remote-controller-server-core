@@ -45,8 +45,8 @@ export default class Connection extends EventEmitter {
       if (isAuthenticateCache === this.isAuthenticate) return
       isAuthenticateCache = this.isAuthenticate
 
-      this.localEmit(...EVENT_PROPS)
       this.emit(...EVENT_PROPS)
+      this.send(...EVENT_PROPS)
     }
   })()
   #passportChecker = passportInput => {
@@ -61,8 +61,8 @@ export default class Connection extends EventEmitter {
       status: this.#authenticationFactors.passport[1] ? 1 : 2
     }]
 
-    this.localEmit(...EVENT_PROPS)
     this.emit(...EVENT_PROPS)
+    this.send(...EVENT_PROPS)
     this.#fireAuthenticatedEvent()
   }
 
@@ -85,7 +85,7 @@ export default class Connection extends EventEmitter {
    * @param {boolean} [configs.authenticationFactors.passport=false]
    * @param {module:passport} [configs.passport] Required if configs.authenticationFactors.passport === true
    *
-   * @emits module:connections/connection#event:disconnected
+   * @emits module:connections/connection#event:authentication
    */
   constructor (configs) {
     if (typeof configs !== 'object') throw new Error('configs parameter is required and must be object')
@@ -141,7 +141,7 @@ export default class Connection extends EventEmitter {
 
       if (!necessaryEvents.includes(eventName)) return chain
 
-      if (eventName !== 'message') this.localEmit(eventName, ...args)
+      if (eventName !== 'message') this.emit(eventName, ...args)
       else {
         let message = args[0] || null
         let name
@@ -165,7 +165,7 @@ export default class Connection extends EventEmitter {
         if (name &&
           (name === 'authenticate' || this.isAuthenticate) &&
           !necessaryEvents.includes(name)) {
-          this.localEmit(name, body)
+          this.emit(name, body)
         }
       }
 
@@ -187,8 +187,8 @@ export default class Connection extends EventEmitter {
             break
         }
 
-        this.localEmit(...EVENT_PROPS)
         this.emit(...EVENT_PROPS)
+        this.send(...EVENT_PROPS)
       }
 
       this.on('authenticate', event => {
@@ -209,7 +209,7 @@ export default class Connection extends EventEmitter {
   }
 
   /**
-   * @summary emit sends message to client
+   * @summary Send message to client
    * @description
    * If body is instanceof Buffer, then it convert to Uint8Array
    *
@@ -224,7 +224,7 @@ export default class Connection extends EventEmitter {
    * * Rejection
    *  * Reject an error if Connection is not authenticated
    */
-  emit (name, body) {
+  send (name, body) {
     if (typeof name !== 'string') throw new Error('name parameter is required and must be string')
     else if (name !== 'authentication' && !this.isAuthenticate) return Promise.reject(new Error('Connection is not authenticated'))
 
@@ -265,7 +265,7 @@ export default class Connection extends EventEmitter {
    *
    * @param {boolean} [confirmation=true]
    *
-   * @emits module:connections/connection#event:authenticated
+   * @emits module:connections/connection#event:authentication
    *
    * @return {void}
    */
@@ -281,19 +281,9 @@ export default class Connection extends EventEmitter {
       status: this.#authenticationFactors.confirmation[1] ? 1 : 2
     }]
 
-    this.localEmit(...EVENT_PROPS)
     this.emit(...EVENT_PROPS)
+    this.send(...EVENT_PROPS)
     this.#fireAuthenticatedEvent()
-  }
-
-  /**
-   * localEmit is a alias for EventEmitter.prototype.emit
-   *
-   * @see module:remote-controller-server-core~EventEmitter
-   * @see {@link https://nodejs.org/api/events.html#events_emitter_emit_eventname_args|Events}
-   */
-  get localEmit () {
-    return EventEmitter.prototype.emit.bind(this)
   }
 
   /**
