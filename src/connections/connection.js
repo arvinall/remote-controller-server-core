@@ -10,7 +10,42 @@ import Passport from '../passport'
 const CLIENT_AUTHENTICATION_FACTORS = ['passport']
 
 /**
- * Connection is a Engine.io socket wrapper
+ * Connection authentication status
+ *
+ * @event module:connections/connection#event:authentication
+ *
+ * @type {object}
+ * @property {string} factor Authentication factor's name that it's states changed
+ * @property {number} status
+ * Authentication (factor) status
+ *
+ * | Value | Description |
+ * | --- | --- |
+ * | 0 | Ask for authentication factor |
+ * | 1 | Allowed |
+ * | 2 | Denied |
+ * @property {string} type
+ * Depend on factor
+ *
+ * |  Factor  | Description |
+ * | --- | --- |
+ * |  passport  | Type of passport |
+ */
+
+/**
+ * @summary Connection is a Engine.io socket wrapper
+ * @description
+ * ### Messages
+ * ##### Sends
+ * **authentication** :`{@link module:connections/connection#event:authentication}`
+ *
+ * ##### Receives
+ * **authenticate** :`object`
+ *
+ * | Name  | type  | Description |
+ * | --- | --- | --- |
+ * | factor  | string  |
+ * | passportInput | string  | If factor is passport |
  *
  * @mixes module:remote-controller-server-core~external:EventEmitter
  * @see {@link https://github.com/socketio/engine.io/blob/master/README.md#events-2|engineIO.Socket's events}
