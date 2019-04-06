@@ -1,11 +1,11 @@
 /* global test, expect, describe, afterAll */
 
 import path from 'path'
-import storagesMaker from '../../storages'
-import preferencesMaker from '../index'
+import makeStorages from '../../storages'
+import makePreferences from '../index'
 import Preference from '../preference'
 
-const storages = storagesMaker({ path: path.join(process.cwd(), 'tmp') })
+const storages = makeStorages({ path: path.join(process.cwd(), 'tmp') })
 
 let preferencesStorageName
 let preferences
@@ -14,28 +14,28 @@ function timestamp () {
   return String(Date.now())
 }
 
-describe('preferencesMaker', () => {
+describe('makePreferences', () => {
   describe('Errors', () => {
     test('Must throw error when configs parameter is not object', () => {
       const ERROR = 'configs parameter is required and must be object'
 
-      expect(preferencesMaker.bind(null, 'wrong')).toThrow(ERROR)
-      expect(preferencesMaker).toThrow(ERROR)
+      expect(makePreferences.bind(null, 'wrong')).toThrow(ERROR)
+      expect(makePreferences).toThrow(ERROR)
     })
 
     test('Must throw error when configs.storages is not object or doesnt have initialize method', () => {
       const ERROR = 'configs.storages is required and must be storages'
       const configs = { storages: 'wrong' }
 
-      expect(preferencesMaker.bind(null, configs)).toThrow(ERROR)
+      expect(makePreferences.bind(null, configs)).toThrow(ERROR)
 
       configs.storages = {}
 
-      expect(preferencesMaker.bind(null, configs)).toThrow(ERROR)
+      expect(makePreferences.bind(null, configs)).toThrow(ERROR)
 
       configs.storages = undefined
 
-      expect(preferencesMaker.bind(null, configs)).toThrow(ERROR)
+      expect(makePreferences.bind(null, configs)).toThrow(ERROR)
     })
 
     test('Must throw error when configs.name is not string', () => {
@@ -45,11 +45,11 @@ describe('preferencesMaker', () => {
         name: ['wrong']
       }
 
-      expect(preferencesMaker.bind(null, configs)).toThrow(ERROR)
+      expect(makePreferences.bind(null, configs)).toThrow(ERROR)
 
       configs.name = undefined
 
-      expect(preferencesMaker.bind(null, configs)).toThrow(ERROR)
+      expect(makePreferences.bind(null, configs)).toThrow(ERROR)
     })
 
     test('Must throw error when another instance using this preferences name', () => {
@@ -59,9 +59,9 @@ describe('preferencesMaker', () => {
       }
       const ERROR = `${configs.name} is already in use`
 
-      preferencesMaker(configs)
+      makePreferences(configs)
 
-      expect(preferencesMaker.bind(null, configs)).toThrow(ERROR)
+      expect(makePreferences.bind(null, configs)).toThrow(ERROR)
 
       storages.remove(configs.name)
     })
@@ -73,7 +73,7 @@ describe('preferencesMaker', () => {
       storages
     }
 
-    expect(preferencesMaker(configs)).toEqual(expect.objectContaining({
+    expect(makePreferences(configs)).toEqual(expect.objectContaining({
       get: expect.any(Function),
       initialize: expect.any(Function),
       remove: expect.any(Function),
@@ -85,7 +85,7 @@ describe('preferencesMaker', () => {
 
   afterAll(() => {
     preferencesStorageName = timestamp()
-    preferences = preferencesMaker({
+    preferences = makePreferences({
       name: preferencesStorageName,
       storages
     })

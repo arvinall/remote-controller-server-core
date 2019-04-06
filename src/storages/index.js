@@ -6,14 +6,14 @@
 import Storage from './storage'
 
 /**
- * storagesMaker creates storages module
+ * makeStorages creates storages module
  *
  * @param {object} [configs={}]
  * @param {string} [configs.path=process.cwd()] Storages path address
  *
  * @return {module:storages~Storages}
  */
-export default function storagesMaker (configs = { path: process.cwd() }) {
+export default function makeStorages (configs = { path: process.cwd() }) {
   if (typeof configs.path !== 'string') throw new Error('configs.path must be string')
 
   const STORAGES_GLOBAL_ERRORS = {

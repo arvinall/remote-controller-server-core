@@ -10,7 +10,7 @@ import http from 'http'
 import engineIO from 'engine.io'
 
 /**
- * engineMaker creates engine module
+ * makeEngine creates engine module
  *
  * @param {object} [configs={}]
  * @param {number} [configs.port=7777] Server's port
@@ -18,7 +18,7 @@ import engineIO from 'engine.io'
  *
  * @return {module:engine~Engine}
  */
-export default function engineMaker (configs = {}) {
+export default function makeEngine (configs = {}) {
   if (typeof configs !== 'object') throw new Error('configs parameter must be object')
 
   // Set default configs
@@ -46,7 +46,7 @@ export default function engineMaker (configs = {}) {
     /**
      * Start engine
      *
-     * @param {number} [port=engineMaker~configs.port]
+     * @param {number} [port=module:engine~configs.port]
      *
      * @emits module:engine~Engine#event:started
      *

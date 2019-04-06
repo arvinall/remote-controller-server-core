@@ -2,7 +2,7 @@
 
 import envConfigs from './configs'
 import engineIOClient from 'engine.io-client'
-import engineMaker from '../index'
+import makeEngine from '../index'
 
 const engineConfigs = { port: 8888, path: '/test' }
 
@@ -10,36 +10,36 @@ let engine
 
 afterEach(() => jest.setTimeout(5000))
 
-describe('engineMaker', () => {
+describe('makeEngine', () => {
   describe('Errors', () => {
     test('Must throw error when configs parameter is not object', () => {
       const ERROR = 'configs parameter must be object'
 
-      expect(engineMaker.bind(null, 'wrong')).toThrow(ERROR)
+      expect(makeEngine.bind(null, 'wrong')).toThrow(ERROR)
     })
 
     test('Must throw error when configs.port property is not number', () => {
       const ERROR = 'configs.port must be number'
       const configs = { port: 'wrong' }
 
-      expect(engineMaker.bind(null, configs)).toThrow(ERROR)
+      expect(makeEngine.bind(null, configs)).toThrow(ERROR)
     })
 
     test('Must throw error when configs.path property is not string and dont starts with "/"', () => {
       const ERROR = 'configs.path must be string and starts with "/"'
       const configs = { path: 'wrong' }
 
-      expect(engineMaker.bind(null, configs)).toThrow(ERROR)
+      expect(makeEngine.bind(null, configs)).toThrow(ERROR)
       configs.path = false
-      expect(engineMaker.bind(null, configs)).toThrow(ERROR)
+      expect(makeEngine.bind(null, configs)).toThrow(ERROR)
     })
   })
 
-  test('engineMaker must return engine module without error', () => {
+  test('makeEngine must return engine module without error', () => {
     const configs = {
       port: 8888
     }
-    const engine = engineMaker(configs)
+    const engine = makeEngine(configs)
 
     expect(engine).toEqual(expect.any(Object))
     expect(engine).toEqual(expect.objectContaining({
@@ -53,7 +53,7 @@ describe('engineMaker', () => {
     expect(typeof engine.address.ip === 'string' || engine.address.ip === null).toBe(true)
   })
 
-  afterAll(() => { engine = engineMaker(engineConfigs) })
+  afterAll(() => { engine = makeEngine(engineConfigs) })
 })
 
 describe('engine start method', () => {

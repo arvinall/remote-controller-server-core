@@ -1,6 +1,6 @@
 /* global test, expect, describe, jest */
 
-import engineMaker from '../index'
+import makeEngine from '../index'
 
 jest.mock('os', () => {
   const os = require.requireActual('os')
@@ -16,7 +16,7 @@ jest.mock('os', () => {
   return os
 })
 
-const engine = engineMaker()
+const engine = makeEngine()
 
 describe('engine start method', () => {
   test('Must throw error when network is not available (async)', async () => {

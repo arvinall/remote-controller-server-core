@@ -2,7 +2,7 @@
 
 import path from 'path'
 import Storage from '../storage'
-import storagesMaker from '../index'
+import makeStorages from '../index'
 
 const TMP_PATH = path.join(process.cwd(), 'tmp')
 
@@ -12,9 +12,9 @@ function timestamp () {
   return String(Date.now())
 }
 
-describe('preferencesMaker', () => {
-  test('storagesMaker must return storages module without error', () => {
-    let storages = storagesMaker({ path: TMP_PATH })
+describe('makeStorages', () => {
+  test('must return storages module without error', () => {
+    let storages = makeStorages({ path: TMP_PATH })
 
     expect(storages).toEqual(expect.any(Object))
     expect(storages).toEqual(expect.objectContaining({
@@ -24,9 +24,7 @@ describe('preferencesMaker', () => {
     }))
   })
 
-  afterAll(() => {
-    storages = storagesMaker({ path: TMP_PATH })
-  })
+  afterAll(() => { storages = makeStorages({ path: TMP_PATH }) })
 })
 
 describe('storages get method', () => {

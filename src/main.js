@@ -35,9 +35,9 @@
  * @see {@link https://github.com/socketio/engine.io/blob/master/README.md#server-2|Engine.io's Github page}
  */
 
-import storagesMaker from './storages'
-import preferencesMaker from './preferences'
-import engineMaker from './engine'
+import makeStorages from './storages'
+import makePreferences from './preferences'
+import makeEngine from './engine'
 
 const storagesList = Object.create(null)
 
@@ -50,7 +50,7 @@ const storagesList = Object.create(null)
  *
  * @return {module:remote-controller-server-core~core}
  */
-export default function coreMaker (configs = Object.create(null)) {
+export default function makeCore (configs = Object.create(null)) {
   if (typeof configs !== 'object') throw new Error('configs parameter must be object')
 
   // Set default configs
@@ -69,7 +69,7 @@ export default function coreMaker (configs = Object.create(null)) {
 
   let storages = storagesList[configs.storagePath]
   if (storages === undefined) {
-    storages = storagesMaker({ path: configs.storagePath })
+    storages = makeStorages({ path: configs.storagePath })
 
     storagesList[configs.storagePath] = storages
   }
@@ -82,7 +82,7 @@ export default function coreMaker (configs = Object.create(null)) {
    *
    * @type {module:preferences~Preferences}
    */
-  MODULE.preferences = preferencesMaker({
+  MODULE.preferences = makePreferences({
     storages,
     name: configs.preferencesStorageName
   })
@@ -95,7 +95,7 @@ export default function coreMaker (configs = Object.create(null)) {
    *
    * @type {module:engine~Engine}
    */
-  MODULE.engine = engineMaker()
+  MODULE.engine = makeEngine()
 
   return Object.freeze(MODULE)
 }

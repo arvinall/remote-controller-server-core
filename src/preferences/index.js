@@ -7,7 +7,7 @@ import EventEmitter from 'events'
 import Preference from './preference'
 
 /**
- * preferencesMaker creates preferences module
+ * makePreferences creates preferences module
  *
  * @param {object} configs
  * @param {module:storages~Storages} configs.storages storages module for storing Preferences
@@ -17,7 +17,7 @@ import Preference from './preference'
  *
  * @return {module:preferences~Preferences}
  */
-export default function preferencesMaker (configs) {
+export default function makePreferences (configs) {
   if (typeof configs !== 'object') throw new Error('configs parameter is required and must be object')
   else if (typeof configs.storages !== 'object' || typeof configs.storages.initialize !== 'function') throw new Error('configs.storages is required and must be storages')
 
