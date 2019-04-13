@@ -19,7 +19,7 @@ import Preference from './preference'
  */
 export default function makePreferences (configs) {
   if (typeof configs !== 'object') throw new Error('configs parameter is required and must be object')
-  else if (typeof configs.storages !== 'object' || typeof configs.storages.initialize !== 'function') throw new Error('configs.storages is required and must be storages')
+  else if (typeof configs.storages !== 'object' || typeof configs.storages.initialize !== 'function') throw new Error('configs.storages is required and must be storages module')
 
   // Set default configs
   configs = Object.assign({
@@ -156,10 +156,15 @@ export default function makePreferences (configs) {
      *  * Reject an error if Preference is not accessible
      *  * Reject an error if Preference is not exist in list
      */
-    remove (preference, configs = { sync: true }) {
+    remove (preference, configs = Object.create(null)) {
       if (preference === undefined || (typeof preference !== 'string' && !(preference instanceof Preference))) {
         throw new Error('preference parameter is required and must be string/Preference')
       }
+
+      // Set default configs
+      configs = Object.assign({
+        sync: true
+      }, configs)
 
       const name = preference.name || preference
       const deletePreference = () => {

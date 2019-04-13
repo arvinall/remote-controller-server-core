@@ -13,7 +13,12 @@ import Storage from './storage'
  *
  * @return {module:storages~Storages}
  */
-export default function makeStorages (configs = { path: process.cwd() }) {
+export default function makeStorages (configs = Object.create(null)) {
+  // Set default configs
+  configs = Object.assign({
+    path: process.cwd()
+  }, configs)
+
   if (typeof configs.path !== 'string') throw new Error('configs.path must be string')
 
   const STORAGES_GLOBAL_ERRORS = {
@@ -26,8 +31,6 @@ export default function makeStorages (configs = { path: process.cwd() }) {
    */
   class Storages {
     /**
-     * A list that hold Storage classes
-     *
      * @type {Object}
      */
     #storagesList = {}
@@ -92,10 +95,15 @@ export default function makeStorages (configs = { path: process.cwd() }) {
      *  * Reject an error if Storage is not accessible
      *  * Reject an error if Storage is not exist in list
      */
-    remove (storage, configs = { sync: true }) {
+    remove (storage, configs = Object.create(null)) {
       if (storage === undefined || (typeof storage !== 'string' && !(storage instanceof Storage))) {
         throw new Error('storage parameter is required and must be string/Storage')
       }
+
+      // Set default configs
+      configs = Object.assign({
+        sync: true
+      }, configs)
 
       const name = storage.name || storage
       const deleteStorage = () => {

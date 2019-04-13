@@ -51,31 +51,34 @@ const CLIENT_AUTHENTICATION_FACTORS = ['passport']
  * @see {@link https://github.com/socketio/engine.io/blob/master/README.md#events-2|engineIO.Socket's events}
  */
 export default class Connection extends EventEmitter {
+  /**
+   * @type {module:remote-controller-server-core~engineIO.Socket}
+   */
   #socket
   /**
-   * Client IP address
-   * @type {(string|null)}
+   * @type {string}
    */
-  #address = null
+  #address
+  /**
+   * @type {module:passport}
+   */
+  #passport
   /**
    * @type {{passport: boolean[], confirmation: boolean[]}}
    */
   #authenticationFactors = {
-    confirmation: [false],
-    passport: [false]
+    // [Requirement, Verification]
+    confirmation: [false, false],
+    passport: [false, false]
   }
-  /**
-   * @type {(module:passport|null)}
-   */
-  #passport = null
 
   #fireAuthenticatedEvent = (() => {
     let isAuthenticateCache = this.isAuthenticate
 
     return () => {
-      const EVENT_PROPS = ['authentication', { status: 1 }]
-
-      if (!this.isAuthenticate) EVENT_PROPS[1].status = 2
+      const EVENT_PROPS = ['authentication', {
+        status: this.isAuthenticate ? 1 : 2
+      }]
 
       if (isAuthenticateCache === this.isAuthenticate) return
       isAuthenticateCache = this.isAuthenticate
@@ -129,9 +132,9 @@ export default class Connection extends EventEmitter {
       (configs.authenticationFactors !== undefined &&
         typeof configs.authenticationFactors !== 'object') ||
       ((configs.authenticationFactors && configs.authenticationFactors.confirmation) !== undefined &&
-        typeof (configs.authenticationFactors && configs.authenticationFactors.confirmation) !== 'boolean') ||
+        typeof configs.authenticationFactors.confirmation !== 'boolean') ||
       ((configs.authenticationFactors && configs.authenticationFactors.passport) !== undefined &&
-        typeof (configs.authenticationFactors && configs.authenticationFactors.passport) !== 'boolean')
+        typeof configs.authenticationFactors.passport !== 'boolean')
     ) throw new Error('configs.authenticationFactors must be object with boolean values')
 
     super()
@@ -146,14 +149,14 @@ export default class Connection extends EventEmitter {
       passport: false
     }, configs.authenticationFactors)
 
-    let withOutAuthFactor = true
+    let withoutAuthFactor = true
     for (let factor in configs.authenticationFactors) {
       if (!this.#authenticationFactors[factor] || !configs.authenticationFactors[factor]) continue
 
-      withOutAuthFactor = false
+      withoutAuthFactor = false
       break
     }
-    if (withOutAuthFactor) throw new Error('One authentication factor require at least')
+    if (withoutAuthFactor) throw new Error('One authentication factor require at least')
 
     if (configs.authenticationFactors.passport === true && !(configs.passport instanceof Passport)) {
       throw new Error('configs.passport is required and must be Passport')
@@ -162,9 +165,9 @@ export default class Connection extends EventEmitter {
     this.#socket = configs.socket
     this.#address = this.#socket.request.socket.remoteAddress
     for (let factor in this.#authenticationFactors) {
-      this.#authenticationFactors[factor].unshift(configs.authenticationFactors[factor])
+      this.#authenticationFactors[factor][0] = configs.authenticationFactors[factor]
     }
-    this.#passport = configs.authenticationFactors.passport ? configs.passport : null
+    if (configs.authenticationFactors.passport) this.#passport = configs.passport
 
     // Transform Socket events to Connection
     this.#socket.emit = (eventName, ...args) => {

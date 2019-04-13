@@ -19,13 +19,13 @@ export default class Preference extends EventEmitter {
   /**
    * preferences storage
    *
-   * @type {(undefined|module:storages/storage)}
+   * @type {module:storages/storage}
    */
   #storage
   /**
    * Preference's name
    *
-   * @type {(undefined|string)}
+   * @type {string}
    */
   #name
 
@@ -35,7 +35,7 @@ export default class Preference extends EventEmitter {
    * @param {object} configs
    * @param {string} configs.name Preference's name
    * @param {module:storages/storage} configs.storage Storage that use for preferences
-   * @param {object} [configs.body={}] Preference's initial content
+   * @param {object} [configs.body] Preference's initial content
    *
    * @throws Will throw an error if the storage is not accessible
    * @throws Will throw an error if the body property provided but storage is already exist
@@ -103,11 +103,16 @@ export default class Preference extends EventEmitter {
    * * Rejection
    *  * Reject an error if the Preference is not accessible
    */
-  update (body, configs = { sync: true }) {
+  update (body, configs = Object.create(null)) {
     // Make body object from function
     if (typeof body === 'function') body = body(this.body)
 
     if (typeof body !== 'object') throw new Error('body parameter is required and must be object/function')
+
+    // Set default configs
+    configs = Object.assign({
+      sync: true
+    }, configs)
 
     const updateBody = storageBody => {
       storageBody[this.#name] = body
@@ -163,7 +168,7 @@ export default class Preference extends EventEmitter {
    * * Rejection
    *  * Reject an error if the Preference is not accessible
    */
-  remove (configs = { sync: true }) {
+  remove (configs = Object.create(null)) {
     const lastBody = this.body
     const deletePreference = body => {
       delete body[this.name]
@@ -190,6 +195,11 @@ export default class Preference extends EventEmitter {
 
       this.emit('removed', EVENT)
     }
+
+    // Set default configs
+    configs = Object.assign({
+      sync: true
+    }, configs)
 
     if (configs.sync) {
       if (this.#storage === undefined) throw GLOBAL_ERRORS.accessibility

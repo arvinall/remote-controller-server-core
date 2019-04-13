@@ -19,15 +19,17 @@ const GLOBAL_ERRORS = {
  * @mixes module:remote-controller-server-core~external:EventEmitter
  */
 export default class Storage extends EventEmitter {
-  // Storage name
+  /**
+   * @type {string}
+   */
   #name
   /**
-   * Storage json file address
-   *
-   * @type {(undefined|string)}
+   * @type {string}
    */
   #address
-  // Storage body
+  /**
+   * @type {object}
+   */
   #body
 
   /**
@@ -35,7 +37,7 @@ export default class Storage extends EventEmitter {
    *
    * @param {object} configs
    * @param {string} configs.name json file name
-   * @param {object} configs.body json file initial content
+   * @param {object} [configs.body] json file initial content
    * @param {object} [configs.path=process.cwd()] json file initial content
    *
    * @throws Will throw an error if the requested storage's json file is not accessible
@@ -130,7 +132,12 @@ export default class Storage extends EventEmitter {
    * * Rejection
    *  * Reject an error if the storage's json file doesn't accessible
    */
-  remove (configs = { sync: true }) {
+  remove (configs = Object.create(null)) {
+    // Set default configs
+    configs = Object.assign({
+      sync: true
+    }, configs)
+
     const clearProperties = () => {
       const EVENT = {
         name: this.#name,
@@ -188,8 +195,13 @@ export default class Storage extends EventEmitter {
    * * Rejection
    *  * Reject an error if the storage's json file doesn't accessible
    */
-  update (body, configs = { sync: true }) {
+  update (body, configs = Object.create(null)) {
     if (typeof body === 'function') body = body(this.body)
+
+    // Set default configs
+    configs = Object.assign({
+      sync: true
+    }, configs)
 
     if (body === undefined || typeof body !== 'object') throw new Error('body parameter is required and must be object/function')
 

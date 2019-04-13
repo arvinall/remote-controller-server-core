@@ -24,7 +24,7 @@ describe('makePreferences', () => {
     })
 
     test('Must throw error when configs.storages is not object or doesnt have initialize method', () => {
-      const ERROR = 'configs.storages is required and must be storages'
+      const ERROR = 'configs.storages is required and must be storages module'
       const configs = { storages: 'wrong' }
 
       expect(makePreferences.bind(null, configs)).toThrow(ERROR)

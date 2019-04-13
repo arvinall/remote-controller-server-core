@@ -46,7 +46,7 @@ const storagesList = Object.create(null)
  *
  * @param {object} [configs={}]
  * @param {string} [configs.storagePath=process.cwd()] Storages path address
- * @param {string} [configs.preferencesStorageName='preferences']
+ * @param {string} [configs.preferenceStorageName='preferences']
  *
  * @return {module:remote-controller-server-core~core}
  */
@@ -56,11 +56,11 @@ export default function makeCore (configs = Object.create(null)) {
   // Set default configs
   configs = Object.assign({
     storagePath: process.cwd(),
-    preferencesStorageName: 'preferences'
+    preferenceStorageName: 'preferences'
   }, configs)
 
   if (typeof configs.storagePath !== 'string') throw new Error('configs.storagePath must be string')
-  else if (typeof configs.preferencesStorageName !== 'string') throw new Error('configs.preferencesStorageName must be string')
+  else if (typeof configs.preferenceStorageName !== 'string') throw new Error('configs.preferencesStorageName must be string')
 
   /**
    * @namespace module:remote-controller-server-core~core
@@ -84,7 +84,7 @@ export default function makeCore (configs = Object.create(null)) {
    */
   MODULE.preferences = makePreferences({
     storages,
-    name: configs.preferencesStorageName
+    name: configs.preferenceStorageName
   })
 
   /**

@@ -18,7 +18,7 @@ import engineIO from 'engine.io'
  *
  * @return {module:engine~Engine}
  */
-export default function makeEngine (configs = {}) {
+export default function makeEngine (configs = Object.create(null)) {
   if (typeof configs !== 'object') throw new Error('configs parameter must be object')
 
   // Set default configs
