@@ -33,15 +33,6 @@ const CONFIG = {
         ]
       }
     ]
-  },
-  resolve: {
-    alias: {
-      /*
-      uws pkg is deprecated
-      this line is a temporary solution
-      */
-      uws: 'ws'
-    }
   }
 }
 
