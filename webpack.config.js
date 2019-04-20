@@ -9,7 +9,7 @@ const CONFIG = {
   mode: 'development',
   target: 'node',
   devtool: 'eval',
-  watch: true,
+  watch: isDevelopment,
   watchOptions: { ignored: EXCLUDE },
   output: {
     path: path.resolve(__dirname, 'build'),
