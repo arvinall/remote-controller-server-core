@@ -4,7 +4,7 @@
  */
 
 import EventEmitter from 'events'
-import engineIO from 'engine.io'
+import WebSocket from 'ws'
 import Passport from '../passport'
 import idGenerator from '../idGenerator'
 
@@ -133,7 +133,7 @@ export default class Connection extends EventEmitter {
    */
   constructor (configs) {
     if (typeof configs !== 'object') throw new Error('configs parameter is required and must be object')
-    else if (!(configs.socket instanceof engineIO.Socket)) throw new Error('configs.socket is required and must be EngineIO.Socket')
+    else if (!(configs.socket instanceof WebSocket)) throw new Error('configs.socket is required and must be WebSocket')
     else if (
       (configs.authenticationFactors !== undefined &&
         typeof configs.authenticationFactors !== 'object') ||
@@ -374,7 +374,7 @@ export default class Connection extends EventEmitter {
    * @type {boolean}
    */
   get isConnected () {
-    return this.status === 'open'
+    return this.#socket.readyState === WebSocket.OPEN
   }
 
   /**

@@ -7,7 +7,7 @@ import { promisify } from 'util'
 import EventEmitter from 'events'
 import os from 'os'
 import http from 'http'
-import engineIO from 'engine.io'
+import WebSocket from 'ws'
 
 /**
  * makeEngine creates engine module
@@ -31,11 +31,12 @@ export default function makeEngine (configs = Object.create(null)) {
   else if (typeof configs.path !== 'string' || !configs.path.startsWith('/')) throw new Error('configs.path must be string and starts with "/"')
 
   const httpServer = http.createServer()
-  const webSocketServer = new engineIO.Server()
-
-  // Attach websocket to http server
-  webSocketServer.attach(httpServer, { path: configs.path })
-  webSocketServer.generateId = idGenerator
+  const webSocketServer = new WebSocket.Server({
+    server: httpServer,
+    path: configs.path,
+    clientTracking: false,
+    perMessageDeflate: true
+  })
 
   /**
    * Engine module control web server and its websocket
