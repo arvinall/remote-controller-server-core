@@ -188,7 +188,7 @@ export default class Connection extends EventEmitter {
 
       if (eventName !== 'message') this.emit(eventName, ...args)
       else {
-        let message = args[0] || null
+        let message = args[0]
         let name
         let body
 
@@ -200,18 +200,27 @@ export default class Connection extends EventEmitter {
 
         if (message instanceof Array && typeof message[0] === 'string') {
           name = message[0]
-          body = message[1]
+
+          if (message[1] instanceof Array) body = message[1]
         }
 
-        if (body && body[0] === 'Uint8Array' && typeof body[1] === 'object') {
-          body = uint8ArrayLikeToBuffer(body[1])
+        if (body instanceof Array) {
+          for (let dataIndex in body) {
+            const data = body[dataIndex]
+
+            if (data instanceof Array &&
+              data[0] === 'Uint8Array' &&
+              data[1] instanceof Array) {
+              body[dataIndex] = uint8ArrayLikeToBuffer(data)
+            }
+          }
         }
+
+        if (!(body instanceof Array)) body = []
 
         if (name &&
           (name === 'authenticate' || this.isAuthenticate) &&
-          !necessaryEvents.includes(name)) {
-          this.emit(name, body)
-        }
+          !necessaryEvents.includes(name)) this.emit(name, ...body)
       }
 
       return chain
@@ -269,19 +278,28 @@ export default class Connection extends EventEmitter {
    * * Rejection
    *  * Reject an error if Connection is not authenticated
    */
-  send (name, body) {
+  send (name, ...body) {
     if (typeof name !== 'string') throw new Error('name parameter is required and must be string')
     else if (name !== 'authentication' && !this.isAuthenticate) return Promise.reject(new Error('Connection is not authenticated'))
 
-    let message = [ name ]
+    let message = [ name, body ]
+    let callback
 
-    if (body instanceof Buffer) {
-      message[1] = bufferToUint8ArrayLike(body)
-    } else message[1] = body
+    if (typeof body[body.length - 1] === 'function') callback = body.splice(body.length - 1, 1)[0]
+
+    for (let dataIndex in body) {
+      const data = body[dataIndex]
+
+      if (data instanceof Buffer) body[dataIndex] = bufferToUint8ArrayLike(data)
+      else if (data instanceof Uint8Array) body[dataIndex] = uint8ArrayToUint8ArrayLike(data)
+    }
 
     message = JSON.stringify(message)
 
     return new Promise(resolve => this.#socket.send(message, undefined, () => resolve()))
+      .then(() => {
+        if (typeof callback === 'function') this.once(name, callback)
+      })
   }
 
   /**
@@ -387,15 +405,20 @@ export default class Connection extends EventEmitter {
   }
 }
 
+export function uint8ArrayToUint8ArrayLike (uint8Array) {
+  return ['Uint8Array', Array.from(uint8Array)]
+}
+
 export function bufferToUint8ArrayLike (buffer) {
   let ab = new ArrayBuffer(buffer.length)
   let view = new Uint8Array(ab)
   for (var i = 0; i < buffer.length; ++i) {
     view[i] = buffer[i]
   }
+
   return ['Uint8Array', Array.from(view)]
 }
 
 export function uint8ArrayLikeToBuffer (uint8ArrayLike) {
-  return ['Buffer', Buffer.from(Uint8Array.from(uint8ArrayLike))]
+  return Buffer.from(Uint8Array.from(uint8ArrayLike[1]))
 }
