@@ -6,8 +6,10 @@
 import EventEmitter from 'events'
 import engineIO from 'engine.io'
 import Passport from '../passport'
+import idGenerator from '../idGenerator'
 
 const CLIENT_AUTHENTICATION_FACTORS = ['passport']
+const generateID = idGenerator()
 
 /**
  * Connection authentication status
@@ -51,6 +53,10 @@ const CLIENT_AUTHENTICATION_FACTORS = ['passport']
  * @see {@link https://github.com/socketio/engine.io/blob/master/README.md#events-2|engineIO.Socket's events}
  */
 export default class Connection extends EventEmitter {
+  /**
+   * @type {string}
+   */
+  #id
   /**
    * @type {module:remote-controller-server-core~engineIO.Socket}
    */
@@ -162,6 +168,7 @@ export default class Connection extends EventEmitter {
       throw new Error('configs.passport is required and must be Passport')
     }
 
+    this.#id = generateID()
     this.#socket = configs.socket
     this.#address = this.#socket.request.socket.remoteAddress
     for (let factor in this.#authenticationFactors) {
@@ -376,7 +383,7 @@ export default class Connection extends EventEmitter {
    * @return {number}
    */
   get id () {
-    return this.#socket.id
+    return this.#id
   }
 }
 
