@@ -141,10 +141,3 @@ function getNetworkIP () {
 
   return ip
 }
-
-// Socket ID generator
-const idGenerator = (() => {
-  let counter = 0
-
-  return () => counter++
-})()
