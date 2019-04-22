@@ -368,18 +368,6 @@ export default class Connection extends EventEmitter {
   }
 
   /**
-   * Get Socket readyState
-   *
-   * @type {string}
-   *
-   * @see module:remote-controller-server-core~engineIO.Socket
-   * @see {@link https://github.com/socketio/engine.io/blob/master/README.md#properties-2|engineIO.Socket's properties}
-   */
-  get status () {
-    return this.#socket.readyState
-  }
-
-  /**
    * Get Client IP
    *
    * @type {string}
