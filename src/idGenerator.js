@@ -18,7 +18,7 @@ export const keyCodesList = [[48, 57], [65, 90]]
  */
 export default function idGenerator (charCodesList = keyCodesList) {
   const firstID = codeToChar(charCodesList[0][0])
-  const nextCode = nextCharCode.bind(null, charCodesList, firstID)
+  const nextCode = nextCharCode.bind(null, charCodesList, charToCode(firstID))
 
   let lastID
 
