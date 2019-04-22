@@ -105,7 +105,11 @@ export default function makeEngine (configs = Object.create(null)) {
      * @type {{port: number, ip: (string|null)}}
      */
     get address () {
-      return { port: configs.port, ip: getNetworkIP() }
+      const ADDRESS = webSocketServer.address()
+
+      ADDRESS.ip = getNetworkIP()
+
+      return ADDRESS
     }
 
     /**
