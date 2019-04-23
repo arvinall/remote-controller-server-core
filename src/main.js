@@ -67,12 +67,19 @@ export default function makeCore (configs = Object.create(null)) {
    */
   const MODULE = Object.create(null)
 
-  let storages = storagesList[configs.storagePath]
-  if (storages === undefined) {
-    storages = makeStorages({ path: configs.storagePath })
-
-    storagesList[configs.storagePath] = storages
+  if (storagesList[configs.storagePath] === undefined) {
+    storagesList[configs.storagePath] = makeStorages({ path: configs.storagePath })
   }
+
+  /**
+   * Storage manager module
+   *
+   * @name storages
+   * @memberOf module:remote-controller-server-core~core
+   *
+   * @type {module:storages~Storages}
+   */
+  MODULE.storages = storagesList[configs.storagePath]
 
   /**
    * Preference manager module
@@ -83,7 +90,7 @@ export default function makeCore (configs = Object.create(null)) {
    * @type {module:preferences~Preferences}
    */
   MODULE.preferences = makePreferences({
-    storages,
+    storages: MODULE.storages,
     name: configs.preferenceStorageName
   })
 
