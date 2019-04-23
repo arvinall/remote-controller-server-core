@@ -102,7 +102,9 @@ export default function makeEngine (configs = Object.create(null)) {
     /**
      * Get server address
      *
-     * @type {{port: number, ip: (string|null)}}
+     * @type {{address: string, family: string, port: number, ip: (string|null)}}
+     *
+     * @see {@link https://github.com/websockets/ws/blob/master/doc/ws.md#serveraddress|WebSocket.Server#address method}
      */
     get address () {
       const ADDRESS = webSocketServer.address()

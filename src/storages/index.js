@@ -35,6 +35,9 @@ export default function makeStorages (configs = Object.create(null)) {
      */
     #storagesList = {}
 
+    // JSDoc doesnt use this class without constructor :/
+    constructor () {} // eslint-disable-line no-useless-constructor
+
     /**
      * Get Storage instance via it's name
      *

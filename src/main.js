@@ -7,32 +7,33 @@
  * Nodejs EventEmitter class
  *
  * @external module:remote-controller-server-core~EventEmitter
+ *
  * @see {@link https://nodejs.org/docs/latest-v10.x/api/events.html#events_class_eventemitter|EventEmitter}
  */
 /**
- * Engine.io module
+ * ws module
  *
- * @external module:remote-controller-server-core~engineIO
+ * @external module:remote-controller-server-core~ws
  *
- * @see {@link https://github.com/socketio/engine.io/blob/master/README.md|Engine.io's Github page}
+ * @see {@link https://github.com/websockets/ws/blob/master/README.md|ws Github page}
  */
 /**
- * Engine.io's Socket class
+ * ws WebSocket class
  *
- * @name Socket
- * @memberOf module:remote-controller-server-core~engineIO
+ * @name WebSocket
+ * @memberOf module:remote-controller-server-core~ws
  * @static
  *
- * @see {@link https://github.com/socketio/engine.io/blob/master/README.md#socket|Engine.io's Github page}
+ * @see {@link https://github.com/websockets/ws/blob/master/doc/ws.md#class-websocket|Class: WebSocket}
  */
 /**
- * Engine.io's Server class
+ * ws WebSocket.Server class
  *
  * @name Server
- * @memberOf module:remote-controller-server-core~engineIO
+ * @memberOf module:remote-controller-server-core~ws.WebSocket
  * @static
  *
- * @see {@link https://github.com/socketio/engine.io/blob/master/README.md#server-2|Engine.io's Github page}
+ * @see {@link https://github.com/websockets/ws/blob/master/doc/ws.md#class-websocketserver|Class: WebSocket.Server}
  */
 
 import makeStorages from './storages'
