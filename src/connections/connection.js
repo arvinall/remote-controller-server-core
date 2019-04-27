@@ -12,45 +12,31 @@ const CLIENT_AUTHENTICATION_FACTORS = ['passport']
 const generateID = idGenerator()
 
 /**
- * Connection authentication status
- *
- * @event module:connections/connection#event:authentication
- *
- * @type {object}
- * @property {string} factor Authentication factor's name that it's states changed
- * @property {number} status
- * Authentication (factor) status
- *
- * | Value | Description |
- * | --- | --- |
- * | 0 | Ask for authentication factor |
- * | 1 | Allowed |
- * | 2 | Denied |
- * @property {string} type
- * Depend on factor
- *
- * |  Factor  | Description |
- * | --- | --- |
- * |  passport  | Type of passport |
- */
-
-/**
- * @summary Connection is a Engine.io socket wrapper
+ * @summary Connection is a {@link module:remote-controller-server-core~external:ws.WebSocket|ws.WebSocket} wrapper
  * @description
+ * This class receives client's messages like this
+ * <br> `'["name", ["body", ...]]'` <br>
+ * and then emit an event with its name and body
+ * ##### Elements
+ *  | Name | Type | Attributes | Description |
+ *  | --- | --- | --- | --- | --- |
+ *  | `name` | `string` |   | Message's name |
+ *  | `body` | `*[]` | <optional> | Message's body (Every element pass as parameter to event) |
+ *
+ *
  * ### Messages
  * ##### Sends
- * **authentication** :`{@link module:connections/connection#event:authentication}`
+ * **authentication**:  `{@link module:connections/connection#event:authentication}`
  *
  * ##### Receives
- * **authenticate** :`object`
+ * **authenticate**:  `object`
  *
- * | Name  | type  | Description |
+ * | Name  | Type  | Description |
  * | --- | --- | --- |
- * | factor  | string  |
- * | passportInput | string  | If factor is passport |
+ * | `factor`  | `string`  |  Target factor
+ * | `passportInput` | `string`  | If factor is passport |
  *
  * @mixes module:remote-controller-server-core~external:EventEmitter
- * @see {@link https://github.com/socketio/engine.io/blob/master/README.md#events-2|engineIO.Socket's events}
  */
 export default class Connection extends EventEmitter {
   /**
@@ -58,7 +44,7 @@ export default class Connection extends EventEmitter {
    */
   #id
   /**
-   * @type {module:remote-controller-server-core~engineIO.Socket}
+   * @type {module:remote-controller-server-core~external:ws.WebSocket}
    */
   #socket
   /**
@@ -78,6 +64,9 @@ export default class Connection extends EventEmitter {
     passport: [false, false]
   }
 
+  /**
+   * @emits module:connections/connection#event:authentication
+   */
   #fireAuthenticatedEvent = (() => {
     let isAuthenticateCache = this.isAuthenticate
 
@@ -111,19 +100,10 @@ export default class Connection extends EventEmitter {
   }
 
   /**
-   * @summary Listen to engineIO.Socket events
-   * @description
-   * This class receives client's messages like this
-   * <br> `'["name","body"]'` <br>
-   * and then emit an event with its name and body
-   * ##### Elements
-   *  | Name | Type | Attributes | Description |
-   *  | --- | --- | --- | --- | --- |
-   *  | name | string |   | Message's name |
-   *  | body | * | <optional> | Message's body |
+   * Transfer events from {@link module:remote-controller-server-core~external:ws.WebSocket|ws.WebSocket}
    *
    * @param {object} configs
-   * @param {module:remote-controller-server-core~engineIO.Socket} configs.socket
+   * @param {module:remote-controller-server-core~external:ws.WebSocket} configs.socket
    * @param {object} [configs.authenticationFactors={}] Authentication factors
    * @param {boolean} [configs.authenticationFactors.confirmation=true] Must Connection confirm before interact?
    * @param {boolean} [configs.authenticationFactors.passport=false]
@@ -133,7 +113,7 @@ export default class Connection extends EventEmitter {
    */
   constructor (configs) {
     if (typeof configs !== 'object') throw new Error('configs parameter is required and must be object')
-    else if (!(configs.socket instanceof WebSocket)) throw new Error('configs.socket is required and must be WebSocket')
+    else if (!(configs.socket instanceof WebSocket)) throw new Error('configs.socket is required and must be ws.WebSocket')
     else if (
       (configs.authenticationFactors !== undefined &&
         typeof configs.authenticationFactors !== 'object') ||
@@ -265,14 +245,15 @@ export default class Connection extends EventEmitter {
   /**
    * @summary Send message to client
    * @description
-   * If body is instanceof Buffer, then it convert to Uint8Array
-   *
-   * this method create an array and push name and body to it
-   * `[name, body]`
-   * and then normalize it to string and send to client
+   * If every element of body is instanceof Buffer <br>
+   * convert to Uint8Array then convert to pure array <br>
+   * then send as {@link module:connections/connection~Uint8ArrayLike|Uint8ArrayLike} . <br>
+   * This method create an array and push name and body to it like this <br>
+   * `[name, [...body]]` <br>
+   * and then serialize it to string and send to client
    *
    * @param {string} name Message's name
-   * @param {*} [body] Message's content
+   * @param {...*} [body] Message's content
    *
    * @return {Promise<(void|Error)>}
    * * Rejection
@@ -313,12 +294,11 @@ export default class Connection extends EventEmitter {
     /**
      * @summary Connection disconnected event
      * @description
-     * Same as engineIO.Socket close event
+     * Same as {@link module:remote-controller-server-core~external:ws.WebSocket|ws.WebSocket} close event
      *
      * @event module:connections/connection#event:disconnected
      *
-     * @see module:remote-controller-server-core~engineIO.Socket
-     * @see {@link https://github.com/socketio/engine.io/blob/master/README.md#events-2|engineIO.Socket's events}
+     * @see module:remote-controller-server-core~external:ws.WebSocket
      */
     if (this.status !== 'closed' || this.status !== 'closing') this.#socket.close()
   }
@@ -393,10 +373,24 @@ export default class Connection extends EventEmitter {
   }
 }
 
+/**
+ * Convert uint8Array to pure array then uint8ArrayLike
+ *
+ * @param {Uint8Array} uint8Array
+ *
+ * @returns {module:connections/connection~Uint8ArrayLike}
+ */
 export function uint8ArrayToUint8ArrayLike (uint8Array) {
   return ['Uint8Array', Array.from(uint8Array)]
 }
 
+/**
+ * Convert buffer to uint8Array then uint8ArrayLike
+ *
+ * @param {Buffer} buffer
+ *
+ * @returns {module:connections/connection~Uint8ArrayLike}
+ */
 export function bufferToUint8ArrayLike (buffer) {
   let ab = new ArrayBuffer(buffer.length)
   let view = new Uint8Array(ab)
@@ -407,6 +401,46 @@ export function bufferToUint8ArrayLike (buffer) {
   return ['Uint8Array', Array.from(view)]
 }
 
+/**
+ * Convert uint8ArrayLike to buffer
+ *
+ * @param {module:connections/connection~Uint8ArrayLike} uint8ArrayLike
+ *
+ * @returns {Buffer}
+ */
 export function uint8ArrayLikeToBuffer (uint8ArrayLike) {
   return Buffer.from(Uint8Array.from(uint8ArrayLike[1]))
 }
+
+/**
+ * Binary style use for send and receive <br>
+ * `["Uint8Array", arrayFromUint8Array]`
+ *
+ * @typedef {array} module:connections/connection~Uint8ArrayLike
+ * @property {string} 0 This element always is Uint8Array
+ * @property {Array} 1 An array that contains uint8Array's data
+ */
+
+/**
+ * Connection authentication status
+ *
+ * @event module:connections/connection#event:authentication
+ *
+ * @type {object}
+ * @property {string} factor Authentication factor's name that it's state changed
+ * @property {number} status
+ * Authentication (factor) status
+ *
+ * | Value | Description |
+ * | --- | --- |
+ * | `0` | Ask for authentication factor |
+ * | `1` | Allowed |
+ * | `2` | Denied |
+ *
+ * @property {string} type
+ * Depend on factor
+ *
+ * |  Factor  | Description |
+ * | --- | --- |
+ * |  `passport`  | Type of passport |
+ */
