@@ -66,14 +66,6 @@ function rangeOf (charCodesList, charCode) {
   }
 }
 
-function codeToChar (charCode) {
-  return String.fromCharCode(charCode).toUpperCase()
-}
-
-function charToCode (char) {
-  return char.toUpperCase().charCodeAt(0)
-}
-
 function nextCharCode (charCodesList, firstID, charCode) {
   let rangeIndex = rangeOf(charCodesList, charCode)
 
@@ -83,4 +75,12 @@ function nextCharCode (charCodesList, firstID, charCode) {
   } else charCode++
 
   return charCode
+}
+
+function codeToChar (charCode) {
+  return String.fromCharCode(charCode).toUpperCase()
+}
+
+function charToCode (char) {
+  return char.toUpperCase().charCodeAt(0)
 }

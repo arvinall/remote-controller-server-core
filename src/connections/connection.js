@@ -82,6 +82,7 @@ export default class Connection extends EventEmitter {
       this.send(...EVENT_PROPS)
     }
   })()
+
   #passportChecker = passportInput => {
     try {
       this.#authenticationFactors.passport[1] = this.#passport.isEqual(passportInput)
@@ -259,7 +260,7 @@ export default class Connection extends EventEmitter {
    * * Rejection
    *  * Reject an error if Connection is not authenticated
    */
-  send (name, ...body) {
+  async send (name, ...body) {
     if (typeof name !== 'string') throw new Error('name parameter is required and must be string')
     else if (name !== 'authentication' && !this.isAuthenticate) return Promise.reject(new Error('Connection is not authenticated'))
 
@@ -398,7 +399,7 @@ export function bufferToUint8ArrayLike (buffer) {
     view[i] = buffer[i]
   }
 
-  return ['Uint8Array', Array.from(view)]
+  return uint8ArrayToUint8ArrayLike(view)
 }
 
 /**

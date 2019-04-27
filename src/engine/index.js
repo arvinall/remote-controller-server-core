@@ -34,12 +34,11 @@ export default function makeEngine (configs = Object.create(null)) {
   const webSocketServer = new WebSocket.Server({
     server: httpServer,
     path: configs.path,
-    clientTracking: false,
     perMessageDeflate: true
   })
 
   /**
-   * Engine module control web server and its websocket
+   * Engine module control web server and it's websocket
    *
    * @mixes module:remote-controller-server-core~external:EventEmitter
    */
@@ -56,7 +55,7 @@ export default function makeEngine (configs = Object.create(null)) {
      *  * Reject an error if engine started before
      *  * Reject an error if there is no network
      */
-    start (port = configs.port) {
+    async start (port = configs.port) {
       if (typeof port !== 'number') throw new Error('port parameter must be number')
       else if (this.isActive) return Promise.reject(new Error('Engine already started'))
       else if (getNetworkIP() === null) return Promise.reject(new Error('Network is not available'))
@@ -83,7 +82,7 @@ export default function makeEngine (configs = Object.create(null)) {
      * * Rejection
      *  * Reject an error if engine stopped before
      */
-    stop () {
+    async stop () {
       if (!this.isActive) return Promise.reject(new Error('Engine already stopped'))
 
       /**
@@ -93,7 +92,7 @@ export default function makeEngine (configs = Object.create(null)) {
        */
       const fireEvent = () => { this.emit('stopped') }
 
-      webSocketServer.close()
+      for (const webSocket of webSocketServer.clients) { webSocket.close() }
 
       return promisify(httpServer.close.bind(httpServer))()
         .then(fireEvent, error => Promise.reject(error))
