@@ -6,14 +6,14 @@
 /**
  * Nodejs EventEmitter class
  *
- * @external module:remote-controller-server-core~EventEmitter
+ * @external module:remote-controller-server-core~external:EventEmitter
  *
  * @see {@link https://nodejs.org/docs/latest-v10.x/api/events.html#events_class_eventemitter|EventEmitter}
  */
 /**
  * ws module
  *
- * @external module:remote-controller-server-core~ws
+ * @external module:remote-controller-server-core~external:ws
  *
  * @see {@link https://github.com/websockets/ws/blob/master/README.md|ws Github page}
  */
@@ -21,7 +21,7 @@
  * ws WebSocket class
  *
  * @name WebSocket
- * @memberOf module:remote-controller-server-core~ws
+ * @memberOf module:remote-controller-server-core~external:ws
  * @static
  *
  * @see {@link https://github.com/websockets/ws/blob/master/doc/ws.md#class-websocket|Class: WebSocket}
@@ -30,7 +30,7 @@
  * ws WebSocket.Server class
  *
  * @name Server
- * @memberOf module:remote-controller-server-core~ws.WebSocket
+ * @memberOf module:remote-controller-server-core~external:ws.WebSocket
  * @static
  *
  * @see {@link https://github.com/websockets/ws/blob/master/doc/ws.md#class-websocketserver|Class: WebSocket.Server}
