@@ -255,6 +255,7 @@ export default class Connection extends EventEmitter {
    *
    * @param {string} name Message's name
    * @param {...*} [body] Message's content
+   * @param {function} [callback] This function listens to event with the same name just once
    *
    * @return {Promise<(void|Error)>}
    * * Rejection
