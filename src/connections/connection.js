@@ -373,6 +373,44 @@ export default class Connection extends EventEmitter {
   get id () {
     return this.#id
   }
+
+  /**
+   * Set preferred options for nodejs fs.createReadStream method
+   *
+   * * UTF8 encoding
+   * * Read 1.063 megabyte per chunk
+   *
+   * @param {object} [options={}]
+   * @param {boolean} [overwrite=true] Write to the same object or create a new one
+   *
+   * @returns {Object}
+   */
+  static setReadStreamDefaults (options, overwrite = true) {
+    if (typeof options !== 'object') options = Object.create(null)
+
+    let result
+
+    const BPC = 1.063e+6
+    const DEFAULTS = {
+      encoding: 'utf8',
+      end: BPC,
+      highWaterMark: BPC
+    }
+    const optionsCache = Object.assign(Object.create(null), options)
+
+    if (typeof optionsCache.end !== 'number') {
+      DEFAULTS.end = (typeof optionsCache.start === 'number' ? optionsCache.start : 0) + BPC
+    }
+
+    if (overwrite) result = Object.assign(options, DEFAULTS, optionsCache)
+    else result = Object.assign(Object.create(null), DEFAULTS, options)
+
+    if ((result.end - result.start) < result.highWaterMark) {
+      result.highWaterMark = result.end - result.start
+    }
+
+    return result
+  }
 }
 
 /**
