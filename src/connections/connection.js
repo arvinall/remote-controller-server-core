@@ -386,15 +386,15 @@ export default class Connection extends EventEmitter {
    * @returns {Object}
    */
   static setReadStreamDefaults (options, overwrite = true) {
-    if (typeof options !== 'object') options = Object.create(null)
+    if (typeof options !== 'object') options = {}
 
     let result
 
     const BPC = 1.063e+6
     const DEFAULTS = {
-      encoding: 'utf8',
       end: BPC,
-      highWaterMark: BPC
+      highWaterMark: BPC,
+      multiChunks: true
     }
     const optionsCache = Object.assign(Object.create(null), options)
 
@@ -402,8 +402,7 @@ export default class Connection extends EventEmitter {
       DEFAULTS.end = (typeof optionsCache.start === 'number' ? optionsCache.start : 0) + BPC
     }
 
-    if (overwrite) result = Object.assign(options, DEFAULTS, optionsCache)
-    else result = Object.assign(Object.create(null), DEFAULTS, options)
+    result = Object.assign(overwrite ? options : {}, DEFAULTS, optionsCache)
 
     if ((result.end - result.start) < result.highWaterMark) {
       result.highWaterMark = result.end - result.start
