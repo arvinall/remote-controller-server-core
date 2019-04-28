@@ -43,7 +43,7 @@ import makeEngine from './engine'
 const storagesList = Object.create(null)
 
 /**
- * core function creates main core module
+ * makeCore creates core namespace
  *
  * @param {object} [configs={}]
  * @param {string} [configs.storagePath=process.cwd()] Storages path address

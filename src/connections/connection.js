@@ -279,7 +279,7 @@ export default class Connection extends EventEmitter {
 
     message = JSON.stringify(message)
 
-    return new Promise(resolve => this.#socket.send(message, undefined, () => resolve()))
+    return new Promise(resolve => this.#socket.send(message, undefined, resolve))
       .then(() => {
         if (typeof callback === 'function') this.once(name, callback)
       })
@@ -394,13 +394,14 @@ export function uint8ArrayToUint8ArrayLike (uint8Array) {
  * @returns {module:connections/connection~Uint8ArrayLike}
  */
 export function bufferToUint8ArrayLike (buffer) {
-  let ab = new ArrayBuffer(buffer.length)
-  let view = new Uint8Array(ab)
-  for (var i = 0; i < buffer.length; ++i) {
-    view[i] = buffer[i]
+  const arrayBuffer = new ArrayBuffer(buffer.length)
+  const uint8Array = new Uint8Array(arrayBuffer)
+
+  for (let index = 0; index < buffer.length; index++) {
+    uint8Array[index] = buffer[index]
   }
 
-  return uint8ArrayToUint8ArrayLike(view)
+  return uint8ArrayToUint8ArrayLike(uint8Array)
 }
 
 /**
