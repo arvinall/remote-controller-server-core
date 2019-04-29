@@ -390,10 +390,10 @@ export default class Connection extends EventEmitter {
 
     let result
 
-    const BPC = 1.063e+6
+    const BPC = 1062500
     const DEFAULTS = {
       end: BPC,
-      highWaterMark: BPC,
+      highWaterMark: BPC + 1,
       multiChunks: true
     }
     const optionsCache = Object.assign(Object.create(null), options)
@@ -401,6 +401,8 @@ export default class Connection extends EventEmitter {
     if (typeof optionsCache.end !== 'number') {
       DEFAULTS.end = (typeof optionsCache.start === 'number' ? optionsCache.start : 0) + BPC
     }
+
+    if (typeof optionsCache.highWaterMark === 'number') optionsCache.highWaterMark++
 
     result = Object.assign(overwrite ? options : {}, DEFAULTS, optionsCache)
 
