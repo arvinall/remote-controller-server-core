@@ -61,7 +61,7 @@ export default class Passport {
       ? passportInput
       : passports[this.type](passportInput, this.salt)
 
-    return this.hash.compare(passport.hash) === 0
+    return this.hash.equals(passport.hash)
   }
 
   /**
