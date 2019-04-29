@@ -11,6 +11,14 @@
  * @see {@link https://nodejs.org/docs/latest-v10.x/api/events.html#events_class_eventemitter|EventEmitter}
  */
 /**
+ * Nodejs readableStream class
+ *
+ * @external module:remote-controller-server-core~external:readableStream
+ *
+ * @see {@link https://nodejs.org/api/stream.html#stream_readable_streams|Readable Streams}
+ */
+
+/**
  * ws module
  *
  * @external module:remote-controller-server-core~external:ws

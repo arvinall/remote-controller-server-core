@@ -8,6 +8,10 @@ module.exports = {
   env: {
     node: true
   },
+  rules: {
+    'generator-star-spacing': 'off',
+    'yield-star-spacing': 'off'
+  },
   overrides: [
     {
       files: ['**/*.test.js'],

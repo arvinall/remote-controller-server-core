@@ -3,10 +3,12 @@
  * @module connections/connection
  */
 
+import { promisify } from 'util'
 import EventEmitter from 'events'
 import WebSocket from 'ws'
 import Passport from '../passport'
 import idGenerator from '../idGenerator'
+import stream from 'stream'
 
 const CLIENT_AUTHENTICATION_FACTORS = ['passport']
 const generateID = idGenerator()
@@ -411,6 +413,69 @@ export default class Connection extends EventEmitter {
     }
 
     return result
+  }
+
+  /**
+   * A helper to read readable stream chunks
+   *
+   * @param {module:remote-controller-server-core~external:readableStream} readableStream
+   * @param {boolean} [multiChunk=true]
+   *
+   * @returns {module:connections/connection~streamChunksReader}
+   *
+   * @example
+   * let streamOptions = {@link module:connections/connection.setReadStreamDefaults|Connection.setReadStreamDefaults}({ end: 1062500 * 5 })
+   * let readableStream = fs.createReadStream('Big.File', streamOptions)
+   * ;(async function () {
+   *    for await (const someChunks of {@link module:connections/connection.readStreamChunks|Connection.readStreamChunks}(readableStream, false)()) {
+   *      await send('bigFile', streamOptions, ...someChunks)
+   *    }
+   *  })()
+   */
+  static readStreamChunks (readableStream, multiChunk = true) {
+    if (!(readableStream instanceof stream.Readable)) {
+      throw new Error('readableStream parameter is required and must be stream.Readable')
+    }
+
+    /**
+     * Resolve an array of chunks. <br>
+     * * `{@link module:connections/connection.readStreamChunks|readStreamChunks}(multiChunk = true)`:
+     * Resolve an array that contains **all** the chunks
+     * * `{@link module:connections/connection.readStreamChunks|readStreamChunks}(multiChunk = false)`:
+     * Resolve an array that contains **one** chunk in every iteration
+     *
+     * @name module:connections/connection~streamChunksReader
+     * @generator
+     *
+     * @returns {AsyncIterableIterator<Buffer[]>}
+     */
+    async function *streamChunksReader () {
+      const CHUNKS = []
+
+      while (!readableStream.closed) {
+        // EventEmitter events are not error first, so it reject the promise
+        try {
+          readableStream.resume()
+          await Promise.race([
+            promisify(readableStream.once.bind(readableStream))('data'),
+            promisify(readableStream.once.bind(readableStream))('close')
+          ])
+        } catch (chunk) {
+          readableStream.pause()
+
+          if (chunk instanceof Error) throw chunk
+          else if (chunk !== null) {
+            if (multiChunk) CHUNKS.push(chunk)
+
+            else yield [chunk]
+          }
+        }
+      }
+
+      if (multiChunk) yield CHUNKS
+    }
+
+    return streamChunksReader
   }
 }
 
