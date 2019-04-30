@@ -14,14 +14,13 @@ export const keyCodesList = [[48, 57], [65, 90]]
  * Make new id generator
  *
  * @param {number[][]} charCodesList Min and max key code as every element (sort by size)
+ * @param {string} [lastID]
  *
  * @returns {function(): string}
  */
-export default function idGenerator (charCodesList = keyCodesList) {
+export default function idGenerator (charCodesList = keyCodesList, lastID) {
   const firstID = codeToChar(charCodesList[0][0])
   const nextCode = nextCharCode.bind(null, charCodesList, charToCode(firstID))
-
-  let lastID
 
   /**
    * Make a new unique id
