@@ -1,16 +1,9 @@
-/* global test, expect, describe, afterAll */
+/* global test, expect, describe, afterAll, generateId, TMP_PATH */
 
-import path from 'path'
 import Storage from '../storage'
 import makeStorages from '../index'
 
-const TMP_PATH = path.join(process.cwd(), 'tmp')
-
 let storages
-
-function timestamp () {
-  return String(Date.now())
-}
 
 describe('makeStorages', () => {
   test('must return storages module without error', () => {
@@ -40,7 +33,7 @@ describe('storages get method', () => {
   describe('Success', () => {
     test('Read storage without error', () => {
       let configs = {
-        name: timestamp(),
+        name: generateId(),
         body: { test: 'Read storage via storages module' },
         path: TMP_PATH
       }
@@ -63,19 +56,19 @@ describe('storages initialize method', () => {
   describe('Errors', () => {
     test('Must throw error when name parameter is not string', () => {
       expect(storages.initialize
-        .bind(storages, Number(timestamp())))
+        .bind(storages, Number(generateId())))
         .toThrow('name parameter is required and must be string')
     })
 
     test('Must throw error when body parameter is not undefined/object', () => {
       expect(storages.initialize
-        .bind(storages, timestamp(), 'Test string body to initialize'))
+        .bind(storages, generateId(), 'Test string body to initialize'))
         .toThrow('body parameter must be object')
     })
 
     test('Must throw error when initialize existing storage', () => {
       const configs = {
-        name: timestamp(),
+        name: generateId(),
         body: { test: 'Initialize storage twice' }
       }
       const storage = storages.initialize(configs.name, configs.body)
@@ -91,7 +84,7 @@ describe('storages initialize method', () => {
   describe('Success', () => {
     test('Initialize storage without error', () => {
       const configs = {
-        name: timestamp(),
+        name: generateId(),
         body: { test: 'Initialize storage via storages' }
       }
       const storage = storages.initialize(configs.name, configs.body)
@@ -115,7 +108,7 @@ describe('storages remove method', () => {
     test('Must throw error when storage parameter is instance of Storage and deleted before (sync)', () => {
       const ERROR = 'Storage is not accessible'
       let storage = new Storage({
-        name: timestamp(),
+        name: generateId(),
         body: { test: 'Delete a deleted storage (sync)' },
         path: TMP_PATH
       })
@@ -130,7 +123,7 @@ describe('storages remove method', () => {
 
       const ERROR = 'Storage is not accessible'
       let storage = new Storage({
-        name: timestamp(),
+        name: generateId(),
         body: { test: 'Delete a deleted storage (sync)' },
         path: TMP_PATH
       })
@@ -145,7 +138,7 @@ describe('storages remove method', () => {
     })
 
     test('Must throw error when Storage is not exist in list (sync)', () => {
-      const name = timestamp()
+      const name = generateId()
       const ERROR = `${name} is not exist in list`
 
       expect(storages.remove.bind(storages, name)).toThrow(ERROR)
@@ -154,7 +147,7 @@ describe('storages remove method', () => {
     test('Must throw error when Storage is not exist in list (async)', async () => {
       expect.assertions(1)
 
-      const name = timestamp()
+      const name = generateId()
       const ERROR = `${name} is not exist in list`
 
       try {
@@ -167,7 +160,7 @@ describe('storages remove method', () => {
 
   describe('Success', () => {
     test('Remove storage via name without error (sync)', () => {
-      const storage = storages.initialize(timestamp(), { test: 'Delete Storage via name (sync)' })
+      const storage = storages.initialize(generateId(), { test: 'Delete Storage via name (sync)' })
 
       expect(storages.remove(storage.name)).toBeUndefined()
       expect(storage).toEqual(expect.objectContaining({
@@ -179,7 +172,7 @@ describe('storages remove method', () => {
     test('Remove storage via name without error (async)', async () => {
       expect.assertions(2)
 
-      const storage = storages.initialize(timestamp(), { test: 'Delete Storage via name (async)' })
+      const storage = storages.initialize(generateId(), { test: 'Delete Storage via name (async)' })
 
       expect(await storages.remove(storage.name, { sync: false })).toBeUndefined()
       expect(storage).toEqual(expect.objectContaining({
@@ -189,7 +182,7 @@ describe('storages remove method', () => {
     })
 
     test('Remove storage via Storage instance without error (sync)', () => {
-      const storage = storages.initialize(timestamp(), {
+      const storage = storages.initialize(generateId(), {
         test: 'Delete Storage via Storage instance (sync)'
       })
 
@@ -203,7 +196,7 @@ describe('storages remove method', () => {
     test('Remove storage via Storage instance without error (async)', async () => {
       expect.assertions(2)
 
-      const storage = storages.initialize(timestamp(), { test: 'Delete Storage via Storage instance (async)' })
+      const storage = storages.initialize(generateId(), { test: 'Delete Storage via Storage instance (async)' })
 
       expect(await storages.remove(storage, { sync: false })).toBeUndefined()
       expect(storage).toEqual(expect.objectContaining({
@@ -215,7 +208,7 @@ describe('storages remove method', () => {
 })
 
 test('storages has method must return right value', () => {
-  const storage = storages.initialize(timestamp(), { test: 'has method' })
+  const storage = storages.initialize(generateId(), { test: 'has method' })
   const name = storage.name
 
   expect(storages.has(name)).toBe(true)

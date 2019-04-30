@@ -1,16 +1,17 @@
-/* global test, expect */
+/* global test, expect, TMP_PATH, afterAll */
 
-import path from 'path'
-import Core from '../main'
+import makeCore from '../main'
 
-const TMP_PATH = path.join(process.cwd(), 'tmp')
+const serverCore = makeCore({
+  storagePath: TMP_PATH
+})
 
 test('Core must return core module correctly', () => {
-  let core = Core({
-    storagePath: TMP_PATH
-  })
-
-  expect(core).toEqual(expect.objectContaining({
-    preferences: expect.any(Object)
+  expect(serverCore).toEqual(expect.objectContaining({
+    storages: expect.any(Object),
+    preferences: expect.any(Object),
+    engine: expect.any(Object)
   }))
 })
+
+afterAll(() => serverCore.storages.get('preferences').remove())

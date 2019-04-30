@@ -1,18 +1,15 @@
-/* global test, expect, describe, afterAll */
+/* global test, expect, describe, afterAll, generateId, TMP_PATH */
 
-import path from 'path'
 import makeStorages from '../../storages'
-import makePreferences from '../index'
+import preferencesMaker from '../index'
 import Preference from '../preference'
 
-const storages = makeStorages({ path: path.join(process.cwd(), 'tmp') })
+const storages = makeStorages({ path: TMP_PATH })
+const core = { storages }
+const makePreferences = preferencesMaker.bind(core)
 
 let preferencesStorageName
 let preferences
-
-function timestamp () {
-  return String(Date.now())
-}
 
 describe('makePreferences', () => {
   describe('Errors', () => {
@@ -23,27 +20,9 @@ describe('makePreferences', () => {
       expect(makePreferences).toThrow(ERROR)
     })
 
-    test('Must throw error when configs.storages is not object or doesnt have initialize method', () => {
-      const ERROR = 'configs.storages is required and must be storages module'
-      const configs = { storages: 'wrong' }
-
-      expect(makePreferences.bind(null, configs)).toThrow(ERROR)
-
-      configs.storages = {}
-
-      expect(makePreferences.bind(null, configs)).toThrow(ERROR)
-
-      configs.storages = undefined
-
-      expect(makePreferences.bind(null, configs)).toThrow(ERROR)
-    })
-
     test('Must throw error when configs.name is not string', () => {
-      const ERROR = 'configs.name is required and must be string'
-      const configs = {
-        storages,
-        name: ['wrong']
-      }
+      const ERROR = 'configs.name must be string'
+      const configs = { name: ['wrong'] }
 
       expect(makePreferences.bind(null, configs)).toThrow(ERROR)
 
@@ -53,10 +32,7 @@ describe('makePreferences', () => {
     })
 
     test('Must throw error when another instance using this preferences name', () => {
-      const configs = {
-        storages,
-        name: timestamp()
-      }
+      const configs = { name: generateId() }
       const ERROR = `${configs.name} is already in use`
 
       makePreferences(configs)
@@ -68,10 +44,7 @@ describe('makePreferences', () => {
   })
 
   test('Must return preferences module without error', () => {
-    const configs = {
-      name: timestamp(),
-      storages
-    }
+    const configs = { name: generateId() }
 
     expect(makePreferences(configs)).toEqual(expect.objectContaining({
       get: expect.any(Function),
@@ -84,11 +57,8 @@ describe('makePreferences', () => {
   })
 
   afterAll(() => {
-    preferencesStorageName = timestamp()
-    preferences = makePreferences({
-      name: preferencesStorageName,
-      storages
-    })
+    preferencesStorageName = generateId()
+    preferences = makePreferences({ name: preferencesStorageName })
   })
 })
 
@@ -103,7 +73,7 @@ describe('preferences get method', () => {
   describe('Success', () => {
     test('Return Preference without error', () => {
       const configs = {
-        name: timestamp(),
+        name: generateId(),
         storage: storages.get(preferencesStorageName),
         body: { test: 'preferences get method test' }
       }
@@ -120,7 +90,7 @@ describe('preferences get method', () => {
 
     test('Return same Preference when call get twice', () => {
       const configs = {
-        name: timestamp(),
+        name: generateId(),
         storage: storages.get(preferencesStorageName),
         body: { test: 'preferences get method caching test' }
       }
@@ -148,11 +118,11 @@ describe('preferences initialize method', () => {
     test('Must throw error when body parameter is defined but not string', () => {
       const ERROR = 'body parameter must be object'
 
-      expect(preferences.initialize.bind(preferences, timestamp(), 'wrong')).toThrow(ERROR)
+      expect(preferences.initialize.bind(preferences, generateId(), 'wrong')).toThrow(ERROR)
     })
 
     test('Must throw error when initializing an existing Preference', () => {
-      const name = timestamp()
+      const name = generateId()
       const ERROR = `${name} is already exist`
 
       let preference = new Preference({
@@ -168,7 +138,7 @@ describe('preferences initialize method', () => {
   })
 
   test('Initialize and return Preference without error', () => {
-    const name = timestamp()
+    const name = generateId()
     const body = { test: 'Initialize Preference successfully' }
     const preference = preferences.initialize(name, body)
 
@@ -189,7 +159,7 @@ describe('preferences remove method', () => {
     test('Must throw error when Preference removed before (sync)', () => {
       const ERROR = 'Preference is not accessible'
       const preference = new Preference({
-        name: timestamp(),
+        name: generateId(),
         storage: storages.get(preferencesStorageName),
         body: { test: 'Remove a removed Preference (sync)' }
       })
@@ -204,7 +174,7 @@ describe('preferences remove method', () => {
 
       const ERROR = 'Preference is not accessible'
       const preference = new Preference({
-        name: timestamp(),
+        name: generateId(),
         storage: storages.get(preferencesStorageName),
         body: { test: 'Remove a removed Preference (async)' }
       })
@@ -220,7 +190,7 @@ describe('preferences remove method', () => {
 
     test('Must throw error when Preference doesnt exist in preferences module list (sync)', () => {
       const preference = new Preference({
-        name: timestamp(),
+        name: generateId(),
         storage: storages.get(preferencesStorageName),
         body: { test: 'Remove a Preference that doesnt exist in list (sync)' }
       })
@@ -234,7 +204,7 @@ describe('preferences remove method', () => {
       expect.assertions(2)
 
       const preference = new Preference({
-        name: timestamp(),
+        name: generateId(),
         storage: storages.get(preferencesStorageName),
         body: { test: 'Remove a Preference that doesnt exist in list (async)' }
       })
@@ -256,7 +226,7 @@ describe('preferences remove method', () => {
 
   describe('Success', () => {
     test('Remove Preference via name without error (sync)', () => {
-      const preference = preferences.initialize(timestamp(), {
+      const preference = preferences.initialize(generateId(), {
         test: 'Remove via name (sync)'
       })
 
@@ -270,7 +240,7 @@ describe('preferences remove method', () => {
     test('Remove Preference via name without error (async)', async () => {
       expect.assertions(2)
 
-      const preference = preferences.initialize(timestamp(), {
+      const preference = preferences.initialize(generateId(), {
         test: 'Remove via name (async)'
       })
 
@@ -282,7 +252,7 @@ describe('preferences remove method', () => {
     })
 
     test('Remove Preference via Preference instance without error (sync)', () => {
-      const preference = preferences.initialize(timestamp(), {
+      const preference = preferences.initialize(generateId(), {
         test: 'Remove via Preference instance (sync)'
       })
 
@@ -296,7 +266,7 @@ describe('preferences remove method', () => {
     test('Remove Preference via Preference instance without error (async)', async () => {
       expect.assertions(2)
 
-      const preference = preferences.initialize(timestamp(), {
+      const preference = preferences.initialize(generateId(), {
         test: 'Remove via Preference instance (async)'
       })
 
@@ -310,7 +280,7 @@ describe('preferences remove method', () => {
 })
 
 test('preferences has method must return right value', () => {
-  const preference = preferences.initialize(timestamp(), { test: 'has method' })
+  const preference = preferences.initialize(generateId(), { test: 'has method' })
   const name = preference.name
 
   expect(preferences.has(name)).toBe(true)
@@ -324,7 +294,7 @@ describe('preferences events', () => {
   test('Must emit removed event when a Preference removed', done => {
     expect.assertions(1)
 
-    const name = timestamp()
+    const name = generateId()
     const body = { test: 'removed event' }
     const preference = preferences.initialize(name, body)
 
@@ -342,7 +312,7 @@ describe('preferences events', () => {
   test('Must emit updated event when a Preference updated', done => {
     expect.assertions(1)
 
-    const name = timestamp()
+    const name = generateId()
     const body = { test: 'updated event' }
     const preference = preferences.initialize(name, body)
     const updatedBody = Object.assign({}, body, {

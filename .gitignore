@@ -83,7 +83,7 @@ typings/
 *.tmp
 
 # Temporary directory
-tmp/
+**/tmp/
 
 # Jetbrains configs
 .idea/

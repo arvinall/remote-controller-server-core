@@ -1,13 +1,11 @@
-/* global test, expect, describe */
+/* global test, expect, describe, afterAll, generateId, TMP_PATH */
 
 import Preference from '../preference'
-import path from 'path'
 import Storage from '../../storages/storage'
 
-const TMP_PATH = path.join(process.cwd(), 'tmp')
 const preferencesStorage = (() => {
   let configs = {
-    name: 'PreferenceTest',
+    name: generateId(),
     path: TMP_PATH
   }
 
@@ -19,10 +17,6 @@ const preferencesStorage = (() => {
     return new Storage(configs)
   }
 })()
-
-function timestamp () {
-  return String(Date.now())
-}
 
 describe('Preference constructor', () => {
   let initializedPreference
@@ -61,7 +55,7 @@ describe('Preference constructor', () => {
       const ERROR = 'Storage is not accessible'
       const configs = { name: 'deletedStorage' }
       const storage = new Storage({
-        name: timestamp(),
+        name: generateId(),
         body: {},
         path: TMP_PATH
       })
@@ -86,7 +80,7 @@ describe('Preference constructor', () => {
 
     test('Must throw error when configs.body is defined but Preference is already exist', () => {
       const configs = {
-        name: timestamp(),
+        name: generateId(),
         storage: preferencesStorage,
         body: { name: 'initializedPreference', test: 'Existing error' }
       }
@@ -101,7 +95,7 @@ describe('Preference constructor', () => {
 
     test('Must throw error when configs.body is undefined and Preference is not accessible', () => {
       const configs = {
-        name: timestamp(),
+        name: generateId(),
         storage: preferencesStorage
       }
       const ERROR = `${configs.name} is not accessible`
@@ -113,7 +107,7 @@ describe('Preference constructor', () => {
   describe('Success', () => {
     test('Initial without error', () => {
       const configs = {
-        name: timestamp(),
+        name: generateId(),
         storage: preferencesStorage,
         body: { test: 'Initialized Successful' }
       }
@@ -143,7 +137,7 @@ describe('Preference remove method', () => {
     test('Must throw error when remove a removed Preference', () => {
       const ERROR = 'Preference is not accessible'
       const configs = {
-        name: timestamp(),
+        name: generateId(),
         storage: preferencesStorage,
         body: { test: 'Remove a removed Preference' }
       }
@@ -159,7 +153,7 @@ describe('Preference remove method', () => {
   describe('Success', () => {
     test('Remove without error (sync)', () => {
       const configs = {
-        name: timestamp(),
+        name: generateId(),
         storage: preferencesStorage,
         body: { test: 'Remove (sync)' }
       }
@@ -173,7 +167,7 @@ describe('Preference remove method', () => {
       expect.assertions(2)
 
       const configs = {
-        name: timestamp(),
+        name: generateId(),
         storage: preferencesStorage,
         body: { test: 'Remove (async)' }
       }
@@ -190,7 +184,7 @@ describe('Preference update method', () => {
     test('Must throw error when body parameter is not object/function', () => {
       const ERROR = 'body parameter is required and must be object/function'
       const configs = {
-        name: timestamp(),
+        name: generateId(),
         storage: preferencesStorage,
         body: { test: 'Update without body' }
       }
@@ -204,7 +198,7 @@ describe('Preference update method', () => {
     test('Must throw error when update a removed Preference', () => {
       const ERROR = 'Preference is not accessible'
       const configs = {
-        name: timestamp(),
+        name: generateId(),
         storage: preferencesStorage,
         body: { test: 'Update a removed Preference' }
       }
@@ -223,7 +217,7 @@ describe('Preference update method', () => {
   describe('Success', () => {
     test('update via object without error (sync)', () => {
       const configs = {
-        name: timestamp(),
+        name: generateId(),
         storage: preferencesStorage,
         body: { test: 'update via object (sync)' }
       }
@@ -241,7 +235,7 @@ describe('Preference update method', () => {
       expect.assertions(2)
 
       const configs = {
-        name: timestamp(),
+        name: generateId(),
         storage: preferencesStorage,
         body: { test: 'update via object (async)' }
       }
@@ -257,7 +251,7 @@ describe('Preference update method', () => {
 
     test('update via function without error (sync)', () => {
       const configs = {
-        name: timestamp(),
+        name: generateId(),
         storage: preferencesStorage,
         body: { test: 'update via function (sync)' }
       }
@@ -279,7 +273,7 @@ describe('Preference update method', () => {
       expect.assertions(2)
 
       const configs = {
-        name: timestamp(),
+        name: generateId(),
         storage: preferencesStorage,
         body: { test: 'update via function (async)' }
       }
@@ -304,7 +298,7 @@ describe('Preference events', () => {
     expect.assertions(1)
 
     const configs = {
-      name: timestamp(),
+      name: generateId(),
       storage: preferencesStorage,
       body: { test: 'removed event' }
     }
@@ -325,7 +319,7 @@ describe('Preference events', () => {
     expect.assertions(1)
 
     const configs = {
-      name: timestamp(),
+      name: generateId(),
       storage: preferencesStorage,
       body: { test: 'updated event' }
     }
@@ -345,3 +339,5 @@ describe('Preference events', () => {
     preference.update(updatedBody)
   })
 })
+
+afterAll(() => preferencesStorage.remove())

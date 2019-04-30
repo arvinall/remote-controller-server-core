@@ -1,13 +1,8 @@
-/* global test, expect, describe */
+/* global test, expect, describe, generateId, TMP_PATH */
 
 import path from 'path'
 import Storage from '../storage'
-
-const TMP_PATH = path.join(process.cwd(), 'tmp')
-
-function timestamp () {
-  return String(Date.now())
-}
+import fs from 'fs'
 
 describe('Storage constructor', () => {
   describe('Errors', () => {
@@ -60,7 +55,7 @@ describe('Storage constructor', () => {
   describe('Success', () => {
     test('Initial storage without error', () => {
       let configs = {
-        name: timestamp(),
+        name: generateId(),
         body: {
           test: 'Initial storage successfully'
         },
@@ -70,6 +65,8 @@ describe('Storage constructor', () => {
 
       expect(storageInstance).toBeInstanceOf(Storage)
       expect(storageInstance).toHaveProperty('body', configs.body)
+
+      fs.unlinkSync(path.join(TMP_PATH, configs.name + '.json'))
     })
 
     test('Read storage without error', () => {
@@ -89,7 +86,7 @@ describe('Storage remove method', () => {
     test('Must throw error when remove a removed storage (sync)', () => {
       let body = { test: 'Remove twice storage (sync)' }
       let storage = new Storage({
-        name: timestamp(),
+        name: generateId(),
         path: TMP_PATH,
         body
       })
@@ -105,7 +102,7 @@ describe('Storage remove method', () => {
 
       let body = { test: 'Remove twice storage (async)' }
       let storage = new Storage({
-        name: timestamp(),
+        name: generateId(),
         path: TMP_PATH,
         body
       })
@@ -128,7 +125,7 @@ describe('Storage remove method', () => {
         test: 'Remove storage without error (sync)'
       }
       let storage = new Storage({
-        name: timestamp(),
+        name: generateId(),
         path: TMP_PATH,
         body
       })
@@ -145,7 +142,7 @@ describe('Storage remove method', () => {
         test: 'Remove storage without error (async)'
       }
       let storage = new Storage({
-        name: timestamp(),
+        name: generateId(),
         path: TMP_PATH,
         body
       })
@@ -164,7 +161,7 @@ describe('Storage update method', () => {
         test: 'Update storage without body parameter'
       }
       let storage = new Storage({
-        name: timestamp(),
+        name: generateId(),
         path: TMP_PATH,
         body
       })
@@ -179,7 +176,7 @@ describe('Storage update method', () => {
         test: 'Update storage with non object/function body parameter'
       }
       let storage = new Storage({
-        name: timestamp(),
+        name: generateId(),
         path: TMP_PATH,
         body
       })
@@ -194,7 +191,7 @@ describe('Storage update method', () => {
         test: 'Update deleted storage (sync)'
       }
       let storage = new Storage({
-        name: timestamp(),
+        name: generateId(),
         path: TMP_PATH,
         body
       })
@@ -213,7 +210,7 @@ describe('Storage update method', () => {
         test: 'Update deleted storage (async)'
       }
       let storage = new Storage({
-        name: timestamp(),
+        name: generateId(),
         path: TMP_PATH,
         body
       })
@@ -236,7 +233,7 @@ describe('Storage update method', () => {
         test: 'Update storage with object body parameter (sync)'
       }
       let storage = new Storage({
-        name: timestamp(),
+        name: generateId(),
         path: TMP_PATH,
         body
       })
@@ -257,7 +254,7 @@ describe('Storage update method', () => {
         test: 'Update storage with object body parameter (async)'
       }
       let storage = new Storage({
-        name: timestamp(),
+        name: generateId(),
         path: TMP_PATH,
         body
       })
@@ -277,7 +274,7 @@ describe('Storage update method', () => {
         test: 'Update storage with function body parameter (sync)'
       }
       let storage = new Storage({
-        name: timestamp(),
+        name: generateId(),
         path: TMP_PATH,
         body
       })
@@ -303,7 +300,7 @@ describe('Storage update method', () => {
         test: 'Update storage with function body parameter (async)'
       }
       let storage = new Storage({
-        name: timestamp(),
+        name: generateId(),
         path: TMP_PATH,
         body
       })
@@ -328,7 +325,7 @@ describe('Storage events', () => {
     expect.assertions(1)
 
     const configs = {
-      name: timestamp(),
+      name: generateId(),
       body: { test: 'removed event' },
       path: TMP_PATH
     }
@@ -350,7 +347,7 @@ describe('Storage events', () => {
     expect.assertions(1)
 
     const configs = {
-      name: timestamp(),
+      name: generateId(),
       body: { test: 'updated event' },
       path: TMP_PATH
     }
