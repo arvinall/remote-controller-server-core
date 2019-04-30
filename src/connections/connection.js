@@ -379,8 +379,7 @@ export default class Connection extends EventEmitter {
   /**
    * Set preferred options for nodejs fs.createReadStream method
    *
-   * * UTF8 encoding
-   * * Read 1.063 megabyte per chunk
+   * * Read 1.0625 megabyte per chunk
    *
    * @param {object} [options={}]
    * @param {boolean} [overwrite=true] Write to the same object or create a new one
@@ -392,6 +391,7 @@ export default class Connection extends EventEmitter {
 
     let result
 
+    // Byte Per Chunk
     const BPC = 1062500
     const DEFAULTS = {
       end: BPC,
@@ -434,15 +434,15 @@ export default class Connection extends EventEmitter {
    */
   static readStreamChunks (readableStream, multiChunk = true) {
     if (!(readableStream instanceof stream.Readable)) {
-      throw new Error('readableStream parameter is required and must be stream.Readable')
+      throw new Error('readableStream parameter is required and must be readableStream')
     }
 
     /**
      * Resolve an array of chunks. <br>
      * * `{@link module:connections/connection.readStreamChunks|readStreamChunks}(multiChunk = true)`:
-     * Resolve an array that contains **all** the chunks
+     * Resolve an array that contains **all** the chunks.
      * * `{@link module:connections/connection.readStreamChunks|readStreamChunks}(multiChunk = false)`:
-     * Resolve an array that contains **one** chunk in every iteration
+     * Resolve an array that contains **one** chunk in every iteration.
      *
      * @name module:connections/connection~streamChunksReader
      * @generator
@@ -453,7 +453,7 @@ export default class Connection extends EventEmitter {
       const CHUNKS = []
 
       while (!readableStream.closed) {
-        // EventEmitter events are not error first, so it reject the promise
+        // EventEmitter's events are not error first, so it reject the promise
         try {
           readableStream.resume()
           await Promise.race([
@@ -463,12 +463,8 @@ export default class Connection extends EventEmitter {
         } catch (chunk) {
           readableStream.pause()
 
-          if (chunk instanceof Error) throw chunk
-          else if (chunk !== null) {
-            if (multiChunk) CHUNKS.push(chunk)
-
-            else yield [chunk]
-          }
+          if (multiChunk) CHUNKS.push(chunk)
+          else yield [chunk]
         }
       }
 
