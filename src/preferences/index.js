@@ -10,7 +10,6 @@ import Preference from './preference'
  * makePreferences creates preferences module
  *
  * @param {object} configs
- * @param {module:storages~Storages} configs.storages storages module for storing Preferences
  * @param {string} [configs.name='preferences'] Preferences's Storage name
  *
  * @throws Will throw an error if Preferences file is already in use
@@ -19,15 +18,14 @@ import Preference from './preference'
  */
 export default function makePreferences (configs) {
   if (typeof configs !== 'object') throw new Error('configs parameter is required and must be object')
-  else if (typeof configs.storages !== 'object' || typeof configs.storages.initialize !== 'function') throw new Error('configs.storages is required and must be storages module')
 
   // Set default configs
   configs = Object.assign({
     name: 'preferences'
   }, configs)
 
-  if (typeof configs.name !== 'string') throw new Error('configs.name is required and must be string')
-  else if (configs.storages.has(configs.name)) throw new Error(`${configs.name} is already in use`)
+  if (typeof configs.name !== 'string') throw new Error('configs.name must be string')
+  else if (this.storages.has(configs.name)) throw new Error(`${configs.name} is already in use`)
 
   const PREFERENCES_GLOBAL_ERRORS = {
     accessibility: new Error(`Preference is not accessible`),
@@ -35,9 +33,9 @@ export default function makePreferences (configs) {
   }
   const preferencesStorage = (() => {
     try {
-      return configs.storages.get(configs.name)
+      return this.storages.get(configs.name)
     } catch (error) {
-      return configs.storages.initialize(configs.name)
+      return this.storages.initialize(configs.name)
     }
   })()
 

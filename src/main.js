@@ -74,10 +74,10 @@ export default function makeCore (configs = Object.create(null)) {
   /**
    * @namespace module:remote-controller-server-core~core
    */
-  const MODULE = Object.create(null)
+  const core = Object.create(null)
 
   if (storagesList[configs.storagePath] === undefined) {
-    storagesList[configs.storagePath] = makeStorages({ path: configs.storagePath })
+    storagesList[configs.storagePath] = makeStorages.call(core, { path: configs.storagePath })
   }
 
   /**
@@ -88,7 +88,7 @@ export default function makeCore (configs = Object.create(null)) {
    *
    * @type {module:storages~Storages}
    */
-  MODULE.storages = storagesList[configs.storagePath]
+  core.storages = storagesList[configs.storagePath]
 
   /**
    * Preference manager module
@@ -98,10 +98,7 @@ export default function makeCore (configs = Object.create(null)) {
    *
    * @type {module:preferences~Preferences}
    */
-  MODULE.preferences = makePreferences({
-    storages: MODULE.storages,
-    name: configs.preferenceStorageName
-  })
+  core.preferences = makePreferences.call(core, { name: configs.preferenceStorageName })
 
   /**
    * Core engine
@@ -111,9 +108,9 @@ export default function makeCore (configs = Object.create(null)) {
    *
    * @type {module:engine~Engine}
    */
-  MODULE.engine = makeEngine()
+  core.engine = makeEngine.call(core)
 
-  return Object.freeze(MODULE)
+  return Object.freeze(core)
 }
 
 export * as storages from './storages'
