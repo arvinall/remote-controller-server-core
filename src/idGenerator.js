@@ -13,14 +13,14 @@ export const keyCodesList = [[48, 57], [65, 90]]
 /**
  * Make new id generator
  *
- * @param {number[][]} charCodesList Min and max key code as every element (sort by size)
- * @param {string} [lastID]
+ * @param {number[][]} [charCodesList] Min and max key code as every element (sort by size)
+ * @param {string} [lastId]
  *
  * @returns {function(): string}
  */
-export default function idGenerator (charCodesList = keyCodesList, lastID) {
-  const firstID = codeToChar(charCodesList[0][0])
-  const nextCode = nextCharCode.bind(null, charCodesList, charToCode(firstID))
+export default function idGenerator (charCodesList = keyCodesList, lastId) {
+  const firstId = codeToChar(charCodesList[0][0])
+  const nextCode = nextCharCode.bind(null, charCodesList, charToCode(firstId))
 
   /**
    * Make a new unique id
@@ -28,58 +28,85 @@ export default function idGenerator (charCodesList = keyCodesList, lastID) {
    * @returns {string}
    */
   return function () {
-    if (lastID === undefined) lastID = firstID
+    if (lastId === undefined) lastId = firstId
     else {
-      let newID = lastID.split('')
+      let newId = lastId.split('')
 
-      for (let charIndex in newID) {
+      for (let charIndex in newId) {
         charIndex = Number(charIndex)
 
-        if (charToCode(newID[charIndex]) === charCodesList[charCodesList.length - 1][1]) {
-          newID[charIndex] = firstID
-          if (newID[charIndex + 1] === undefined) {
-            newID.push(firstID)
+        if (charToCode(newId[charIndex]) === charCodesList[charCodesList.length - 1][1]) {
+          newId[charIndex] = firstId
+          if (newId[charIndex + 1] === undefined) {
+            newId.push(firstId)
             break
           }
         } else {
-          let charCode = nextCode(charToCode(newID[charIndex]))
+          let charCode = nextCode(charToCode(newId[charIndex]))
 
-          newID[charIndex] = codeToChar(charCode)
+          newId[charIndex] = codeToChar(charCode)
           break
         }
       }
 
-      lastID = newID.join('')
+      lastId = newId.join('')
     }
 
-    return lastID
+    return lastId
   }
 }
 
+/**
+ * @param {number[][]} charCodesList
+ * @param {number} charCode
+ *
+ * @throws Will throw an error if id is not in range of charCodesList parameter
+ *
+ * @returns {number}
+ */
 function rangeOf (charCodesList, charCode) {
-  if (typeof charCode !== 'number') return
+  if (typeof charCode !== 'number') throw new Error('charCode parameter is required and mus be number')
 
   for (const rangeIndex in charCodesList) {
     if (charCode > charCodesList[rangeIndex][0] - 1 &&
       charCode < charCodesList[rangeIndex][1] + 1) return Number(rangeIndex)
   }
+
+  throw new Error('ID is not in range of charCodesList parameter')
 }
 
-function nextCharCode (charCodesList, firstID, charCode) {
+/**
+ * @param {number[][]} charCodesList
+ * @param {number} firstId
+ * @param {number} charCode
+ *
+ * @returns {number}
+ */
+function nextCharCode (charCodesList, firstId, charCode) {
   let rangeIndex = rangeOf(charCodesList, charCode)
 
   if (charCode >= charCodesList[rangeIndex][1]) {
-    if (rangeIndex === charCodesList.length - 1) charCode = firstID
+    if (rangeIndex === charCodesList.length - 1) charCode = firstId
     else charCode = charCodesList[rangeIndex + 1][0]
   } else charCode++
 
   return charCode
 }
 
+/**
+ * @param {number} charCode
+ *
+ * @returns {string}
+ */
 function codeToChar (charCode) {
   return String.fromCharCode(charCode).toUpperCase()
 }
 
+/**
+ * @param {string} char
+ *
+ * @returns {number}
+ */
 function charToCode (char) {
   return char.toUpperCase().charCodeAt(0)
 }
