@@ -106,7 +106,7 @@ export default function makeEngine (configs = Object.create(null)) {
      * Get server address
      *
      * @example
-     * { address: '192.168.1.2', family: 'IPv4', port: 7777}
+     * { address: '192.168.1.2', family: 'IPv4', port: 7777, path: '/'}
      *
      * @type {{address: (string|null), family: string, port: number}}
      *
@@ -118,7 +118,8 @@ export default function makeEngine (configs = Object.create(null)) {
 
       Object.assign(ADDRESS, {
         family: 'IPv4',
-        port: configs.port
+        port: configs.port,
+        path: configs.path
       }, ADDRESS_CACHE, {
         address: getNetworkIP()
       })
