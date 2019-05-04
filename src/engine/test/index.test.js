@@ -1,14 +1,15 @@
 /* global test, expect, describe, jest, afterAll, afterEach */
 
 import envConfigs from './configs'
-import engineIOClient from 'engine.io-client'
+import WebSocket from 'ws'
 import makeEngine from '../index'
 
 const engineConfigs = { port: 8888, path: '/test' }
 
 let engine
+let webSocketParameters
 
-afterEach(() => jest.setTimeout(5000))
+afterEach(() => jest.setTimeout(envConfigs.timeout))
 
 describe('makeEngine', () => {
   describe('Errors', () => {
@@ -36,10 +37,7 @@ describe('makeEngine', () => {
   })
 
   test('makeEngine must return engine module without error', () => {
-    const configs = {
-      port: 8888
-    }
-    const engine = makeEngine(configs)
+    const engine = makeEngine(engineConfigs)
 
     expect(engine).toEqual(expect.any(Object))
     expect(engine).toEqual(expect.objectContaining({
@@ -48,12 +46,18 @@ describe('makeEngine', () => {
       address: expect.any(Object),
       isActive: expect.any(Boolean)
     }))
-    expect(engine.address).toEqual(expect.any(Object))
-    expect(engine.address.port).toBe(configs.port)
-    expect(typeof engine.address.ip === 'string' || engine.address.ip === null).toBe(true)
+    expect(engine.address.port).toBe(engineConfigs.port)
+    expect(typeof engine.address.address === 'string' || engine.address.address === null).toBe(true)
   })
 
-  afterAll(() => { engine = makeEngine(engineConfigs) })
+  afterAll(() => {
+    engine = makeEngine(engineConfigs)
+
+    webSocketParameters = [
+      `ws://${engine.address.address}:${engine.address.port}` + engineConfigs.path,
+      { perMessageDeflate: true }
+    ]
+  })
 })
 
 describe('engine start method', () => {
@@ -81,26 +85,18 @@ describe('engine start method', () => {
     })
   })
 
-  test('Start webSocket server without error (async)', async () => {
+  test('Start and connect to webSocket server without error (async)', async () => {
     expect.assertions(3)
-
-    jest.setTimeout(envConfigs.timeout)
 
     expect(await engine.start()).toBeUndefined()
     expect(engine.isActive).toBe(true)
 
-    const webSocketClient = new engineIOClient
-      .Socket(`ws://${engine.address.ip}:${engine.address.port}`, {
-        path: engineConfigs.path,
-        transports: ['websocket']
-      })
+    const webSocketClient = new WebSocket(...webSocketParameters)
 
-    return new Promise(resolve => webSocketClient.on('open', resolve))
-      .then(() => expect(webSocketClient.readyState).toBe('open'))
-      .then(async () => {
-        webSocketClient.close()
-        await engine.stop()
-      })
+    await (new Promise(resolve => webSocketClient.on('open', resolve)))
+    expect(webSocketClient.readyState).toBe(WebSocket.OPEN)
+    webSocketClient.close()
+    await engine.stop()
   })
 })
 
@@ -122,21 +118,15 @@ describe('engine stop method', () => {
   test('Stop webSocket server without error (async)', async () => {
     expect.assertions(2)
 
-    jest.setTimeout(envConfigs.timeout)
-
     await engine.start()
 
-    const webSocketClient = new engineIOClient
-      .Socket(`ws://${engine.address.ip}:${engine.address.port}`, {
-        path: engineConfigs.path,
-        transports: ['websocket']
-      })
+    const webSocketClient = new WebSocket(...webSocketParameters)
 
     await new Promise(resolve => webSocketClient.on('open', resolve))
       .then(async () => expect(await engine.stop()).toBeUndefined())
 
     return new Promise(resolve => webSocketClient.on('close', resolve))
-      .then(() => expect(webSocketClient.readyState).toBe('closed'))
+      .then(() => expect(webSocketClient.readyState).toBe(WebSocket.CLOSED))
   })
 })
 
