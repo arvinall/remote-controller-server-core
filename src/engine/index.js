@@ -105,14 +105,23 @@ export default function makeEngine (configs = Object.create(null)) {
     /**
      * Get server address
      *
-     * @type {{address: string, family: string, port: number, ip: (string|null)}}
+     * @example
+     * { address: '192.168.1.2', family: 'IPv4', port: 7777}
+     *
+     * @type {{address: (string|null), family: string, port: number}}
      *
      * @see {@link https://github.com/websockets/ws/blob/master/doc/ws.md#serveraddress|WebSocket.Server#address method}
      */
     get address () {
-      const ADDRESS = webSocketServer.address()
+      const ADDRESS = webSocketServer.address() || {}
+      const ADDRESS_CACHE = Object.assign(Object.create(null), ADDRESS)
 
-      ADDRESS.ip = getNetworkIP()
+      Object.assign(ADDRESS, {
+        family: 'IPv4',
+        port: configs.port
+      }, ADDRESS_CACHE, {
+        address: getNetworkIP()
+      })
 
       return ADDRESS
     }
