@@ -50,27 +50,31 @@ export default function makeEngine (configs = Object.create(null)) {
      *
      * @emits module:engine~Engine#event:started
      *
+     * @async
      * @returns {Promise<(void|Error)>}
      * * Rejection
      *  * Reject an error if engine started before
      *  * Reject an error if there is no network
      */
-    async start (port = configs.port) {
+    start (port = configs.port) {
       if (typeof port !== 'number') throw new Error('port parameter must be number')
-      else if (this.isActive) return Promise.reject(new Error('Engine already started'))
-      else if (getNetworkIP() === null) return Promise.reject(new Error('Network is not available'))
 
-      configs.port = port
+      return (async function () { // eslint-disable-line no-extra-parens
+        if (this.isActive) return Promise.reject(new Error('Engine already started'))
+        else if (getNetworkIP() === null) return Promise.reject(new Error('Network is not available'))
 
-      /**
-       * Engine started event
-       *
-       * @event module:engine~Engine#event:started
-       */
-      const fireEvent = () => { this.emit('started') }
+        configs.port = port
 
-      return promisify(httpServer.listen.bind(httpServer))({ port, host: '0.0.0.0' })
-        .then(fireEvent, error => Promise.reject(error))
+        /**
+         * Engine started event
+         *
+         * @event module:engine~Engine#event:started
+         */
+        const fireEvent = () => { this.emit('started') }
+
+        await promisify(httpServer.listen.bind(httpServer))({ port, host: '0.0.0.0' })
+        fireEvent()
+      }).call(this)
     }
 
     /**
@@ -83,7 +87,7 @@ export default function makeEngine (configs = Object.create(null)) {
      *  * Reject an error if engine stopped before
      */
     async stop () {
-      if (!this.isActive) return Promise.reject(new Error('Engine already stopped'))
+      if (!this.isActive) throw new Error('Engine already stopped')
 
       /**
        * Engine stopped event
@@ -94,8 +98,8 @@ export default function makeEngine (configs = Object.create(null)) {
 
       for (const webSocket of webSocketServer.clients) { webSocket.close() }
 
-      return promisify(httpServer.close.bind(httpServer))()
-        .then(fireEvent, error => Promise.reject(error))
+      await promisify(httpServer.close.bind(httpServer))()
+      fireEvent()
     }
 
     /**
