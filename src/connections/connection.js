@@ -11,7 +11,7 @@ import idGenerator from '../idGenerator'
 import stream from 'stream'
 
 const CLIENT_AUTHENTICATION_FACTORS = ['passport']
-const generateID = idGenerator()
+const generateId = idGenerator()
 
 /**
  * @summary Connection is a {@link module:remote-controller-server-core~external:ws.WebSocket|ws.WebSocket} wrapper
@@ -110,7 +110,7 @@ export default class Connection extends EventEmitter {
    * @param {object} [configs.authenticationFactors={}] Authentication factors
    * @param {boolean} [configs.authenticationFactors.confirmation=true] Must Connection confirm before interact?
    * @param {boolean} [configs.authenticationFactors.passport=false]
-   * @param {module:passport} [configs.passport] Required if configs.authenticationFactors.passport === true
+   * @param {module:passport} [configs.passport] Required if configs.authenticationFactors.passport is set to true
    *
    * @emits module:connections/connection#event:authentication
    */
@@ -151,7 +151,7 @@ export default class Connection extends EventEmitter {
       throw new Error('configs.passport is required and must be Passport')
     }
 
-    this.#id = generateID()
+    this.#id = generateId()
     this.#socket = configs.socket
     this.#address = this.#socket.request.socket.remoteAddress
     for (let factor in this.#authenticationFactors) {
