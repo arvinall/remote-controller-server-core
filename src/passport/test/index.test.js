@@ -25,8 +25,8 @@ describe('Passport constructor', () => {
       expect(() => new Passport(passports.types[0])).toThrow(ERROR)
     })
 
-    test('Must throw error when passport parameter is not a encryption object', () => {
-      const ERROR = 'passport parameter must be a encryption object'
+    test('Must throw error when passport parameter is not an encryption object', () => {
+      const ERROR = 'passport parameter must be an encryption object'
 
       expect(() => new Passport(passports.types[0], null)).toThrow(ERROR)
       expect(() => new Passport(passports.types[0], null, {})).toThrow(ERROR)

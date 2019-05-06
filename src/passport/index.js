@@ -35,8 +35,11 @@ export default class Passport {
     if (typeof type !== 'string' || !passports.hasOwnProperty(type)) {
       throw new Error('type parameter is required and must be string and one of passport types')
     } else if (passportInput === undefined) throw GLOBAL_ERRORS.passportInputRequired
-    else if (passportInput === null && (typeof passport !== 'object' || !(passport.hash instanceof Buffer) || !(passport.hash instanceof Buffer))) {
-      throw new Error('passport parameter must be a encryption object')
+    else if (passportInput === null &&
+      (typeof passport !== 'object' ||
+        !(passport.hash instanceof Buffer) ||
+        !(passport.hash instanceof Buffer))) {
+      throw new Error('passport parameter must be an encryption object')
     }
 
     this.#type = type
