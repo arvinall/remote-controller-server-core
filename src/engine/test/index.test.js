@@ -1,4 +1,4 @@
-/* global test, expect, describe, jest, afterAll, afterEach */
+/* global test, expect, describe, jest, afterAll, beforeEach */
 
 import envConfigs from '../../test/configs'
 import WebSocket from 'ws'
@@ -9,7 +9,7 @@ const engineConfigs = { port: 8888, path: '/test' }
 let engine
 let webSocketParameters
 
-afterEach(() => jest.setTimeout(envConfigs.timeout))
+beforeEach(() => jest.setTimeout(envConfigs.timeout))
 
 describe('makeEngine', () => {
   describe('Errors', () => {
