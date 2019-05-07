@@ -5,7 +5,8 @@ import WebSocket from 'ws'
 import Passport from '../../passport'
 import Connection from '../connection'
 
-const PASSPORT = new Passport('password', 'aB_54321')
+const PASSWORD = 'aB_54321'
+const PASSPORT = new Passport('password', PASSWORD)
 const webSocketOptions = { perMessageDeflate: true }
 const webSocketServerOptions = {
   host: '127.0.0.1',
@@ -15,6 +16,8 @@ const webSocketServerOptions = {
 const webSocketServer = new WebSocket.Server(webSocketServerOptions)
 
 webSocketServerOptions.address = `ws://${webSocketServerOptions.host}:${webSocketServerOptions.port}`
+
+let connection // eslint-disable-line no-unused-vars
 
 async function getSocket () {
   return new Promise(resolve => {
@@ -109,6 +112,14 @@ describe('Connection constructor', () => {
     })
   })
 
+  const configs = {
+    authenticationFactors: {
+      /* confirmation: true,
+      passport: false */
+    },
+    passport: PASSPORT
+  }
+
   describe('Success', () => {
     test('Initial without error', async () => {
       expect.assertions(1)
@@ -127,15 +138,7 @@ describe('Connection constructor', () => {
       expect(connection).toBeInstanceOf(Connection)
     })
 
-    describe('Must sends authentication ask status messages', () => {
-      const configs = {
-        authenticationFactors: {
-          /* confirmation: true,
-          passport: false */
-        },
-        passport: PASSPORT
-      }
-
+    describe('Must sends authentications ask status messages', () => {
       test('Factor: confirmation', async () => {
         expect.assertions(3)
 
@@ -158,6 +161,7 @@ describe('Connection constructor', () => {
         expect(messageBody.factor).toBe('confirmation')
         expect(messageBody.status).toBe(0)
       })
+
       test('Factor: passport', async () => {
         expect.assertions(4)
 
@@ -184,6 +188,7 @@ describe('Connection constructor', () => {
         expect(messageBody.status).toBe(0)
         expect(messageBody.type).toBe(configs.passport.type)
       })
+
       test('Factors: confirmation, passport', async () => {
         expect.assertions(7)
 
@@ -203,7 +208,7 @@ describe('Connection constructor', () => {
         const message = await (new Promise(resolve => {
           const result = []
 
-          function getData (data) {
+          webSocket.on('message', function getData (data) {
             result.push(JSON.parse(data))
 
             if (result.length >= 2) {
@@ -211,15 +216,15 @@ describe('Connection constructor', () => {
 
               resolve(result)
             }
-          }
-
-          webSocket.on('message', getData)
+          })
         }))
 
+        // confirmation
         expect(message[0][0]).toBe('authentication')
         expect(message[0][1][0].factor).toBe('confirmation')
         expect(message[0][1][0].status).toBe(0)
 
+        // passport
         expect(message[1][0]).toBe('authentication')
         expect(message[1][1][0].factor).toBe('passport')
         expect(message[1][1][0].status).toBe(0)
@@ -227,6 +232,97 @@ describe('Connection constructor', () => {
 
         webSocket.on('message', data => console.error('Unexpected behavior', data))
       })
+    })
+
+    test('Must sends passport authentication factor allowed/denied status messages', async () => {
+      expect.assertions(9)
+
+      configs.authenticationFactors.confirmation = false
+      configs.authenticationFactors.passport = true
+
+      const webSocket = new WebSocket(webSocketServerOptions.address, webSocketOptions)
+      const [ socket, request ] = await getSocket()
+
+      webSocket.once('error', () => {})
+
+      socket.request = request
+      configs.socket = socket
+
+      ;(() => new Connection(configs))()
+
+      let message
+      let messageName
+      let messageBody
+
+      await (async (/* Ask */) => {
+        message = JSON
+          .parse(await (new Promise(resolve => webSocket.once('message', resolve))))
+        messageName = message[0]
+        messageBody = message[1][0]
+
+        expect(messageName).toBe('authentication')
+        expect(messageBody.factor).toBe('passport')
+        expect(messageBody.status).toBe(0)
+      })()
+
+      await (async (/* Deny */) => {
+        webSocket.send(JSON.stringify([
+          'authenticate',
+          [
+            {
+              factor: 'passport',
+              passportInput: 'wrong'
+            }
+          ]
+        ]))
+
+        message = JSON
+          .parse(await (new Promise(resolve => webSocket.once('message', resolve))))
+        messageName = message[0]
+        messageBody = message[1][0]
+
+        expect(messageName).toBe('authentication')
+        expect(messageBody.factor).toBe('passport')
+        expect(messageBody.status).toBe(2)
+      })()
+
+      await (async (/* Allow */) => {
+        webSocket.send(JSON.stringify([
+          'authenticate',
+          [
+            {
+              factor: 'passport',
+              passportInput: PASSWORD
+            }
+          ]
+        ]))
+
+        message = JSON
+          .parse(await (new Promise(resolve => webSocket.once('message', resolve))))
+        messageName = message[0]
+        messageBody = message[1][0]
+
+        expect(messageName).toBe('authentication')
+        expect(messageBody.factor).toBe('passport')
+        expect(messageBody.status).toBe(1)
+      })()
+
+      webSocket.on('message', data => console.error('Unexpected behavior', data))
+    })
+
+    afterAll(async () => {
+      configs.authenticationFactors.confirmation = true
+      configs.authenticationFactors.passport = true
+
+      const webSocket = new WebSocket(webSocketServerOptions.address, webSocketOptions)
+      const [ socket, request ] = await getSocket()
+
+      webSocket.once('error', () => {})
+
+      socket.request = request
+      configs.socket = socket
+
+      connection = new Connection(configs)
     })
   })
 })
