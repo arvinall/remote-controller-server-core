@@ -17,13 +17,13 @@ const generateId = idGenerator()
  * @summary Connection is a {@link module:remote-controller-server-core~external:ws.WebSocket|ws.WebSocket} wrapper
  * @description
  * This class receives client's messages like this
- * <br> `'["name", ["body", ...]]'` <br>
+ * <br> `'[string, *[]]'` <br>
  * and then emit an event with its name and body
  * ##### Elements
  *  | Name | Type | Attributes | Description |
  *  | --- | --- | --- | --- | --- |
- *  | `name` | `string` |   | Message's name |
- *  | `body` | `*[]` | <optional> | Message's body (Every element pass as parameter to event) |
+ *  | `0` | `string` |   | Message's name |
+ *  | `1` | `*[]` | <optional> | Message's body (Every element pass as parameter to event) |
  *
  *
  * ### Messages
@@ -62,15 +62,15 @@ export default class Connection extends EventEmitter {
    */
   #authenticationFactors = {
     // [Requirement, Verification]
-    confirmation: [false /* , false */], // eslint-disable-line standard/array-bracket-even-spacing
-    passport: [false /* , false */] // eslint-disable-line standard/array-bracket-even-spacing
+    passport: [false /* , false */], // eslint-disable-line standard/array-bracket-even-spacing
+    confirmation: [true /* , false */] // eslint-disable-line standard/array-bracket-even-spacing
   }
 
   /**
    * @emits module:connections/connection#event:authentication
    */
   #fireAuthenticatedEvent = (() => {
-    let isAuthenticateCache = this.isAuthenticate
+    let isAuthenticateCache
 
     return () => {
       const EVENT_PROPS = ['authentication', {
@@ -78,6 +78,11 @@ export default class Connection extends EventEmitter {
       }]
 
       if (isAuthenticateCache === this.isAuthenticate) return
+
+      if (this.#authenticationFactors.confirmation[0] &&
+        this.#authenticationFactors.confirmation[1] === undefined &&
+        this.#authenticationFactors.passport[0]) return
+
       isAuthenticateCache = this.isAuthenticate
 
       this.emit(...EVENT_PROPS)
@@ -218,15 +223,29 @@ export default class Connection extends EventEmitter {
           status: 0
         }]
 
-        switch (factor) {
-          case 'passport':
-            EVENT_PROPS[1].type = this.#passport.type
-            break
-        }
+        if (factor === 'passport') EVENT_PROPS[1].type = this.#passport.type
 
         this.emit(...EVENT_PROPS)
         this.send(...EVENT_PROPS)
+
+        break
       }
+
+      this.on('authentication', event => setImmediate(() => {
+        if (event.factor === 'passport') {
+          if (!this.isAuthenticate &&
+            this.#authenticationFactors.confirmation[0] &&
+            event.status === 1) {
+            const EVENT_PROPS = ['authentication', {
+              factor: 'confirmation',
+              status: 0
+            }]
+
+            this.emit(...EVENT_PROPS)
+            this.send(...EVENT_PROPS)
+          }
+        }
+      }))
 
       this.on('authenticate', event => {
         if (
@@ -236,11 +255,7 @@ export default class Connection extends EventEmitter {
           !CLIENT_AUTHENTICATION_FACTORS.includes(event.factor)
         ) return
 
-        switch (event.factor) {
-          case 'passport':
-            this.#passportChecker(event.passportInput)
-            break
-        }
+        if (event.factor === 'passport') this.#passportChecker(event.passportInput)
       })
     })
   }
@@ -348,7 +363,7 @@ export default class Connection extends EventEmitter {
       }
     }
 
-    return authenticated
+    return !!authenticated
   }
 
   /**
