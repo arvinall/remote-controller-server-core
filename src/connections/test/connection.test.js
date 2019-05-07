@@ -17,7 +17,9 @@ const webSocketServer = new WebSocket.Server(webSocketServerOptions)
 
 webSocketServerOptions.address = `ws://${webSocketServerOptions.host}:${webSocketServerOptions.port}`
 
-let connection // eslint-disable-line no-unused-vars
+let connection
+let socket
+let webSocket
 
 async function getSocket () {
   return new Promise(resolve => {
@@ -431,21 +433,86 @@ describe('Connection constructor', () => {
 
       webSocket.on('message', data => console.error('Unexpected behavior', data))
     })
+  })
 
-    afterAll(async () => {
-      configs.authenticationFactors.confirmation = true
-      configs.authenticationFactors.passport = true
+  afterAll(async () => {
+    configs.authenticationFactors.confirmation = false
+    configs.authenticationFactors.passport = true
 
-      const webSocket = new WebSocket(webSocketServerOptions.address, webSocketOptions)
-      const [ socket, request ] = await getSocket()
+    webSocket = new WebSocket(webSocketServerOptions.address, webSocketOptions)
 
-      webSocket.once('error', () => {})
+    webSocket.once('error', () => {})
 
-      socket.request = request
-      configs.socket = socket
+    socket = await getSocket()
+    socket[0].request = socket[1]
+    socket = socket[0]
 
-      connection = new Connection(configs)
+    configs.socket = socket
+
+    connection = new Connection(configs)
+
+    await (new Promise(resolve => webSocket.once('open', resolve)))
+  })
+})
+
+describe('Connection properties', () => {
+  test('Connection id property must return string with at least one character', () => {
+    expect(!!connection.id.length).toBe(true)
+  })
+
+  test('Connection address property must return string that contains 4 dot', () => {
+    expect(!!connection.address.length).toBe(true)
+    expect(connection.address.split('.').length).toBe(4)
+  })
+
+  test('Connection isAuthenticate property must return false when passport is not provided', () => {
+    expect(connection.isAuthenticate).toBe(false)
+  })
+
+  test('Connection isAuthenticate property must return true when passport is provided', async () => {
+    webSocket.send(JSON.stringify([
+      'authenticate',
+      [
+        {
+          factor: 'passport',
+          passportInput: PASSWORD
+        }
+      ]
+    ]))
+
+    await (new Promise(resolve => connection.once('authentication', resolve)))
+
+    expect(connection.isAuthenticate).toBe(true)
+  })
+
+  test('Connection isConnected property must return true when connection is established', () => {
+    expect(connection.isConnected).toBe(true)
+  })
+
+  test('Connection isConnected property must return true when connection is established', () => {
+    socket.close()
+
+    expect(connection.isConnected).toBe(false)
+  })
+
+  afterAll(async () => {
+    webSocket = new WebSocket(webSocketServerOptions.address, webSocketOptions)
+
+    webSocket.once('error', () => {})
+
+    socket = await getSocket()
+    socket[0].request = socket[1]
+    socket = socket[0]
+
+    connection = new Connection({
+      socket,
+      authenticationFactors: {
+        passport: true
+      },
+      passport: PASSPORT
     })
+
+    await (new Promise(resolve => webSocket.once('open', resolve)))
   })
 })
 
