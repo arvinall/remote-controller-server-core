@@ -62,8 +62,8 @@ export default class Connection extends EventEmitter {
    */
   #authenticationFactors = {
     // [Requirement, Verification]
-    confirmation: [false, false],
-    passport: [false, false]
+    confirmation: [false /* , false */], // eslint-disable-line standard/array-bracket-even-spacing
+    passport: [false /* , false */] // eslint-disable-line standard/array-bracket-even-spacing
   }
 
   /**
