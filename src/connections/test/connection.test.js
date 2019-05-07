@@ -333,6 +333,105 @@ describe('Connection constructor', () => {
       webSocket.on('message', data => console.error('Unexpected behavior', data))
     })
 
+    test('Must sends authentication status messages when passport sends', async () => {
+      expect.assertions(9)
+
+      configs.authenticationFactors.confirmation = false
+      configs.authenticationFactors.passport = true
+
+      const webSocket = new WebSocket(webSocketServerOptions.address, webSocketOptions)
+      const [ socket, request ] = await getSocket()
+
+      webSocket.once('error', () => {})
+
+      socket.request = request
+      configs.socket = socket
+
+      ;(() => new Connection(configs))()
+
+      let message
+      let messageName
+      let messageBody
+
+      await (async (/* Ask */) => {
+        message = JSON
+          .parse(await (new Promise(resolve => webSocket.once('message', resolve))))
+        messageName = message[0]
+        messageBody = message[1][0]
+
+        expect(messageName).toBe('authentication')
+        expect(messageBody.factor).toBe('passport')
+        expect(messageBody.status).toBe(0)
+      })()
+
+      await (async (/* Deny */) => {
+        webSocket.send(JSON.stringify([
+          'authenticate',
+          [
+            {
+              factor: 'passport',
+              passportInput: 'wrong'
+            }
+          ]
+        ]))
+
+        // Get second message
+        message = await (new Promise(resolve => {
+          const result = []
+
+          webSocket.on('message', function getData (data) {
+            result.push(JSON.parse(data))
+
+            if (result.length >= 2) {
+              webSocket.off('message', getData)
+
+              resolve(result[1])
+            }
+          })
+        }))
+        messageName = message[0]
+        messageBody = message[1][0]
+
+        expect(messageName).toBe('authentication')
+        expect(messageBody.factor).toBeUndefined()
+        expect(messageBody.status).toBe(2)
+      })()
+
+      await (async (/* Allow */) => {
+        webSocket.send(JSON.stringify([
+          'authenticate',
+          [
+            {
+              factor: 'passport',
+              passportInput: PASSWORD
+            }
+          ]
+        ]))
+
+        message = await (new Promise(resolve => {
+          const result = []
+
+          webSocket.on('message', function getData (data) {
+            result.push(JSON.parse(data))
+
+            if (result.length >= 2) {
+              webSocket.off('message', getData)
+
+              resolve(result[1])
+            }
+          })
+        }))
+        messageName = message[0]
+        messageBody = message[1][0]
+
+        expect(messageName).toBe('authentication')
+        expect(messageBody.factor).toBeUndefined()
+        expect(messageBody.status).toBe(1)
+      })()
+
+      webSocket.on('message', data => console.error('Unexpected behavior', data))
+    })
+
     afterAll(async () => {
       configs.authenticationFactors.confirmation = true
       configs.authenticationFactors.passport = true
