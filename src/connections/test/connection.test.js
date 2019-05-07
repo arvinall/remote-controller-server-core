@@ -138,7 +138,7 @@ describe('Connection constructor', () => {
       expect(connection).toBeInstanceOf(Connection)
     })
 
-    describe('Must sends authentications ask status messages', () => {
+    describe('Must sends authentications ask status messages when connected', () => {
       test('Factor: confirmation', async () => {
         expect.assertions(3)
 
@@ -205,7 +205,35 @@ describe('Connection constructor', () => {
 
         ;(() => new Connection(configs))()
 
-        const message = await (new Promise(resolve => {
+        let message
+        let messageName
+        let messageBody
+
+        // passport
+        message = JSON
+          .parse(await (new Promise(resolve => webSocket.once('message', resolve))))
+        messageName = message[0]
+        messageBody = message[1][0]
+
+        expect(messageName).toBe('authentication')
+        expect(messageBody.factor).toBe('passport')
+        expect(messageBody.status).toBe(0)
+        expect(messageBody.type).toBe(configs.passport.type)
+
+        webSocket.send(JSON.stringify([
+          'authenticate',
+          [
+            {
+              factor: 'passport',
+              passportInput: PASSWORD
+            }
+          ]
+        ]))
+
+        // confirmation
+
+        // Get second message
+        message = await (new Promise(resolve => {
           const result = []
 
           webSocket.on('message', function getData (data) {
@@ -214,27 +242,22 @@ describe('Connection constructor', () => {
             if (result.length >= 2) {
               webSocket.off('message', getData)
 
-              resolve(result)
+              resolve(result[1])
             }
           })
         }))
+        messageName = message[0]
+        messageBody = message[1][0]
 
-        // confirmation
-        expect(message[0][0]).toBe('authentication')
-        expect(message[0][1][0].factor).toBe('confirmation')
-        expect(message[0][1][0].status).toBe(0)
-
-        // passport
-        expect(message[1][0]).toBe('authentication')
-        expect(message[1][1][0].factor).toBe('passport')
-        expect(message[1][1][0].status).toBe(0)
-        expect(message[1][1][0].type).toBe(configs.passport.type)
+        expect(messageName).toBe('authentication')
+        expect(messageBody.factor).toBe('confirmation')
+        expect(messageBody.status).toBe(0)
 
         webSocket.on('message', data => console.error('Unexpected behavior', data))
       })
     })
 
-    test('Must sends passport authentication factor allowed/denied status messages', async () => {
+    test('Must sends passport authentication factor allowed/denied status messages when passport sends', async () => {
       expect.assertions(9)
 
       configs.authenticationFactors.confirmation = false
