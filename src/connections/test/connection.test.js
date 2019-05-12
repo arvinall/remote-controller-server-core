@@ -27,6 +27,22 @@ async function getSocket () {
   })
 }
 
+async function getSomeMessages (size = 1, ws = webSocket) {
+  return new Promise(resolve => {
+    const result = []
+
+    ws.on('message', function getData (data) {
+      result.push(JSON.parse(data))
+
+      if (result.length >= size) {
+        ws.off('message', getData)
+
+        resolve(result)
+      }
+    })
+  })
+}
+
 beforeAll(async () => new Promise(resolve => {
   if (!webSocketServer._server.listening) webSocketServer._server.once('listening', resolve)
   else resolve()
@@ -154,8 +170,7 @@ describe('Connection constructor', () => {
 
         ;(() => new Connection(configs))()
 
-        const [messageName, [messageBody]] = JSON
-          .parse(await (new Promise(resolve => webSocket.once('message', resolve))))
+        const [messageName, [messageBody]] = (await getSomeMessages(1, webSocket))[0]
 
         webSocket.on('message', data => console.error('Unexpected behavior', data))
 
@@ -180,8 +195,7 @@ describe('Connection constructor', () => {
 
         ;(() => new Connection(configs))()
 
-        const [messageName, [messageBody]] = JSON
-          .parse(await (new Promise(resolve => webSocket.once('message', resolve))))
+        const [messageName, [messageBody]] = (await getSomeMessages(1, webSocket))[0]
 
         webSocket.on('message', data => console.error('Unexpected behavior', data))
 
@@ -212,8 +226,7 @@ describe('Connection constructor', () => {
         let messageBody
 
         // passport
-        message = JSON
-          .parse(await (new Promise(resolve => webSocket.once('message', resolve))))
+        message = (await getSomeMessages(1, webSocket))[0]
         messageName = message[0]
         messageBody = message[1][0]
 
@@ -222,6 +235,7 @@ describe('Connection constructor', () => {
         expect(messageBody.status).toBe(0)
         expect(messageBody.type).toBe(configs.passport.type)
 
+        // confirmation
         webSocket.send(JSON.stringify([
           'authenticate',
           [
@@ -232,22 +246,8 @@ describe('Connection constructor', () => {
           ]
         ]))
 
-        // confirmation
-
         // Get second message
-        message = await (new Promise(resolve => {
-          const result = []
-
-          webSocket.on('message', function getData (data) {
-            result.push(JSON.parse(data))
-
-            if (result.length >= 2) {
-              webSocket.off('message', getData)
-
-              resolve(result[1])
-            }
-          })
-        }))
+        message = (await getSomeMessages(2, webSocket))[1]
         messageName = message[0]
         messageBody = message[1][0]
 
@@ -280,8 +280,7 @@ describe('Connection constructor', () => {
       let messageBody
 
       await (async (/* Ask */) => {
-        message = JSON
-          .parse(await (new Promise(resolve => webSocket.once('message', resolve))))
+        message = (await getSomeMessages(1, webSocket))[0]
         messageName = message[0]
         messageBody = message[1][0]
 
@@ -301,8 +300,7 @@ describe('Connection constructor', () => {
           ]
         ]))
 
-        message = JSON
-          .parse(await (new Promise(resolve => webSocket.once('message', resolve))))
+        message = (await getSomeMessages(1, webSocket))[0]
         messageName = message[0]
         messageBody = message[1][0]
 
@@ -322,8 +320,7 @@ describe('Connection constructor', () => {
           ]
         ]))
 
-        message = JSON
-          .parse(await (new Promise(resolve => webSocket.once('message', resolve))))
+        message = (await getSomeMessages(1, webSocket))[0]
         messageName = message[0]
         messageBody = message[1][0]
 
@@ -356,8 +353,7 @@ describe('Connection constructor', () => {
       let messageBody
 
       await (async (/* Ask */) => {
-        message = JSON
-          .parse(await (new Promise(resolve => webSocket.once('message', resolve))))
+        message = (await getSomeMessages(1, webSocket))[0]
         messageName = message[0]
         messageBody = message[1][0]
 
@@ -378,19 +374,7 @@ describe('Connection constructor', () => {
         ]))
 
         // Get second message
-        message = await (new Promise(resolve => {
-          const result = []
-
-          webSocket.on('message', function getData (data) {
-            result.push(JSON.parse(data))
-
-            if (result.length >= 2) {
-              webSocket.off('message', getData)
-
-              resolve(result[1])
-            }
-          })
-        }))
+        message = (await getSomeMessages(2, webSocket))[1]
         messageName = message[0]
         messageBody = message[1][0]
 
@@ -410,19 +394,8 @@ describe('Connection constructor', () => {
           ]
         ]))
 
-        message = await (new Promise(resolve => {
-          const result = []
-
-          webSocket.on('message', function getData (data) {
-            result.push(JSON.parse(data))
-
-            if (result.length >= 2) {
-              webSocket.off('message', getData)
-
-              resolve(result[1])
-            }
-          })
-        }))
+        // Get second message
+        message = (await getSomeMessages(2, webSocket))[1]
         messageName = message[0]
         messageBody = message[1][0]
 
@@ -489,7 +462,7 @@ describe('Connection properties', () => {
     expect(connection.isConnected).toBe(true)
   })
 
-  test('Connection isConnected property must return true when connection is established', () => {
+  test('Connection isConnected property must return false when connection is not established', () => {
     socket.close()
 
     expect(connection.isConnected).toBe(false)
@@ -506,9 +479,7 @@ describe('Connection properties', () => {
 
     connection = new Connection({
       socket,
-      authenticationFactors: {
-        passport: true
-      },
+      authenticationFactors: { passport: true },
       passport: PASSPORT
     })
 
