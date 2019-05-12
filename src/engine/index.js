@@ -59,9 +59,9 @@ export default function makeEngine (configs = Object.create(null)) {
     start (port = configs.port) {
       if (typeof port !== 'number') throw new Error('port parameter must be number')
 
-      return (async function () { // eslint-disable-line no-extra-parens
-        if (this.isActive) return Promise.reject(new Error('Engine already started'))
-        else if (getNetworkIP() === null) return Promise.reject(new Error('Network is not available'))
+      return (async () => {
+        if (this.isActive) throw new Error('Engine already started')
+        else if (getNetworkIP() === null) throw new Error('Network is not available')
 
         configs.port = port
 
@@ -74,7 +74,7 @@ export default function makeEngine (configs = Object.create(null)) {
 
         await promisify(httpServer.listen.bind(httpServer))({ port, host: '0.0.0.0' })
         fireEvent()
-      }).call(this)
+      })()
     }
 
     /**

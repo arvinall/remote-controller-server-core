@@ -77,11 +77,11 @@ export default class Connection extends EventEmitter {
         status: this.isAuthenticate ? 1 : 2
       }]
 
-      if (isAuthenticateCache === this.isAuthenticate) return
-
-      if (this.#authenticationFactors.confirmation[0] &&
-        this.#authenticationFactors.confirmation[1] === undefined &&
-        this.#authenticationFactors.passport[0]) return
+      // Prevent emit authentication status if:
+      if (isAuthenticateCache === this.isAuthenticate || // Authentication status has no change
+        (this.#authenticationFactors.confirmation[0] && // Only one factor passed when two factor needed
+          this.#authenticationFactors.confirmation[1] === undefined &&
+          this.#authenticationFactors.passport[0])) return
 
       isAuthenticateCache = this.isAuthenticate
 
@@ -274,32 +274,36 @@ export default class Connection extends EventEmitter {
    * @param {...*} [body] Message's content
    * @param {function} [callback] This function listens to event with the same name just once
    *
+   * @async
    * @return {Promise<(void|Error)>}
    * * Rejection
    *  * Reject an error if Connection is not authenticated
    */
-  async send (name, ...body) {
+  send (name, ...body) {
     if (typeof name !== 'string') throw new Error('name parameter is required and must be string')
-    else if (name !== 'authentication' && !this.isAuthenticate) return Promise.reject(new Error('Connection is not authenticated'))
 
-    let message = [ name, body ]
-    let callback
+    return (async () => {
+      if (name !== 'authentication' && !this.isAuthenticate) throw new Error('Connection is not authenticated')
 
-    if (typeof body[body.length - 1] === 'function') callback = body.splice(body.length - 1, 1)[0]
+      let message = [ name, body ]
+      let callback
 
-    for (let dataIndex in body) {
-      const data = body[dataIndex]
+      if (typeof body[body.length - 1] === 'function') callback = body.splice(body.length - 1, 1)[0]
 
-      if (data instanceof Buffer) body[dataIndex] = bufferToUint8ArrayLike(data)
-      else if (data instanceof Uint8Array) body[dataIndex] = uint8ArrayToUint8ArrayLike(data)
-    }
+      for (let dataIndex in body) {
+        const data = body[dataIndex]
 
-    message = JSON.stringify(message)
+        if (data instanceof Buffer) body[dataIndex] = bufferToUint8ArrayLike(data)
+        else if (data instanceof Uint8Array) body[dataIndex] = uint8ArrayToUint8ArrayLike(data)
+      }
 
-    return new Promise(resolve => this.#socket.send(message, undefined, resolve))
-      .then(() => {
-        if (typeof callback === 'function') this.once(name, callback)
-      })
+      message = JSON.stringify(message)
+
+      return new Promise(resolve => this.#socket.send(message, undefined, resolve))
+        .then(() => {
+          if (typeof callback === 'function') this.once(name, callback)
+        })
+    })()
   }
 
   /**
@@ -443,7 +447,7 @@ export default class Connection extends EventEmitter {
    * let readableStream = fs.createReadStream('Big.File', streamOptions)
    * ;(async function () {
    *    for await (const someChunks of {@link module:connections/connection.readStreamChunks|Connection.readStreamChunks}(readableStream, false)()) {
-   *      await send('bigFile', streamOptions, ...someChunks)
+   *      await {@link module:connections/connection#send|connection.send}('bigFile', streamOptions, ...someChunks)
    *    }
    *  })()
    */
