@@ -3,7 +3,11 @@
 import envConfigs from '../../test/configs'
 import WebSocket from 'ws'
 import Passport from '../../passport'
-import Connection from '../connection'
+import Connection, {
+  uint8ArrayToUint8ArrayLike,
+  bufferToUint8ArrayLike,
+  uint8ArrayLikeToBuffer
+} from '../connection'
 
 const PASSWORD = 'aB_54321'
 const PASSPORT = new Passport('password', PASSWORD)
@@ -49,6 +53,51 @@ beforeAll(async () => new Promise(resolve => {
 }))
 
 beforeEach(() => jest.setTimeout(envConfigs.timeout))
+
+test('uint8ArrayToUint8ArrayLike exported function must return correct Uint8ArrayLike', () => {
+  const uint8Array = Uint8Array.from([116, 101, 115, 116]) // Equal to test
+  const uint8ArrayLike = uint8ArrayToUint8ArrayLike(uint8Array)
+
+  expect(uint8ArrayLike).toHaveLength(2)
+  expect(uint8ArrayLike[0]).toBe(uint8Array.constructor.name)
+  expect(uint8ArrayLike[1]).toBeInstanceOf(Array)
+  expect(uint8ArrayLike[1]).toHaveLength(uint8Array.length)
+
+  for (const index in uint8ArrayLike[1]) {
+    expect(uint8ArrayLike[1][index]).toBe(uint8Array[index])
+  }
+
+  const uint8ArrayLikeValue = Buffer.from(Uint8Array.from(uint8ArrayLike[1])).toString()
+
+  expect(uint8ArrayLikeValue).toBe('test')
+})
+
+test('bufferToUint8ArrayLike exported function must convert Buffer to Uint8ArrayLike', () => {
+  const buffer = Buffer.from('test')
+  const uint8Array = Uint8Array.from(buffer)
+  const uint8ArrayLike = bufferToUint8ArrayLike(buffer)
+
+  expect(uint8ArrayLike).toHaveLength(2)
+  expect(uint8ArrayLike[0]).toBe(uint8Array.constructor.name)
+  expect(uint8ArrayLike[1]).toBeInstanceOf(Array)
+  expect(uint8ArrayLike[1]).toHaveLength(uint8Array.length)
+
+  for (const index in uint8ArrayLike[1]) {
+    expect(uint8ArrayLike[1][index]).toBe(uint8Array[index])
+  }
+
+  const newBuffer = Buffer.from(Uint8Array.from(uint8ArrayLike[1]))
+
+  expect(buffer.equals(newBuffer)).toBe(true)
+})
+
+test('uint8ArrayLikeToBuffer exported function must convert Uint8ArrayLike to Buffer', () => {
+  const buffer = Buffer.from('test')
+  const uint8Array = Uint8Array.from(buffer)
+  const uint8ArrayLike = ['Uint8Array', Array.from(uint8Array)]
+
+  expect(uint8ArrayLikeToBuffer(uint8ArrayLike).equals(buffer)).toBe(true)
+})
 
 describe('Connection constructor', () => {
   describe('Errors', () => {
