@@ -536,4 +536,139 @@ describe('Connection properties', () => {
   })
 })
 
+describe('Connection confirm method', () => {
+  test('Must sends only confirmation authentication factor allowed/denied status messages when passport is not provided', async () => {
+    expect.assertions(6)
+
+    let message
+    let messageName
+    let messageBody
+
+    // Allow
+    connection.confirm(/* true */)
+
+    message = (await getSomeMessages())[0]
+    messageName = message[0]
+    messageBody = message[1][0]
+
+    expect(messageName).toBe('authentication')
+    expect(messageBody.factor).toBe('confirmation')
+    expect(messageBody.status).toBe(1)
+
+    // Deny
+    connection.confirm(false)
+
+    message = (await getSomeMessages())[0]
+    messageName = message[0]
+    messageBody = message[1][0]
+
+    expect(messageName).toBe('authentication')
+    expect(messageBody.factor).toBe('confirmation')
+    expect(messageBody.status).toBe(2)
+  })
+
+  test('Must sends confirmation factor and authentication status messages when passport is provided', async () => {
+    expect.assertions(12)
+
+    let message
+    let messageName
+    let messageBody
+
+    webSocket.send(JSON.stringify([
+      'authenticate',
+      [
+        {
+          factor: 'passport',
+          passportInput: PASSWORD
+        }
+      ]
+    ]))
+
+    await getSomeMessages()
+
+    await (async (/* Allow */) => {
+      connection.confirm(/* true */)
+
+      message = await getSomeMessages(2)
+      messageName = [message[0][0], message[1][0]]
+      messageBody = [message[0][1][0], message[1][1][0]]
+
+      expect(messageName[0]).toBe('authentication')
+      expect(messageBody[0].factor).toBe('confirmation')
+      expect(messageBody[0].status).toBe(1)
+
+      expect(messageName[1]).toBe('authentication')
+      expect(messageBody[1].factor).toBeUndefined()
+      expect(messageBody[1].status).toBe(1)
+    })()
+
+    await (async (/* Deny */) => {
+      connection.confirm(false)
+
+      message = await getSomeMessages(2)
+      messageName = [message[0][0], message[1][0]]
+      messageBody = [message[0][1][0], message[1][1][0]]
+
+      expect(messageName[0]).toBe('authentication')
+      expect(messageBody[0].factor).toBe('confirmation')
+      expect(messageBody[0].status).toBe(2)
+
+      expect(messageName[1]).toBe('authentication')
+      expect(messageBody[1].factor).toBeUndefined()
+      expect(messageBody[1].status).toBe(2)
+    })()
+  })
+
+  afterAll(async () => {
+    connection.confirm()
+
+    await getSomeMessages()
+
+    if (connection.isAuthenticate) {
+      connection.confirm(false)
+
+      await getSomeMessages(2)
+    } else {
+      webSocket.send(JSON.stringify([
+        'authenticate',
+        [
+          {
+            factor: 'passport',
+            passportInput: PASSWORD
+          }
+        ]
+      ]))
+
+      await getSomeMessages(2)
+
+      connection.confirm(false)
+
+      await getSomeMessages(2)
+    }
+  })
+})
+
+describe('Connection send method', () => {
+  describe('Errors', () => {
+    test('Must throw error when name parameter is not string', () => {
+      const ERROR = 'name parameter is required and must be string'
+
+      expect(() => connection.send()).toThrow(ERROR)
+      expect(() => connection.send(['wrong'])).toThrow(ERROR)
+    })
+
+    test('Must throw error when connection is not authenticated', async () => {
+      expect.assertions(1)
+
+      const ERROR = 'Connection is not authenticated'
+
+      try {
+        await connection.send('test')
+      } catch (error) {
+        expect(error.message).toBe(ERROR)
+      }
+    })
+  })
+})
+
 afterAll(async () => new Promise(resolve => webSocketServer.close(resolve)))
