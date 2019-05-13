@@ -772,4 +772,67 @@ describe('Connection send method', () => {
   })
 })
 
+describe('Connection events', () => {
+  describe('authentication', () => {
+    test('emit confirmation factor status', async done => {
+      expect.assertions(10)
+
+      const webSocket = new WebSocket(webSocketServerOptions.address, webSocketOptions)
+
+      webSocket.once('error', () => {})
+
+      let socket = await getSocket()
+      socket[0].request = socket[1]
+      socket = socket[0]
+
+      const connection = new Connection({ socket })
+
+      // Ask
+      await (new Promise(resolve => connection.once('authentication', event => {
+        expect(event.factor).toBe('confirmation')
+        expect(event.status).toBe(0)
+
+        resolve()
+      })))
+
+      let counter = 0
+
+      connection.on('authentication', function mainListener (event) {
+        counter++
+
+        switch (counter) {
+          // Deny
+          case 1:
+            expect(event.factor).toBe('confirmation')
+            expect(event.status).toBe(2)
+            break
+          case 2:
+            expect(event.factor).toBeUndefined()
+            expect(event.status).toBe(2)
+            break
+          // Allow
+          case 3:
+            expect(event.factor).toBe('confirmation')
+            expect(event.status).toBe(1)
+            break
+          case 4:
+            expect(event.factor).toBeUndefined()
+            expect(event.status).toBe(1)
+
+          default: // eslint-disable-line no-fallthrough
+            connection.off('authentication', mainListener)
+
+            done()
+            break
+        }
+      })
+
+      // Deny
+      connection.confirm(false)
+      // Allow
+      connection.confirm()
+    })
+  })
+})
+
 afterAll(async () => new Promise(resolve => webSocketServer.close(resolve)))
