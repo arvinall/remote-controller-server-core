@@ -669,6 +669,107 @@ describe('Connection send method', () => {
       }
     })
   })
+
+  describe('Success', () => {
+    beforeAll(async () => {
+      connection.confirm()
+
+      await getSomeMessages(2)
+    })
+
+    test('Send message without error', async () => {
+      expect.assertions(1)
+
+      const name = 'test'
+
+      await connection.send(name)
+
+      const [ messageName ] = (await getSomeMessages())[0]
+
+      expect(messageName).toBe(name)
+    })
+
+    test('Send message with body', async () => {
+      expect.assertions(4)
+
+      const name = 'test'
+      const body = [ name + 1 ]
+
+      let message
+      let messageName
+      let messageBody
+
+      // Send with one body data
+      await connection.send(name, ...body)
+
+      message = (await getSomeMessages())[0]
+      messageName = message[0]
+      messageBody = message[1]
+
+      expect(messageName).toBe(name)
+      expect(messageBody).toEqual(body)
+
+      // Send with multi body data
+      body.push(name + 2, name + 3, name + 4)
+
+      await connection.send(name, ...body)
+
+      message = (await getSomeMessages())[0]
+      messageName = message[0]
+      messageBody = message[1]
+
+      expect(messageName).toBe(name)
+      expect(messageBody).toEqual(body)
+    })
+
+    test('Send message with callback and no body', async done => {
+      expect.assertions(1)
+
+      const name = 'test'
+
+      let messageName
+
+      await connection.send(name, done)
+
+      messageName = (await getSomeMessages())[0][0]
+
+      expect(messageName).toBe(name)
+
+      webSocket.send(JSON.stringify([ name, [] ]))
+    })
+
+    test('Send message with callback and body', async done => {
+      expect.assertions(3)
+
+      const name = 'test'
+      const body = [
+        name + 1,
+        name + 2,
+        name + 3,
+        name + 4
+      ]
+      const reversedBody = [ ...body ].reverse()
+
+      let message
+      let messageName
+      let messageBody
+
+      await connection.send(name, ...body, (...body) => {
+        expect(body).toEqual(reversedBody)
+
+        done()
+      })
+
+      message = (await getSomeMessages())[0]
+      messageName = message[0]
+      messageBody = message[1]
+
+      expect(messageName).toBe(name)
+      expect(messageBody).toEqual(body)
+
+      webSocket.send(JSON.stringify([ name, reversedBody ]))
+    })
+  })
 })
 
 afterAll(async () => new Promise(resolve => webSocketServer.close(resolve)))
