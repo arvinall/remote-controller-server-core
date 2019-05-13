@@ -2,7 +2,7 @@
 const path = require('path')
 
 const isDevelopment = process.env.NODE_ENV === 'development'
-const EXCLUDE = [/node_modules/]
+const EXCLUDE = [ /node_modules/ ]
 const CONFIG = {
   context: path.resolve(__dirname, 'src'),
   entry: './main.js',

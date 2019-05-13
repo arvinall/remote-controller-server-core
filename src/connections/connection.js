@@ -23,7 +23,7 @@ const generateId = idGenerator()
  *  | Name | Type | Attributes | Description |
  *  | --- | --- | --- | --- | --- |
  *  | `0` | `string` |   | Message's name |
- *  | `1` | `*[]` | <optional> | Message's body (Every element pass as parameter to event) |
+ *  | `1` | `*[]` | &lt;optional> | Message's body (Every element pass as parameter to event) |
  *
  *
  * ### Messages

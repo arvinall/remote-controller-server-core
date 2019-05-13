@@ -219,7 +219,7 @@ describe('Connection constructor', () => {
 
         ;(() => new Connection(configs))()
 
-        const [messageName, [messageBody]] = (await getSomeMessages(1, webSocket))[0]
+        const [ messageName, [ messageBody ] ] = (await getSomeMessages(1, webSocket))[0]
 
         webSocket.on('message', data => console.error('Unexpected behavior', data))
 
@@ -244,7 +244,7 @@ describe('Connection constructor', () => {
 
         ;(() => new Connection(configs))()
 
-        const [messageName, [messageBody]] = (await getSomeMessages(1, webSocket))[0]
+        const [ messageName, [ messageBody ] ] = (await getSomeMessages(1, webSocket))[0]
 
         webSocket.on('message', data => console.error('Unexpected behavior', data))
 
@@ -502,7 +502,7 @@ describe('Connection properties', () => {
       ]
     ]))
 
-    await (new Promise(resolve => connection.once('authentication', resolve)))
+    await getSomeMessages(2)
 
     expect(connection.isAuthenticate).toBe(true)
   })
