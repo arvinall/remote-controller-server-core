@@ -772,6 +772,12 @@ describe('Connection send method', () => {
   })
 })
 
+test('Connection disconnect method must close socket successfully', done => {
+  connection.disconnect()
+
+  webSocket.once('close', () => done())
+})
+
 describe('Connection events', () => {
   describe('authentication', () => {
     test('emit confirmation factor status', async done => {
