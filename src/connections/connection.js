@@ -323,7 +323,8 @@ export default class Connection extends EventEmitter {
      *
      * @see module:remote-controller-server-core~external:ws.WebSocket
      */
-    if (this.status !== 'closed' || this.status !== 'closing') this.#socket.close()
+    if (this.#socket.readyState !== WebSocket.CLOSED ||
+      this.#socket.readyState !== WebSocket.CLOSING) this.#socket.close()
   }
 
   /**
