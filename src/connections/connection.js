@@ -430,8 +430,8 @@ export default class Connection extends EventEmitter {
 
     result = Object.assign(overwrite ? options : {}, DEFAULTS, optionsCache)
 
-    if ((result.end - result.start) < result.highWaterMark) {
-      result.highWaterMark = result.end - result.start
+    if ((result.end - result.start) + 1 < result.highWaterMark) {
+      result.highWaterMark = (result.end - result.start) + 1
     }
 
     return result
