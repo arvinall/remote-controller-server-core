@@ -1073,4 +1073,91 @@ describe('Connection events', () => {
   })
 })
 
+describe('Connection setReadStreamDefaults static method', () => {
+  const CHUNK_SIZE = 1062500
+
+  test('Return new object with defaults', () => {
+    const streamOptions = Connection.setReadStreamDefaults()
+
+    expect(streamOptions).toEqual({
+      end: CHUNK_SIZE,
+      highWaterMark: CHUNK_SIZE + 1,
+      multiChunks: true
+    })
+  })
+
+  test('Overwrite object with defaults', () => {
+    const streamOptions = {
+      end: CHUNK_SIZE * 2,
+      test: 0
+    }
+
+    Connection.setReadStreamDefaults(streamOptions /* , true */)
+
+    expect(streamOptions).toEqual({
+      end: CHUNK_SIZE * 2,
+      highWaterMark: CHUNK_SIZE + 1,
+      multiChunks: true,
+      test: 0
+    })
+  })
+
+  test('Return same object with defaults', () => {
+    const streamOptions = {
+      end: CHUNK_SIZE * 2,
+      test: 0
+    }
+
+    expect(Connection.setReadStreamDefaults(streamOptions, false)).toEqual({
+      end: CHUNK_SIZE * 2,
+      highWaterMark: CHUNK_SIZE + 1,
+      multiChunks: true,
+      test: 0
+    })
+
+    expect(streamOptions).toEqual({
+      end: CHUNK_SIZE * 2,
+      test: 0
+    })
+  })
+
+  test('Set end property to start plus ' + CHUNK_SIZE + ' if start property provided', () => {
+    const streamOptions = Connection.setReadStreamDefaults({
+      start: CHUNK_SIZE
+    })
+
+    expect(streamOptions).toEqual({
+      end: CHUNK_SIZE * 2,
+      highWaterMark: CHUNK_SIZE + 1,
+      multiChunks: true,
+      start: CHUNK_SIZE
+    })
+  })
+
+  test('Add one to highWaterMark property if provided', () => {
+    const streamOptions = Connection.setReadStreamDefaults({
+      highWaterMark: CHUNK_SIZE
+    })
+
+    expect(streamOptions).toEqual({
+      end: CHUNK_SIZE,
+      highWaterMark: CHUNK_SIZE + 1,
+      multiChunks: true
+    })
+  })
+
+  test('Set highWaterMark property to different between end and start properties plus one if start property provided', () => {
+    const streamOptions = Connection.setReadStreamDefaults({
+      start: CHUNK_SIZE / 2
+    })
+
+    expect(streamOptions).toEqual({
+      end: CHUNK_SIZE + CHUNK_SIZE / 2,
+      highWaterMark: (CHUNK_SIZE + CHUNK_SIZE / 2 - CHUNK_SIZE / 2) + 1,
+      multiChunks: true,
+      start: CHUNK_SIZE / 2
+    })
+  })
+})
+
 afterAll(async () => new Promise(resolve => webSocketServer.close(resolve)))
