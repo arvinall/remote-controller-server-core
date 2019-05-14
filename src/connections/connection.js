@@ -73,10 +73,6 @@ export default class Connection extends EventEmitter {
     let isAuthenticateCache
 
     return () => {
-      const EVENT_PROPS = ['authentication', {
-        status: this.isAuthenticate ? 1 : 2
-      }]
-
       // Prevent emit authentication status if:
       if (isAuthenticateCache === this.isAuthenticate || // Authentication status has no change
         (this.#authenticationFactors.confirmation[0] && // Only one factor passed when two factor needed
@@ -84,6 +80,12 @@ export default class Connection extends EventEmitter {
           this.#authenticationFactors.passport[0])) return
 
       isAuthenticateCache = this.isAuthenticate
+
+      const EVENT_PROPS = ['authentication', {
+        status: this.isAuthenticate ? 1 : 2
+      }]
+
+      if (this.isAuthenticate) EVENT_PROPS[1].id = this.id
 
       this.emit(...EVENT_PROPS)
       this.send(...EVENT_PROPS)
