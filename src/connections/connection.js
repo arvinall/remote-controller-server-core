@@ -69,7 +69,7 @@ export default class Connection extends EventEmitter {
   /**
    * @emits module:connections/connection#event:authentication
    */
-  #fireAuthenticatedEvent = (() => {
+  #emitAuthentication = (() => {
     let isAuthenticateCache
 
     return () => {
@@ -104,7 +104,7 @@ export default class Connection extends EventEmitter {
 
     this.emit(...EVENT_PROPS)
     this.send(...EVENT_PROPS)
-    this.#fireAuthenticatedEvent()
+    this.#emitAuthentication()
   }
 
   /**
@@ -349,7 +349,7 @@ export default class Connection extends EventEmitter {
 
     this.emit(...EVENT_PROPS)
     this.send(...EVENT_PROPS)
-    this.#fireAuthenticatedEvent()
+    this.#emitAuthentication()
   }
 
   /**
