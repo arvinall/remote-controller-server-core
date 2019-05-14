@@ -779,8 +779,8 @@ test('Connection disconnect method must close socket successfully', done => {
 })
 
 describe('Connection events', () => {
-  describe('authentication', () => {
-    test('emit confirmation factor status', async done => {
+  describe('Authentication', () => {
+    test('Emit confirmation factor status', async done => {
       expect.assertions(10)
 
       const webSocket = new WebSocket(webSocketServerOptions.address, webSocketOptions)
@@ -824,7 +824,6 @@ describe('Connection events', () => {
           case 4:
             expect(event.factor).toBeUndefined()
             expect(event.status).toBe(1)
-
           default: // eslint-disable-line no-fallthrough
             connection.off('authentication', mainListener)
 
@@ -838,6 +837,239 @@ describe('Connection events', () => {
       // Allow
       connection.confirm()
     })
+
+    test('Emit passport factor status', async () => {
+      expect.assertions(10)
+
+      const webSocket = new WebSocket(webSocketServerOptions.address, webSocketOptions)
+
+      webSocket.once('error', () => {})
+
+      let socket = await getSocket()
+      socket[0].request = socket[1]
+      socket = socket[0]
+
+      const connection = new Connection({
+        socket,
+        authenticationFactors: {
+          confirmation: false,
+          passport: true
+        },
+        passport: PASSPORT
+      })
+
+      // Ask
+      await (new Promise(resolve => connection.once('authentication', event => {
+        expect(event.factor).toBe('passport')
+        expect(event.status).toBe(0)
+
+        resolve()
+      })))
+
+      if (!webSocket.readyState) await (new Promise(resolve => webSocket.once('open', resolve)))
+
+      await (async (/* Deny */) => {
+        webSocket.send(JSON.stringify([
+          'authenticate',
+          [
+            {
+              factor: 'passport',
+              passportInput: 'wrong'
+            }
+          ]
+        ]))
+
+        let counter = 0
+
+        await (new Promise(resolve => connection.on('authentication', function deny (event) {
+          counter++
+
+          switch (counter) {
+            case 1:
+              expect(event.factor).toBe('passport')
+              expect(event.status).toBe(2)
+              break
+            case 2:
+              expect(event.factor).toBeUndefined()
+              expect(event.status).toBe(2)
+            default: // eslint-disable-line no-fallthrough
+              connection.off('authentication', deny)
+
+              resolve()
+              break
+          }
+        })))
+      })()
+
+      await (async (/* Allow */) => {
+        webSocket.send(JSON.stringify([
+          'authenticate',
+          [
+            {
+              factor: 'passport',
+              passportInput: PASSWORD
+            }
+          ]
+        ]))
+
+        let counter = 0
+
+        await (new Promise(resolve => connection.on('authentication', function allow (event) {
+          counter++
+
+          switch (counter) {
+            case 1:
+              expect(event.factor).toBe('passport')
+              expect(event.status).toBe(1)
+              break
+            case 2:
+              expect(event.factor).toBeUndefined()
+              expect(event.status).toBe(1)
+            default: // eslint-disable-line no-fallthrough
+              connection.off('authentication', allow)
+
+              resolve()
+              break
+          }
+        })))
+      })()
+    })
+
+    test('Emit passport then confirmation factor status', async done => {
+      expect.assertions(16)
+
+      const webSocket = new WebSocket(webSocketServerOptions.address, webSocketOptions)
+
+      webSocket.once('error', () => {})
+
+      let socket = await getSocket()
+      socket[0].request = socket[1]
+      socket = socket[0]
+
+      const connection = new Connection({
+        socket,
+        authenticationFactors: { passport: true },
+        passport: PASSPORT
+      })
+
+      // Ask for passport
+      await (new Promise(resolve => connection.once('authentication', event => {
+        expect(event.factor).toBe('passport')
+        expect(event.status).toBe(0)
+
+        resolve()
+      })))
+
+      if (!webSocket.readyState) await (new Promise(resolve => webSocket.once('open', resolve)))
+
+      await (async (/* Passport denied */) => {
+        webSocket.send(JSON.stringify([
+          'authenticate',
+          [
+            {
+              factor: 'passport',
+              passportInput: 'wrong'
+            }
+          ]
+        ]))
+
+        await (new Promise(resolve => connection.once('authentication', event => {
+          expect(event.factor).toBe('passport')
+          expect(event.status).toBe(2)
+
+          resolve()
+        })))
+      })()
+
+      await (async (/* Passport allowed - Ask for confirmation */) => {
+        webSocket.send(JSON.stringify([
+          'authenticate',
+          [
+            {
+              factor: 'passport',
+              passportInput: PASSWORD
+            }
+          ]
+        ]))
+
+        let counter = 0
+
+        await (new Promise(resolve => connection.on('authentication', function listener (event) {
+          counter++
+
+          switch (counter) {
+            // Passport allowed
+            case 1:
+              expect(event.factor).toBe('passport')
+              expect(event.status).toBe(1)
+              break
+            // Ask for confirmation
+            case 2:
+              expect(event.factor).toBe('confirmation')
+              expect(event.status).toBe(0)
+            default: // eslint-disable-line no-fallthrough
+              connection.off('authentication', listener)
+
+              resolve()
+              break
+          }
+        })))
+      })()
+
+      ;((/* Confirmation denied - Confirmation allowed */) => {
+        let counter = 0
+
+        connection.on('authentication', function listener (event) {
+          counter++
+
+          switch (counter) {
+            // Deny
+            case 1:
+              expect(event.factor).toBe('confirmation')
+              expect(event.status).toBe(2)
+              break
+            case 2:
+              expect(event.factor).toBeUndefined()
+              expect(event.status).toBe(2)
+              break
+            // Allow
+            case 3:
+              expect(event.factor).toBe('confirmation')
+              expect(event.status).toBe(1)
+              break
+            case 4:
+              expect(event.factor).toBeUndefined()
+              expect(event.status).toBe(1)
+            default: // eslint-disable-line no-fallthrough
+              connection.off('authentication', listener)
+
+              done()
+              break
+          }
+        })
+      })()
+
+      // Confirmation denied
+      connection.confirm(false)
+      // Confirmation allowed
+      connection.confirm()
+    })
+  })
+
+  test('Emit disconnected when socket closed', async done => {
+    const webSocket = new WebSocket(webSocketServerOptions.address, webSocketOptions)
+
+    webSocket.once('error', () => {})
+
+    let socket = await getSocket()
+    socket[0].request = socket[1]
+    socket = socket[0]
+
+    const connection = new Connection({ socket })
+
+    connection.disconnect()
+
+    connection.on('disconnected', () => done())
   })
 })
 
