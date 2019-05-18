@@ -108,6 +108,33 @@ export default class Connection extends EventEmitter {
     this.#emitAuthentication()
   }
 
+  #emitFirstAuthenticationFactorAsk = () => {
+    for (let factor in this.#authenticationFactors) {
+      if (!this.#authenticationFactors[factor][0]) continue
+
+      const EVENT_PROPS = ['authentication', {
+        factor,
+        status: 0
+      }]
+
+      if (factor === 'passport') EVENT_PROPS[1].type = this.#passport.type
+
+      this.emit(...EVENT_PROPS)
+      this.send(...EVENT_PROPS)
+
+      break
+    }
+  }
+
+  #emitConnected = () => {
+    /**
+     * Connection connected event
+     *
+     * @event module:connections/connection#event:connected
+     */
+    return this.emit('connected')
+  }
+
   /**
    * Transfer events from {@link module:remote-controller-server-core~external:ws.WebSocket|ws.WebSocket}
    *
@@ -119,6 +146,7 @@ export default class Connection extends EventEmitter {
    * @param {module:passport} [configs.passport] Required if configs.authenticationFactors.passport is set to true
    *
    * @emits module:connections/connection#event:authentication
+   * @emits module:connections/connection#event:connected
    */
   constructor (configs) {
     if (typeof configs !== 'object') throw new Error('configs parameter is required and must be object')
@@ -216,21 +244,8 @@ export default class Connection extends EventEmitter {
     }
 
     setImmediate(() => {
-      for (let factor in this.#authenticationFactors) {
-        if (!this.#authenticationFactors[factor][0]) continue
-
-        const EVENT_PROPS = ['authentication', {
-          factor,
-          status: 0
-        }]
-
-        if (factor === 'passport') EVENT_PROPS[1].type = this.#passport.type
-
-        this.emit(...EVENT_PROPS)
-        this.send(...EVENT_PROPS)
-
-        break
-      }
+      if (this.isConnected) this.#emitConnected()
+      this.#emitFirstAuthenticationFactorAsk()
 
       this.on('authentication', event => setImmediate(() => {
         if (event.factor === 'passport') {
