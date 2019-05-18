@@ -1,4 +1,4 @@
-/* global test, expect, describe, beforeEach, beforeAll, afterAll */
+/* global test, expect, describe, beforeEach, beforeAll, afterAll, jest, TMP_PATH */
 
 import envConfigs from '../../test/configs'
 import WebSocket from 'ws'
