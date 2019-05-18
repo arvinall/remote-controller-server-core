@@ -413,6 +413,41 @@ export default class Connection extends EventEmitter {
   }
 
   /**
+   * @type {module:remote-controller-server-core~external:ws.WebSocket}
+   */
+  get socket () {
+    return this.#socket
+  }
+
+  /**
+   * @param socket
+   *
+   * @emits module:connections/connection#event:connected
+   * @emits module:connections/connection#event:authentication
+   */
+  set socket (socket) {
+    if (!(socket instanceof WebSocket)) throw new Error('socket parameter is required and must be ws.WebSocket')
+
+    // Reset authentication factors
+    for (const factorKey in this.#authenticationFactors) {
+      delete this.#authenticationFactors[factorKey][1]
+    }
+
+    // Replace emit method with our customization
+    socket.emit = this.#socket.emit
+
+    // Change previous socket emit method with it's default
+    this.#socket.emit = EventEmitter.prototype.emit
+
+    // Replace private properties
+    this.#socket = socket
+    this.#address = this.#socket.request.socket.remoteAddress
+
+    this.#emitConnected()
+    this.#emitFirstAuthenticationFactorAsk()
+  }
+
+  /**
    * Set preferred options for nodejs fs.createReadStream method
    *
    * * Read 1.0625 megabyte per chunk
