@@ -1086,6 +1086,26 @@ describe('Connection setReadStreamDefaults static method', () => {
     })
   })
 
+  test('Return new object with defaults with some prefer options', () => {
+    const preferOptions = {
+      end: CHUNK_SIZE * 2,
+      test: 0
+    }
+    const streamOptions = Connection.setReadStreamDefaults(preferOptions, false)
+
+    expect(streamOptions).toEqual({
+      end: CHUNK_SIZE * 2,
+      highWaterMark: CHUNK_SIZE + 1,
+      multiChunks: true,
+      test: 0
+    })
+
+    expect(preferOptions).toEqual({
+      end: CHUNK_SIZE * 2,
+      test: 0
+    })
+  })
+
   test('Overwrite object with defaults', () => {
     const streamOptions = {
       end: CHUNK_SIZE * 2,
@@ -1098,25 +1118,6 @@ describe('Connection setReadStreamDefaults static method', () => {
       end: CHUNK_SIZE * 2,
       highWaterMark: CHUNK_SIZE + 1,
       multiChunks: true,
-      test: 0
-    })
-  })
-
-  test('Return same object with defaults', () => {
-    const streamOptions = {
-      end: CHUNK_SIZE * 2,
-      test: 0
-    }
-
-    expect(Connection.setReadStreamDefaults(streamOptions, false)).toEqual({
-      end: CHUNK_SIZE * 2,
-      highWaterMark: CHUNK_SIZE + 1,
-      multiChunks: true,
-      test: 0
-    })
-
-    expect(streamOptions).toEqual({
-      end: CHUNK_SIZE * 2,
       test: 0
     })
   })
