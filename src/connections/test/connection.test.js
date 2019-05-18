@@ -1219,7 +1219,7 @@ describe('Connection readStreamChunks static method', () => {
       expect((await chunkIterator.next()).done).toBe(true)
     })
 
-    test.only('Must resolve one chunk over every iteration(3) when set multiChunk false', async () => {
+    test('Must resolve one chunk over every iteration(3) when set multiChunk false', async () => {
       expect.assertions(4)
 
       const readableStream = fs
