@@ -406,7 +406,7 @@ export default class Connection extends EventEmitter {
   /**
    * Connection id
    *
-   * @return {number}
+   * @type {number}
    */
   get id () {
     return this.#id
