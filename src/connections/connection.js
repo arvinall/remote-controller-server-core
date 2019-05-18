@@ -3,7 +3,6 @@
  * @module connections/connection
  */
 
-import { promisify } from 'util'
 import EventEmitter from 'events'
 import WebSocket from 'ws'
 import Passport from '../passport'
@@ -468,29 +467,32 @@ export default class Connection extends EventEmitter {
      *
      * @name module:connections/connection~streamChunksReader
      * @generator
+     * @async
      *
      * @returns {AsyncIterableIterator<Buffer[]>}
      */
     async function *streamChunksReader () {
-      const CHUNKS = []
+      const chunks = []
 
       while (!readableStream.closed) {
-        // EventEmitter's events are not error first, so it reject the promise
-        try {
-          readableStream.resume()
-          await Promise.race([
-            promisify(readableStream.once.bind(readableStream))('data'),
-            promisify(readableStream.once.bind(readableStream))('close')
-          ])
-        } catch (chunk) {
-          readableStream.pause()
+        readableStream.resume()
 
-          if (multiChunk) CHUNKS.push(chunk)
-          else yield [chunk]
+        const chunk = await Promise.race([
+          new Promise(resolve => readableStream.once('data', data => {
+            readableStream.pause()
+
+            resolve(data)
+          })),
+          new Promise(resolve => readableStream.once('close', resolve))
+        ])
+
+        if (chunk) {
+          if (multiChunk) chunks.push(chunk)
+          else yield [ chunk ]
         }
       }
 
-      if (multiChunk) yield CHUNKS
+      if (multiChunk) yield chunks
     }
 
     return streamChunksReader
