@@ -1,5 +1,8 @@
 /* global test, expect, describe, beforeEach, beforeAll, afterAll, jest, TMP_PATH */
 
+import stream from 'stream'
+import fs from 'fs'
+import path from 'path'
 import envConfigs from '../../test/configs'
 import WebSocket from 'ws'
 import Passport from '../../passport'
@@ -18,6 +21,7 @@ const webSocketServerOptions = {
   perMessageDeflate: true
 }
 const webSocketServer = new WebSocket.Server(webSocketServerOptions)
+const DEFAULT_STREAM_CHUNK_SIZE = 1062500
 
 webSocketServerOptions.address = `ws://${webSocketServerOptions.host}:${webSocketServerOptions.port}`
 
@@ -45,6 +49,22 @@ async function getSomeMessages (size = 1, ws = webSocket) {
       }
     })
   })
+}
+
+function makeFileWithSpecificSize (size = DEFAULT_STREAM_CHUNK_SIZE) {
+  const buffer = Buffer.allocUnsafe(size)
+
+  buffer.filePath = path.join(TMP_PATH, String(size))
+
+  fs.writeFileSync(buffer.filePath, buffer)
+
+  return buffer
+}
+
+function removeFileWithSpecificSize (file) {
+  let filePath = file.filePath || file
+
+  fs.unlinkSync(filePath)
 }
 
 beforeAll(async () => new Promise(resolve => {
@@ -1074,7 +1094,7 @@ describe('Connection events', () => {
 })
 
 describe('Connection setReadStreamDefaults static method', () => {
-  const CHUNK_SIZE = 1062500
+  const CHUNK_SIZE = DEFAULT_STREAM_CHUNK_SIZE
 
   test('Return new object with defaults', () => {
     const streamOptions = Connection.setReadStreamDefaults()
@@ -1158,6 +1178,72 @@ describe('Connection setReadStreamDefaults static method', () => {
       multiChunks: true,
       start: CHUNK_SIZE / 2
     })
+  })
+})
+
+describe('Connection readStreamChunks static method', () => {
+  test('Must throw error when readableStream parameter is not readableStream', () => {
+    const ERROR = 'readableStream parameter is required and must be readableStream'
+
+    expect(() => Connection.readStreamChunks()).toThrow(ERROR)
+    expect(() => Connection.readStreamChunks('wrong')).toThrow(ERROR)
+  })
+
+  describe('Success', () => {
+    test('Must return AsyncGeneratorFunction without error', () => {
+      const readableStream = new stream.Readable()
+      const chunkGenerator = Connection.readStreamChunks(readableStream)
+      const AsyncGeneratorFunction = (async function *() {}).constructor // eslint-disable-line no-extra-parens
+
+      expect(chunkGenerator).toBeInstanceOf(AsyncGeneratorFunction)
+    })
+
+    const buffer = makeFileWithSpecificSize(DEFAULT_STREAM_CHUNK_SIZE * 3)
+
+    test('Must resolve 3 chunks just over one iteration when set multiChunk true', async () => {
+      expect.assertions(4)
+
+      const readableStream = fs
+        .createReadStream(buffer.filePath, Connection.setReadStreamDefaults({
+          end: buffer.length
+        }))
+      const chunkIterator = Connection.readStreamChunks(readableStream /* , true */)()
+      const chunks = (await chunkIterator.next()).value
+
+      for (const chunkIndex in chunks) {
+        if (chunkIndex < chunks.length - 1) {
+          expect(chunks[chunkIndex].length).toBe(DEFAULT_STREAM_CHUNK_SIZE + 1)
+        } else expect(chunks[chunkIndex].length).toBe(DEFAULT_STREAM_CHUNK_SIZE - chunkIndex)
+      }
+
+      expect((await chunkIterator.next()).done).toBe(true)
+    })
+
+    test.only('Must resolve one chunk over every iteration(3) when set multiChunk false', async () => {
+      expect.assertions(4)
+
+      const readableStream = fs
+        .createReadStream(buffer.filePath, Connection.setReadStreamDefaults({
+          end: buffer.length
+        }))
+      const chunkIterator = Connection.readStreamChunks(readableStream, false)()
+
+      let counter = 0
+
+      for await (let chunk of chunkIterator) {
+        chunk = chunk[0]
+
+        if (counter < 2) {
+          expect(chunk.length).toBe(DEFAULT_STREAM_CHUNK_SIZE + 1)
+        } else expect(chunk.length).toBe(DEFAULT_STREAM_CHUNK_SIZE - counter)
+
+        counter++
+      }
+
+      expect((await chunkIterator.next()).done).toBe(true)
+    })
+
+    afterAll(() => removeFileWithSpecificSize(buffer))
   })
 })
 
