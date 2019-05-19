@@ -71,7 +71,7 @@ export default class Connection extends EventEmitter {
   #emitAuthentication = (() => {
     let isAuthenticateCache
 
-    return () => {
+    const handler = () => {
       // Prevent emit authentication status if:
       if (isAuthenticateCache === this.isAuthenticate || // Authentication status has no change
         (this.#authenticationFactors.confirmation[0] && // Only one factor passed when two factor needed
@@ -89,6 +89,12 @@ export default class Connection extends EventEmitter {
       this.emit(...EVENT_PROPS)
       this.send(...EVENT_PROPS)
     }
+
+    handler.clearCache = () => {
+      isAuthenticateCache = undefined
+    }
+
+    return handler
   })()
 
   #passportChecker = passportInput => {
@@ -110,7 +116,8 @@ export default class Connection extends EventEmitter {
 
   #emitFirstAuthenticationFactorAsk = () => {
     for (let factor in this.#authenticationFactors) {
-      if (!this.#authenticationFactors[factor][0]) continue
+      if (!this.#authenticationFactors[factor][0] ||
+        this.#authenticationFactors[factor][1] !== undefined) continue
 
       const EVENT_PROPS = ['authentication', {
         factor,
@@ -445,6 +452,10 @@ export default class Connection extends EventEmitter {
 
     this.#emitConnected()
     this.#emitFirstAuthenticationFactorAsk()
+
+    this.#emitAuthentication.clearCache()
+
+    if (this.isAuthenticate) this.#emitAuthentication()
   }
 
   /**
