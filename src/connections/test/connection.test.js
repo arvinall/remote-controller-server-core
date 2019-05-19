@@ -688,6 +688,35 @@ describe('Connection send method', () => {
         expect(error.message).toBe(ERROR)
       }
     })
+
+    test('Must throw error when connection is not connected', async () => {
+      expect.assertions(1)
+
+      const ERROR = 'Connection is not connected'
+      const webSocket = new WebSocket(webSocketServerOptions.address, webSocketOptions)
+
+      webSocket.once('error', () => {})
+
+      let socket = await getSocket()
+      socket[0].request = socket[1]
+      socket = socket[0]
+
+      const connection = new Connection({ socket })
+
+      await (new Promise(resolve => webSocket.once('open', resolve)))
+
+      connection.confirm()
+
+      webSocket.close()
+
+      await (new Promise(resolve => webSocket.once('close', resolve)))
+
+      try {
+        await connection.send('test')
+      } catch (error) {
+        expect(error.message).toBe(ERROR)
+      }
+    })
   })
 
   describe('Success', () => {
@@ -1087,7 +1116,7 @@ describe('Connection events', () => {
 
     const connection = new Connection({ socket })
 
-    connection.disconnect()
+    setImmediate(() => connection.disconnect())
 
     connection.on('disconnected', () => done())
   })
