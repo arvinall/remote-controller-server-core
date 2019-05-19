@@ -9,7 +9,7 @@ import Passport from '../passport'
 import idGenerator from '../idGenerator'
 import stream from 'stream'
 
-const CLIENT_AUTHENTICATION_FACTORS = ['passport']
+const CLIENT_AUTHENTICATION_FACTORS = [ 'passport' ]
 const generateId = idGenerator()
 
 /**
@@ -315,7 +315,7 @@ export default class Connection extends EventEmitter {
 
       message = JSON.stringify(message)
 
-      return new Promise(resolve => this.#socket.send(message, undefined, resolve))
+      return (new Promise(resolve => this.#socket.send(message, undefined, resolve)))
         .then(() => {
           if (typeof callback === 'function') this.once(name, callback)
         })
