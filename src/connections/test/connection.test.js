@@ -541,6 +541,21 @@ describe('Connection properties', () => {
     })
   })
 
+  describe('socket', () => {
+    test('Must return correct ws.WebSocket instance', () => {
+      expect(connection.socket).toBeInstanceOf(WebSocket)
+      expect(connection.socket).toBe(socket)
+    })
+
+    test('Must throw an error when value is not instance of ws.WebSocket', () => {
+      const ERROR = 'Value must be ws.WebSocket'
+
+      expect(() => {
+        connection.socket = 'wrong'
+      }).toThrow(ERROR)
+    })
+  })
+
   afterAll(async () => {
     webSocket = new WebSocket(webSocketServerOptions.address, webSocketOptions)
 
