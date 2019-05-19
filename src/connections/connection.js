@@ -436,7 +436,7 @@ export default class Connection extends EventEmitter {
    * @emits module:connections/connection#event:authentication
    */
   set socket (socket) {
-    if (!(socket instanceof WebSocket)) throw new Error('socket parameter is required and must be ws.WebSocket')
+    if (!(socket instanceof WebSocket)) throw new Error('Value must be ws.WebSocket')
 
     // Reset authentication factors
     for (const factorKey of CLIENT_AUTHENTICATION_FACTORS) {
