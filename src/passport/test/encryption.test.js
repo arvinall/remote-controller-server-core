@@ -1,4 +1,4 @@
-/* global test, expect */
+/* global test, expect, Buffer */
 
 import crypto from 'crypto'
 import * as passGenerator from './passGenerator'

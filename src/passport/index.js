@@ -1,3 +1,4 @@
+/* global Buffer */
 
 /**
  * @module passport

@@ -1,4 +1,4 @@
-/* global test, expect, describe, beforeEach, beforeAll, afterAll, jest, TMP_PATH */
+/* global test, expect, describe, beforeEach, beforeAll, afterAll, jest, TMP_PATH, setImmediate */
 
 import stream from 'stream'
 import fs from 'fs'

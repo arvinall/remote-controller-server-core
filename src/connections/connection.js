@@ -1,3 +1,4 @@
+/* global setImmediate, Buffer */
 
 /**
  * @module connections/connection

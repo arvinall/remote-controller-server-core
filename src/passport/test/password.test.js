@@ -1,4 +1,4 @@
-/* global test, expect */
+/* global test, expect, Buffer */
 
 import * as passGenerator from './passGenerator'
 import password from '../password'
