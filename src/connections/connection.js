@@ -301,12 +301,14 @@ export default class Connection extends EventEmitter {
    * @return {Promise<(void|Error)>}
    * * Rejection
    *  * Reject an error if Connection is not authenticated
+   *  * Reject an error if Connection is not connected
    */
   send (name, ...body) {
     if (typeof name !== 'string') throw new Error('name parameter is required and must be string')
 
     return (async () => {
       if (name !== 'authentication' && !this.isAuthenticate) throw new Error('Connection is not authenticated')
+      else if (!this.isConnected) throw new Error('Connection is not connected')
 
       let message = [ name, body ]
       let callback
