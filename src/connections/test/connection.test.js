@@ -507,34 +507,38 @@ describe('Connection properties', () => {
     expect(connection.address.split('.').length).toBe(4)
   })
 
-  test('Connection isAuthenticate property must return false when passport is not provided', () => {
-    expect(connection.isAuthenticate).toBe(false)
+  describe('isAuthenticate', () => {
+    test('Must return false when passport is not provided', () => {
+      expect(connection.isAuthenticate).toBe(false)
+    })
+
+    test('Must return true when passport is provided', async () => {
+      webSocket.send(JSON.stringify([
+        'authenticate',
+        [
+          {
+            factor: 'passport',
+            passportInput: PASSWORD
+          }
+        ]
+      ]))
+
+      await getSomeMessages(2)
+
+      expect(connection.isAuthenticate).toBe(true)
+    })
   })
 
-  test('Connection isAuthenticate property must return true when passport is provided', async () => {
-    webSocket.send(JSON.stringify([
-      'authenticate',
-      [
-        {
-          factor: 'passport',
-          passportInput: PASSWORD
-        }
-      ]
-    ]))
+  describe('isConnected', () => {
+    test('Must return true when connection is established', () => {
+      expect(connection.isConnected).toBe(true)
+    })
 
-    await getSomeMessages(2)
+    test('Must return false when connection is not established', () => {
+      socket.close()
 
-    expect(connection.isAuthenticate).toBe(true)
-  })
-
-  test('Connection isConnected property must return true when connection is established', () => {
-    expect(connection.isConnected).toBe(true)
-  })
-
-  test('Connection isConnected property must return false when connection is not established', () => {
-    socket.close()
-
-    expect(connection.isConnected).toBe(false)
+      expect(connection.isConnected).toBe(false)
+    })
   })
 
   afterAll(async () => {
