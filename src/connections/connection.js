@@ -443,22 +443,24 @@ export default class Connection extends EventEmitter {
       delete this.#authenticationFactors[factorKey][1]
     }
 
-    // Replace emit method with our customization
+    this.#emitAuthentication.clearCache()
+
+    // Replace emit method with our customized one
     socket.emit = this.#socket.emit
 
-    // Change previous socket emit method with it's default
+    // Change previous socket's emit method with it's default
     this.#socket.emit = EventEmitter.prototype.emit
 
     // Replace private properties
     this.#socket = socket
     this.#address = this.#socket.request.socket.remoteAddress
 
-    this.#emitConnected()
-    this.#emitFirstAuthenticationFactorAsk()
+    setImmediate(() => {
+      if (this.isConnected) this.#emitConnected()
+      this.#emitFirstAuthenticationFactorAsk()
 
-    this.#emitAuthentication.clearCache()
-
-    if (this.isAuthenticate) this.#emitAuthentication()
+      if (this.isAuthenticate) this.#emitAuthentication()
+    })
   }
 
   /**
