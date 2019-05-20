@@ -4,7 +4,9 @@ import http from 'http'
 import envConfigs from '../../test/configs'
 import WebSocket from 'ws'
 import makeEngine from '../index'
+import makeConnections from '../../connections'
 
+const core = { connections: makeConnections() }
 const engineConfigs = { port: 8888, path: '/test' }
 
 let engine
@@ -17,28 +19,28 @@ describe('makeEngine', () => {
     test('Must throw error when configs parameter is not object', () => {
       const ERROR = 'configs parameter must be object'
 
-      expect(makeEngine.bind(null, 'wrong')).toThrow(ERROR)
+      expect(makeEngine.bind(core, 'wrong')).toThrow(ERROR)
     })
 
     test('Must throw error when configs.port property is not number', () => {
       const ERROR = 'configs.port must be number'
       const configs = { port: 'wrong' }
 
-      expect(makeEngine.bind(null, configs)).toThrow(ERROR)
+      expect(makeEngine.bind(core, configs)).toThrow(ERROR)
     })
 
     test('Must throw error when configs.path property is not string and dont starts with "/"', () => {
       const ERROR = 'configs.path must be string and starts with "/"'
       const configs = { path: 'wrong' }
 
-      expect(makeEngine.bind(null, configs)).toThrow(ERROR)
+      expect(makeEngine.bind(core, configs)).toThrow(ERROR)
       configs.path = false
-      expect(makeEngine.bind(null, configs)).toThrow(ERROR)
+      expect(makeEngine.bind(core, configs)).toThrow(ERROR)
     })
   })
 
   test('makeEngine must return engine module without error', () => {
-    const engine = makeEngine(engineConfigs)
+    const engine = makeEngine.call(core, engineConfigs)
 
     expect(engine).toEqual(expect.any(Object))
     expect(engine).toEqual(expect.objectContaining({
@@ -53,7 +55,7 @@ describe('makeEngine', () => {
   })
 
   afterAll(() => {
-    engine = makeEngine(engineConfigs)
+    engine = makeEngine.call(core, engineConfigs)
 
     webSocketParameters = [
       `ws://${engine.address.address}:${engine.address.port}` + engineConfigs.path,

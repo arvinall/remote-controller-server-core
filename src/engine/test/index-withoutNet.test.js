@@ -1,6 +1,7 @@
 /* global test, expect, describe, jest */
 
 import makeEngine from '../index'
+import makeConnections from '../../connections'
 
 jest.mock('os', () => {
   const os = require.requireActual('os')
@@ -16,7 +17,8 @@ jest.mock('os', () => {
   return os
 })
 
-const engine = makeEngine()
+const core = { connections: makeConnections() }
+const engine = makeEngine.call(core)
 
 describe('engine start method', () => {
   test('Must throw error when network is not available (async)', async () => {
