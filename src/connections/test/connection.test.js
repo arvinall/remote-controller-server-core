@@ -526,6 +526,226 @@ describe('Connection properties', () => {
         connection.socket = 'wrong'
       }).toThrow(ERROR)
     })
+
+    test('Must set socket property to new socket without error', async () => {
+      expect.assertions(2)
+
+      const sockets = await getSomeSockets(2)
+      const connection = new Connection({ socket: sockets[0] })
+
+      await new Promise(resolve => connection.once('connected', resolve))
+
+      connection.socket = sockets[1]
+
+      expect(connection.socket).not.toBe(sockets[0])
+      expect(connection.socket).toBe(sockets[1])
+    })
+
+    test('Must emit connected event when new socket is open', async done => {
+      const sockets = await getSomeSockets(2)
+      const connection = new Connection({ socket: sockets[0] })
+
+      await new Promise(resolve => connection.once('connected', resolve))
+
+      connection.socket = sockets[1]
+
+      await new Promise(resolve => connection.once('connected', () => done()))
+    })
+
+    test('Must send/emit authentication status when factor is only confirmation(passed before)', async () => {
+      expect.assertions(9)
+
+      const sockets = await getSomeSockets(2)
+      const connection = new Connection({ socket: sockets[0] })
+
+      // Ask for confirmation
+      await new Promise(resolve => connection.once('authentication', event => {
+        expect(event.factor).toBe('confirmation')
+        expect(event.status).toBe(0)
+
+        resolve()
+      }))
+
+      setImmediate(() => connection.confirm())
+
+      // Authentication/Confirmation status
+      await new Promise(resolve => connection.on('authentication', function allow (event) {
+        if (event.factor !== undefined) {
+          expect(event.factor).toBe('confirmation')
+          expect(event.status).toBe(1)
+        } else {
+          expect(event.factor).toBeUndefined()
+          expect(event.status).toBe(1)
+
+          connection.off('authentication', allow)
+          resolve()
+        }
+      }))
+
+      connection.socket = sockets[1]
+
+      // Authentication status
+      await new Promise(resolve => connection.once('authentication', event => {
+        expect(event.factor).toBeUndefined()
+        expect(event.status).toBe(1)
+
+        resolve()
+      }))
+
+      expect(connection.isAuthenticate).toBe(true)
+    })
+
+    test('Must send/emit passport factor and authentication status when factor is only passport', async () => {
+      expect.assertions(9)
+
+      const sockets = await getSomeSockets(2)
+      const connection = new Connection({
+        socket: sockets[0],
+        authenticationFactors: { confirmation: false, passport: true },
+        passport: PASSPORT
+      })
+
+      // Ask for passport
+      await new Promise(resolve => connection.once('authentication', event => {
+        expect(event.factor).toBe('passport')
+        expect(event.status).toBe(0)
+
+        resolve()
+      }))
+
+      connection.socket.__webSocket__.send(JSON.stringify([
+        'authenticate',
+        [
+          {
+            factor: 'passport',
+            passportInput: PASSWORD
+          }
+        ]
+      ]))
+
+      // Authentication/Passport status
+      await new Promise(resolve => connection.on('authentication', function allow (event) {
+        if (event.factor !== undefined) {
+          expect(event.factor).toBe('passport')
+          expect(event.status).toBe(1)
+        } else {
+          expect(event.factor).toBeUndefined()
+          expect(event.status).toBe(1)
+
+          connection.off('authentication', allow)
+          resolve()
+        }
+      }))
+
+      connection.socket = sockets[1]
+
+      // Ask for passport
+      await new Promise(resolve => connection.once('authentication', event => {
+        expect(event.factor).toBe('passport')
+        expect(event.status).toBe(0)
+
+        resolve()
+      }))
+
+      expect(connection.isAuthenticate).toBe(false)
+    })
+
+    test('Must send/emit passport factor and authentication status when factor is confirmation(passed before) and passport', async () => {
+      expect.assertions(18)
+
+      const sockets = await getSomeSockets(2)
+      const connection = new Connection({
+        socket: sockets[0],
+        authenticationFactors: { confirmation: true, passport: true },
+        passport: PASSPORT
+      })
+
+      // Ask for passport
+      await new Promise(resolve => connection.once('authentication', event => {
+        expect(event.factor).toBe('passport')
+        expect(event.status).toBe(0)
+
+        resolve()
+      }))
+
+      connection.socket.__webSocket__.send(JSON.stringify([
+        'authenticate',
+        [
+          {
+            factor: 'passport',
+            passportInput: PASSWORD
+          }
+        ]
+      ]))
+
+      // Passport status - Ask for confirmation
+      await new Promise(resolve => connection.on('authentication', function handler (event) {
+        if (event.factor !== 'confirmation') {
+          expect(event.factor).toBe('passport')
+          expect(event.status).toBe(1)
+        } else {
+          expect(event.factor).toBe('confirmation')
+          expect(event.status).toBe(0)
+
+          connection.off('authentication', handler)
+          resolve()
+        }
+      }))
+
+      setImmediate(() => connection.confirm())
+
+      // Authentication/Confirmation status
+      await new Promise(resolve => connection.on('authentication', function allow (event) {
+        if (event.factor !== undefined) {
+          expect(event.factor).toBe('confirmation')
+          expect(event.status).toBe(1)
+        } else {
+          expect(event.factor).toBeUndefined()
+          expect(event.status).toBe(1)
+
+          connection.off('authentication', allow)
+          resolve()
+        }
+      }))
+
+      connection.socket = sockets[1]
+
+      // Ask for passport
+      await new Promise(resolve => connection.once('authentication', event => {
+        expect(event.factor).toBe('passport')
+        expect(event.status).toBe(0)
+
+        resolve()
+      }))
+
+      expect(connection.isAuthenticate).toBe(false)
+
+      connection.socket.__webSocket__.send(JSON.stringify([
+        'authenticate',
+        [
+          {
+            factor: 'passport',
+            passportInput: PASSWORD
+          }
+        ]
+      ]))
+
+      // Authentication/Passport status
+      await new Promise(resolve => connection.on('authentication', function allow (event) {
+        if (event.factor !== undefined) {
+          expect(event.factor).toBe('passport')
+          expect(event.status).toBe(1)
+        } else {
+          expect(event.factor).toBeUndefined()
+          expect(event.status).toBe(1)
+
+          connection.off('authentication', allow)
+          resolve()
+        }
+      }))
+
+      expect(connection.isAuthenticate).toBe(true)
+    })
   })
 
   afterAll(async () => {
