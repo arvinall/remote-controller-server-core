@@ -34,6 +34,15 @@
  *
  * @see {@link https://nodejs.org/api/http.html#http_class_http_server|HTTP Server}
  */
+/**
+ * Nodejs IncomingMessage class
+ *
+ * @name IncomingMessage
+ * @memberOf module:remote-controller-server-core~external:http
+ * @static
+ *
+ * @see {@link https://nodejs.org/api/http.html#http_class_http_incomingmessage|HTTP IncomingMessage}
+ */
 
 /**
  * ws module
