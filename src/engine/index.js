@@ -30,6 +30,7 @@ export default function makeEngine (configs = Object.create(null)) {
   if (typeof configs.port !== 'number') throw new Error('configs.port must be number')
   else if (typeof configs.path !== 'string' || !configs.path.startsWith('/')) throw new Error('configs.path must be string and starts with "/"')
 
+  const connections = this.connections
   const httpServer = http.createServer()
   const webSocketServer = new WebSocket.Server({
     server: httpServer,
@@ -43,6 +44,59 @@ export default function makeEngine (configs = Object.create(null)) {
    * @mixes module:remote-controller-server-core~external:EventEmitter
    */
   class Engine extends EventEmitter {
+    constructor () {
+      super()
+
+      const connectionsList = new WeakSet()
+
+      let connection
+
+      webSocketServer.on('connection', (...parameters) => {
+        try {
+          connection = connections.add(...parameters)
+        } catch (error) {}
+
+        if (!connectionsList.has(connection)) {
+          if (process.env.NODE_ENV === 'development') {
+            connection.on('authentication', event => {
+              switch (event.factor) {
+                case undefined:
+                  console.log(connection.id, event.status === 1
+                    ? 'Connection authenticated'
+                    : 'Connection unauthenticated')
+                  break
+                case 'confirmation':
+                  console.log(connection.id, [
+                    'Connection ask for confirmation',
+                    'Connection confirmation allowed',
+                    'Connection confirmation denied'
+                  ][event.status])
+                  break
+                case 'passport':
+                  console.log(connection.id, [
+                    'Connection ask for passport',
+                    'Connection passport allowed',
+                    'Connection passport denied'
+                  ][event.status])
+                  break
+              }
+            })
+          }
+
+          connectionsList.add(connection)
+        }
+      })
+
+      if (process.env.NODE_ENV === 'development') {
+        connections.on('connected', connection => {
+          console.log(connection.id, 'Connected', connection.address)
+        })
+        connections.on('disconnected', connection => {
+          console.log(connection.id, 'Disconnected', connection.address)
+        })
+      }
+    }
+
     /**
      * Start engine
      *
