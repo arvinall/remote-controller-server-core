@@ -810,6 +810,14 @@ test('Connection disconnect method must close socket successfully', done => {
 })
 
 describe('Connection events', () => {
+  test('Emit connected when socket(open) attach to connection', async done => {
+    let socket = (await getSomeSockets())[0]
+
+    const connection = new Connection({ socket })
+
+    connection.on('connected', () => done())
+  })
+
   describe('Authentication', () => {
     test('Emit confirmation factor status', async done => {
       expect.assertions(10)
