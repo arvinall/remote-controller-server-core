@@ -73,6 +73,7 @@
 import makeStorages from './storages'
 import makePreferences from './preferences'
 import makeEngine from './engine'
+import makeConnections from './connections'
 
 const storagesList = Object.create(null)
 
@@ -130,6 +131,16 @@ export default function makeCore (configs = Object.create(null)) {
   core.preferences = makePreferences.call(core, { name: configs.preferenceStorageName })
 
   /**
+   * Connection manager module
+   *
+   * @name connections
+   * @memberOf module:remote-controller-server-core~core
+   *
+   * @type {module:connections~Connections}
+   */
+  core.connections = makeConnections.call(core)
+
+  /**
    * Core engine
    *
    * @name engine
@@ -147,3 +158,4 @@ export * as preferences from './preferences'
 export * as engine from './engine'
 export * as passport from './passport'
 export * as idGenerator from './idGenerator'
+export * as connections from './connections'
