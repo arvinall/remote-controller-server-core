@@ -1,5 +1,6 @@
 /* global test, expect, describe, jest, afterAll, beforeEach */
 
+import http from 'http'
 import envConfigs from '../../test/configs'
 import WebSocket from 'ws'
 import makeEngine from '../index'
