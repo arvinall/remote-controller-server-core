@@ -35,6 +35,25 @@ async function getSocket () {
   })
 }
 
+async function getSomeSockets (size = 1) {
+  const sockets = []
+
+  for (let counter = 1; counter <= size; counter++) {
+    let webSocket = new WebSocket(webSocketServerOptions.address, webSocketOptions)
+
+    webSocket.once('error', () => {})
+
+    let socket = await getSocket()
+    socket[0].request = socket[1]
+    socket = socket[0]
+    socket.__webSocket__ = webSocket
+
+    sockets.push(socket)
+  }
+
+  return sockets
+}
+
 async function getSomeMessages (size = 1, ws = webSocket) {
   return new Promise(resolve => {
     const result = []
@@ -137,13 +156,7 @@ describe('Connection constructor', () => {
 
     test('Must throw error when configs.authenticationFactors property is not object with boolean values', async () => {
       const ERROR = 'configs.authenticationFactors must be object with boolean values'
-      const configs = { socket: new WebSocket(webSocketServerOptions.address, webSocketOptions) }
-      const [ socket, request ] = await getSocket()
-
-      configs.socket.once('error', () => {})
-
-      socket.request = request
-      configs.socket = socket
+      const configs = { socket: (await getSomeSockets())[0] }
 
       configs.authenticationFactors = 'wrong'
 
@@ -162,15 +175,9 @@ describe('Connection constructor', () => {
     test('Must throw error when all values of configs.authenticationFactors property is false', async () => {
       const ERROR = 'One authentication factor require at least'
       const configs = {
-        socket: new WebSocket(webSocketServerOptions.address, webSocketOptions),
+        socket: (await getSomeSockets())[0],
         authenticationFactors: { confirmation: false }
       }
-      const [ socket, request ] = await getSocket()
-
-      configs.socket.once('error', () => {})
-
-      socket.request = request
-      configs.socket = socket
 
       expect(() => new Connection(configs)).toThrow(ERROR)
     })
@@ -178,18 +185,12 @@ describe('Connection constructor', () => {
     test('Must throw error when configs.passport property is not Passport and configs.authenticationFactors.passport property set to true', async () => {
       const ERROR = 'configs.passport is required and must be Passport'
       const configs = {
-        socket: new WebSocket(webSocketServerOptions.address, webSocketOptions),
+        socket: (await getSomeSockets())[0],
         authenticationFactors: {
           confirmation: false,
           passport: true
         }
       }
-      const [ socket, request ] = await getSocket()
-
-      configs.socket.once('error', () => {})
-
-      socket.request = request
-      configs.socket = socket
 
       expect(() => new Connection(configs)).toThrow(ERROR)
 
@@ -211,14 +212,7 @@ describe('Connection constructor', () => {
     test('Initial without error', async () => {
       expect.assertions(1)
 
-      const configs = {}
-      const webSocket = new WebSocket(webSocketServerOptions.address, webSocketOptions)
-      const [ socket, request ] = await getSocket()
-
-      webSocket.once('error', () => {})
-
-      socket.request = request
-      configs.socket = socket
+      const configs = { socket: (await getSomeSockets())[0] }
 
       const connection = new Connection(configs)
 
@@ -229,13 +223,9 @@ describe('Connection constructor', () => {
       test('Factor: confirmation', async () => {
         expect.assertions(3)
 
-        const webSocket = new WebSocket(webSocketServerOptions.address, webSocketOptions)
-        const [ socket, request ] = await getSocket()
+        configs.socket = (await getSomeSockets())[0]
 
-        webSocket.once('error', () => {})
-
-        socket.request = request
-        configs.socket = socket
+        const webSocket = configs.socket.__webSocket__
 
         ;(() => new Connection(configs))()
 
@@ -253,14 +243,9 @@ describe('Connection constructor', () => {
 
         configs.authenticationFactors.confirmation = false
         configs.authenticationFactors.passport = true
+        configs.socket = (await getSomeSockets())[0]
 
-        const webSocket = new WebSocket(webSocketServerOptions.address, webSocketOptions)
-        const [ socket, request ] = await getSocket()
-
-        webSocket.once('error', () => {})
-
-        socket.request = request
-        configs.socket = socket
+        const webSocket = configs.socket.__webSocket__
 
         ;(() => new Connection(configs))()
 
@@ -279,14 +264,9 @@ describe('Connection constructor', () => {
 
         configs.authenticationFactors.confirmation = true
         configs.authenticationFactors.passport = true
+        configs.socket = (await getSomeSockets())[0]
 
-        const webSocket = new WebSocket(webSocketServerOptions.address, webSocketOptions)
-        const [ socket, request ] = await getSocket()
-
-        webSocket.once('error', () => {})
-
-        socket.request = request
-        configs.socket = socket
+        const webSocket = configs.socket.__webSocket__
 
         ;(() => new Connection(configs))()
 
@@ -333,14 +313,9 @@ describe('Connection constructor', () => {
 
       configs.authenticationFactors.confirmation = false
       configs.authenticationFactors.passport = true
+      configs.socket = (await getSomeSockets())[0]
 
-      const webSocket = new WebSocket(webSocketServerOptions.address, webSocketOptions)
-      const [ socket, request ] = await getSocket()
-
-      webSocket.once('error', () => {})
-
-      socket.request = request
-      configs.socket = socket
+      const webSocket = configs.socket.__webSocket__
 
       ;(() => new Connection(configs))()
 
@@ -406,14 +381,9 @@ describe('Connection constructor', () => {
 
       configs.authenticationFactors.confirmation = false
       configs.authenticationFactors.passport = true
+      configs.socket = (await getSomeSockets())[0]
 
-      const webSocket = new WebSocket(webSocketServerOptions.address, webSocketOptions)
-      const [ socket, request ] = await getSocket()
-
-      webSocket.once('error', () => {})
-
-      socket.request = request
-      configs.socket = socket
+      const webSocket = configs.socket.__webSocket__
 
       ;(() => new Connection(configs))()
 
@@ -480,16 +450,10 @@ describe('Connection constructor', () => {
   afterAll(async () => {
     configs.authenticationFactors.confirmation = false
     configs.authenticationFactors.passport = true
+    configs.socket = (await getSomeSockets())[0]
 
-    webSocket = new WebSocket(webSocketServerOptions.address, webSocketOptions)
-
-    webSocket.once('error', () => {})
-
-    socket = await getSocket()
-    socket[0].request = socket[1]
-    socket = socket[0]
-
-    configs.socket = socket
+    socket = configs.socket
+    webSocket = configs.socket.__webSocket__
 
     connection = new Connection(configs)
 
@@ -557,13 +521,8 @@ describe('Connection properties', () => {
   })
 
   afterAll(async () => {
-    webSocket = new WebSocket(webSocketServerOptions.address, webSocketOptions)
-
-    webSocket.once('error', () => {})
-
-    socket = await getSocket()
-    socket[0].request = socket[1]
-    socket = socket[0]
+    socket = (await getSomeSockets())[0]
+    webSocket = socket.__webSocket__
 
     connection = new Connection({
       socket,
@@ -712,14 +671,10 @@ describe('Connection send method', () => {
       expect.assertions(1)
 
       const ERROR = 'Connection is not connected'
-      const webSocket = new WebSocket(webSocketServerOptions.address, webSocketOptions)
 
-      webSocket.once('error', () => {})
+      let socket = (await getSomeSockets())[0]
 
-      let socket = await getSocket()
-      socket[0].request = socket[1]
-      socket = socket[0]
-
+      const webSocket = socket.__webSocket__
       const connection = new Connection({ socket })
 
       await (new Promise(resolve => webSocket.once('open', resolve)))
@@ -851,13 +806,7 @@ describe('Connection events', () => {
     test('Emit confirmation factor status', async done => {
       expect.assertions(10)
 
-      const webSocket = new WebSocket(webSocketServerOptions.address, webSocketOptions)
-
-      webSocket.once('error', () => {})
-
-      let socket = await getSocket()
-      socket[0].request = socket[1]
-      socket = socket[0]
+      let socket = (await getSomeSockets())[0]
 
       const connection = new Connection({ socket })
 
@@ -909,13 +858,9 @@ describe('Connection events', () => {
     test('Emit passport factor status', async () => {
       expect.assertions(10)
 
-      const webSocket = new WebSocket(webSocketServerOptions.address, webSocketOptions)
+      let socket = (await getSomeSockets())[0]
 
-      webSocket.once('error', () => {})
-
-      let socket = await getSocket()
-      socket[0].request = socket[1]
-      socket = socket[0]
+      const webSocket = socket.__webSocket__
 
       const connection = new Connection({
         socket,
@@ -1006,13 +951,9 @@ describe('Connection events', () => {
     test('Emit passport then confirmation factor status', async done => {
       expect.assertions(16)
 
-      const webSocket = new WebSocket(webSocketServerOptions.address, webSocketOptions)
+      let socket = (await getSomeSockets())[0]
 
-      webSocket.once('error', () => {})
-
-      let socket = await getSocket()
-      socket[0].request = socket[1]
-      socket = socket[0]
+      const webSocket = socket.__webSocket__
 
       const connection = new Connection({
         socket,
@@ -1125,13 +1066,7 @@ describe('Connection events', () => {
   })
 
   test('Emit disconnected when socket closed', async done => {
-    const webSocket = new WebSocket(webSocketServerOptions.address, webSocketOptions)
-
-    webSocket.once('error', () => {})
-
-    let socket = await getSocket()
-    socket[0].request = socket[1]
-    socket = socket[0]
+    let socket = (await getSomeSockets())[0]
 
     const connection = new Connection({ socket })
 
