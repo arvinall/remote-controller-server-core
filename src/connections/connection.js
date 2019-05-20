@@ -458,8 +458,7 @@ export default class Connection extends EventEmitter {
     setImmediate(() => {
       if (this.isConnected) this.#emitConnected()
       this.#emitFirstAuthenticationFactorAsk()
-
-      if (this.isAuthenticate) this.#emitAuthentication()
+      this.#emitAuthentication()
     })
   }
 
