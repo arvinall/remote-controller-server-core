@@ -88,7 +88,7 @@ export default class Connection extends EventEmitter {
       if (this.isAuthenticate) EVENT_PROPS[1].id = this.id
 
       this.emit(...EVENT_PROPS)
-      this.send(...EVENT_PROPS)
+      this.send(...EVENT_PROPS).catch(() => {})
     }
 
     handler.clearCache = () => {
@@ -111,7 +111,7 @@ export default class Connection extends EventEmitter {
     }]
 
     this.emit(...EVENT_PROPS)
-    this.send(...EVENT_PROPS)
+    this.send(...EVENT_PROPS).catch(() => {})
     this.#emitAuthentication()
   }
 
@@ -128,7 +128,7 @@ export default class Connection extends EventEmitter {
       if (factor === 'passport') EVENT_PROPS[1].type = this.#passport.type
 
       this.emit(...EVENT_PROPS)
-      this.send(...EVENT_PROPS)
+      this.send(...EVENT_PROPS).catch(() => {})
 
       break
     }
@@ -266,7 +266,7 @@ export default class Connection extends EventEmitter {
             }]
 
             this.emit(...EVENT_PROPS)
-            this.send(...EVENT_PROPS)
+            this.send(...EVENT_PROPS).catch(() => {})
           }
         }
       }))
@@ -375,7 +375,7 @@ export default class Connection extends EventEmitter {
     }]
 
     this.emit(...EVENT_PROPS)
-    this.send(...EVENT_PROPS)
+    this.send(...EVENT_PROPS).catch(() => {})
     this.#emitAuthentication()
   }
 
