@@ -135,6 +135,15 @@ export default function makeEngine (configs = Object.create(null)) {
     get isActive () {
       return httpServer.listening
     }
+
+    /**
+     * Get http server instance that in use
+     *
+     * @type {module:remote-controller-server-core~external:http.Server}
+     */
+    get httpServer () {
+      return httpServer
+    }
   }
 
   return new Engine()

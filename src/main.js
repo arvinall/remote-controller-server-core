@@ -19,6 +19,23 @@
  */
 
 /**
+ * Nodejs http module
+ *
+ * @external module:remote-controller-server-core~external:http
+ *
+ * @see {@link https://nodejs.org/api/http.html|HTTP}
+ */
+/**
+ * Nodejs http.Server class
+ *
+ * @name Server
+ * @memberOf module:remote-controller-server-core~external:http
+ * @static
+ *
+ * @see {@link https://nodejs.org/api/http.html#http_class_http_server|HTTP Server}
+ */
+
+/**
  * ws module
  *
  * @external module:remote-controller-server-core~external:ws

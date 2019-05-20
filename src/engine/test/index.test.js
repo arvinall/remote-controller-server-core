@@ -44,7 +44,8 @@ describe('makeEngine', () => {
       start: expect.any(Function),
       stop: expect.any(Function),
       address: expect.any(Object),
-      isActive: expect.any(Boolean)
+      isActive: expect.any(Boolean),
+      httpServer: expect.any(http.Server)
     }))
     expect(engine.address.port).toBe(engineConfigs.port)
     expect(typeof engine.address.address === 'string' || engine.address.address === null).toBe(true)
