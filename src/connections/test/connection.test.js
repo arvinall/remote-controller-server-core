@@ -155,6 +155,8 @@ describe('Connection constructor', () => {
     })
 
     test('Must throw error when configs.authenticationFactors property is not object with boolean values', async () => {
+      expect.assertions(2)
+
       const ERROR = 'configs.authenticationFactors must be object with boolean values'
       const configs = { socket: (await getSomeSockets())[0] }
 
@@ -173,6 +175,8 @@ describe('Connection constructor', () => {
     })
 
     test('Must throw error when all values of configs.authenticationFactors property is false', async () => {
+      expect.assertions(1)
+
       const ERROR = 'One authentication factor require at least'
       const configs = {
         socket: (await getSomeSockets())[0],
@@ -183,6 +187,8 @@ describe('Connection constructor', () => {
     })
 
     test('Must throw error when configs.passport property is not Passport and configs.authenticationFactors.passport property set to true', async () => {
+      expect.assertions(2)
+
       const ERROR = 'configs.passport is required and must be Passport'
       const configs = {
         socket: (await getSomeSockets())[0],
@@ -477,6 +483,8 @@ describe('Connection properties', () => {
     })
 
     test('Must return true when passport is provided', async () => {
+      expect.assertions(1)
+
       webSocket.send(JSON.stringify([
         'authenticate',
         [
