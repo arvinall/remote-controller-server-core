@@ -341,11 +341,19 @@ export default class Connection extends AsyncEventEmitter {
   /**
    * Disconnect Connection
    *
+   * @param {number} [code]
+   * @param {string} [description]
+   *
    * @emits module:connections/connection#event:disconnected
    *
    * @return {void}
    */
-  disconnect () {
+  disconnect (code, description) {
+    if (code !== undefined &&
+      typeof code !== 'number') throw new Error('code parameter must be number')
+    else if (description !== undefined &&
+      typeof description !== 'string') throw new Error('description parameter must be string')
+
     /**
      * @summary Connection disconnected event
      * @description
@@ -356,7 +364,7 @@ export default class Connection extends AsyncEventEmitter {
      * @see module:remote-controller-server-core~external:ws.WebSocket
      */
     if (this.#socket.readyState !== WebSocket.CLOSED ||
-      this.#socket.readyState !== WebSocket.CLOSING) this.#socket.close()
+      this.#socket.readyState !== WebSocket.CLOSING) this.#socket.close(code, description)
   }
 
   /**

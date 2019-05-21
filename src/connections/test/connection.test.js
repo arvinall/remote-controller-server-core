@@ -1111,10 +1111,46 @@ describe('Connection send method', () => {
   })
 })
 
-test('Connection disconnect method must close socket successfully', done => {
-  connection.disconnect()
+describe('Connection disconnect method', () => {
+  describe('Errors', () => {
+    test('Must throw error when code parameter is not number', () => {
+      const ERROR = 'code parameter must be number'
 
-  webSocket.once('close', () => done())
+      expect(() => connection.disconnect('wrong')).toThrow(ERROR)
+    })
+
+    test('Must throw error when description parameter is not string', () => {
+      const ERROR = 'description parameter must be string'
+
+      expect(() => connection.disconnect(1, [ 'wrong' ])).toThrow(ERROR)
+    })
+  })
+
+  describe('Success', () => {
+    test('Must close socket successfully', done => {
+      connection.disconnect()
+
+      webSocket.once('close', () => done())
+    })
+
+    test('Must close socket successfully with code and description', async () => {
+      expect.assertions(2)
+
+      const socket = (await getSomeSockets())[0]
+      const connection = new Connection({ socket })
+      const CODE = 4000
+      const DESCRIPTION = 'Test'
+
+      connection.disconnect(CODE, DESCRIPTION)
+
+      await new Promise(resolve => socket.__webSocket__.once('close', (code, description) => {
+        expect(code).toBe(CODE)
+        expect(description).toBe(DESCRIPTION)
+
+        resolve()
+      }))
+    })
+  })
 })
 
 describe('Connection events', () => {
