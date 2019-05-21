@@ -127,6 +127,15 @@ export default function makeConnections (configs = Object.create(null)) {
         })
       }
 
+      /**
+       * Connections added event
+       *
+       * @event module:connections~Connections#event:added
+       *
+       * @type {module:connections/connection}
+       */
+      this.emit('added', connection)
+
       return connection
     }
   }
