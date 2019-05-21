@@ -153,6 +153,7 @@ export default class Connection extends AsyncEventEmitter {
    *
    * @param {object} configs
    * @param {module:remote-controller-server-core~external:ws.WebSocket} configs.socket
+   * @param {module:remote-controller-server-core~external:http.IncomingMessage} configs.socket.request
    * @param {object} [configs.authenticationFactors={}] Authentication factors
    * @param {boolean} [configs.authenticationFactors.confirmation=true] Must Connection confirm before interact?
    * @param {boolean} [configs.authenticationFactors.passport=false]
@@ -164,6 +165,7 @@ export default class Connection extends AsyncEventEmitter {
   constructor (configs) {
     if (typeof configs !== 'object') throw new Error('configs parameter is required and must be object')
     else if (!(configs.socket instanceof WebSocket)) throw new Error('configs.socket is required and must be ws.WebSocket')
+    else if (!(configs.socket.request instanceof http.IncomingMessage)) throw new Error('configs.socket.request is required and must be http.IncomingMessage')
     else if (
       (configs.authenticationFactors !== undefined &&
         typeof configs.authenticationFactors !== 'object') ||

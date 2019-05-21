@@ -154,6 +154,17 @@ describe('Connection constructor', () => {
       expect(() => new Connection({ socket: new function () {}() })).toThrow(ERROR)
     })
 
+    test('Must throw error when configs.socket.request property is not http.IncomingMessage', async () => {
+      expect.assertions(1)
+
+      const ERROR = 'configs.socket.request is required and must be http.IncomingMessage'
+      const socket = (await getSomeSockets())[0]
+
+      delete socket.request
+
+      expect(() => new Connection({ socket })).toThrow(ERROR)
+    })
+
     test('Must throw error when configs.authenticationFactors property is not object with boolean values', async () => {
       expect.assertions(2)
 
