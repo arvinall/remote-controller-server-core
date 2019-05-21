@@ -37,50 +37,55 @@ export default function makeConnections (configs = Object.create(null)) {
     /**
      * Add and initial connection
      *
-     * @param {module:remote-controller-server-core~external:ws.WebSocket} socket
-     * @param {module:remote-controller-server-core~external:http.IncomingMessage} request
+     * @param {(module:remote-controller-server-core~external:ws.WebSocket|module:connections/connection)} socket
+     * @param {module:remote-controller-server-core~external:http.IncomingMessage} [request] Is not require when socket parameter is a {@link module:connections/connection|Connection}
      *
      * @throws Will throw an error if previous connection that requested is not exist
      * @throws Will throw an error if previous connection is already connect
      *
      * @emits module:connections~Connections#event:connected
      * @emits module:connections~Connections#event:disconnected
+     * @emits module:connections~Connections#event:added
      *
      * @return {module:connections/connection}
      */
     add (socket, request) {
-      if (!(socket instanceof WebSocket)) throw new Error('socket parameter is required and must be ws.WebSocket')
-      else if (!(request instanceof http.IncomingMessage)) throw new Error('request parameter is required and must be http.IncomingMessage')
+      if (!(socket instanceof WebSocket) &&
+        !(socket instanceof Connection)) throw new Error('socket parameter is required and must be ws.WebSocket/Connection')
+      else if (socket instanceof WebSocket &&
+        !(request instanceof http.IncomingMessage)) throw new Error('request parameter is required when socket parameter is ws.WebSocket and must be http.IncomingMessage')
 
-      socket.request = request
-      socket.request.previousSocketId = (new URLSearchParams(request.url.split('?')[1])).get('id')
+      let connection = socket instanceof Connection ? socket : undefined
+      let initial
 
-      const initial = socket.request.previousSocketId === null
+      if (connection === undefined) {
+        socket.request = request
+        socket.request.previousSocketId = (new URLSearchParams(request.url.split('?')[1])).get('id')
 
-      let connection
+        initial = socket.request.previousSocketId === null
 
-      // Create new Connection instance
-      if (initial) {
-        connection = new Connection({ socket })
+        if (initial) { // Create new Connection instance
+          delete socket.request.previousSocketId
 
-        connectionsList.set(connection.id, connection)
-      } else { // Change an existing connection's socket
-        if (!connectionsList.has(socket.request.previousSocketId)) {
-          socket.close()
+          connection = new Connection({ socket })
+        } else { // Change an existing connection's socket
+          if (!connectionsList.has(socket.request.previousSocketId)) {
+            socket.close()
 
-          throw new Error('Socket id that requested is not exist')
+            throw new Error('Previous connection that requested is not exist')
+          }
+
+          connection = connectionsList.get(socket.request.previousSocketId)
+
+          if (connection.isConnected) {
+            socket.close()
+
+            throw new Error('Previous connection is already connect')
+          }
+
+          connection.socket = socket
         }
-
-        connection = connectionsList.get(socket.request.previousSocketId)
-
-        if (connection.isConnected) {
-          socket.close()
-
-          throw new Error('Connection is already connect')
-        }
-
-        connection.socket = socket
-      }
+      } else initial = true
 
       if (initial) {
         connectionsList.set(connection.id, connection)
