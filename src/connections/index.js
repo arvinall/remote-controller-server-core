@@ -138,6 +138,64 @@ export default function makeConnections (configs = Object.create(null)) {
 
       return connection
     }
+
+    /**
+     * Remove connection from list
+     *
+     * @param {(module:connections/connection|string)} connection Instance of Connection or connection's id
+     *
+     * @emits module:connections~Connections#event:removed
+     *
+     * @return {boolean}
+     */
+    remove (connection) {
+      if (!(connection instanceof Connection) &&
+      typeof connection !== 'string') throw new Error('connection parameter is required and must be Connection/string')
+
+      if (typeof connection === 'string') {
+        connection = connectionsList.get(connection)
+      }
+
+      let result = false
+
+      if (connection instanceof Connection) {
+        connection.disconnect()
+
+        result = connectionsList.delete(connection.id)
+
+        /**
+         * Connections removed event
+         *
+         * @event module:connections~Connections#event:removed
+         *
+         * @type {module:connections/connection}
+         */
+        this.emit('removed', connection)
+      }
+
+      return result
+    }
+
+    /**
+     * Get specific connection or all connected list
+     *
+     * @param  {string} [id]
+     * @return {((module:connections/connection|object<string, module:connections/connection>))}
+     */
+    get (id) {
+      if (id !== undefined &&
+        typeof id !== 'string') throw new Error('id parameter must be string')
+
+      if (id) return connectionsList.get(id)
+
+      const connectedList = {}
+
+      for (const connection of connectionsList.values()) {
+        if (connection.isConnected) connectedList[connection.id] = connection
+      }
+
+      return connectedList
+    }
   }
 
   return new Connections()
