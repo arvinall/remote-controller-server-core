@@ -40,8 +40,8 @@ export default function makeConnections (configs = Object.create(null)) {
      * @param {module:remote-controller-server-core~external:ws.WebSocket} socket
      * @param {module:remote-controller-server-core~external:http.IncomingMessage} request
      *
-     * @throws Will throw an error if the socket id that requested is not exist
-     * @throws Will throw an error if connection is already connect
+     * @throws Will throw an error if previous connection that requested is not exist
+     * @throws Will throw an error if previous connection is already connect
      *
      * @emits module:connections~Connections#event:connected
      * @emits module:connections~Connections#event:disconnected
