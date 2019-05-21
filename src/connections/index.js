@@ -11,9 +11,21 @@ import Connection from './connection'
 /**
  * makeConnections creates connections module
  *
+ * @param {object} [configs={}]
+ * @param {number} [configs.removeTimeout=1800000] Connections will remove after this time in millisecond
+ *
  * @return {module:connections~Connections}
  */
-export default function makeConnections () {
+export default function makeConnections (configs = Object.create(null)) {
+  if (typeof configs !== 'object') throw new Error('configs parameter must be object')
+
+  // Set default configs
+  configs = Object.assign({
+    removeTimeout: 1000 * 60 * 30
+  }, configs)
+
+  if (typeof configs.removeTimeout !== 'number') throw new Error('configs.removeTimeout must be number')
+
   const connectionsList = new Map()
 
   /**
@@ -71,11 +83,9 @@ export default function makeConnections () {
       }
 
       if (initial) {
-        // Disconnect when connection unauthenticated
-        connection.on('authentication', event => {
-          if (event.factor === undefined &&
-          event.status === 2) connection.disconnect()
-        })
+        connectionsList.set(connection.id, connection)
+
+        let timeOut
 
         // Transfer events
         /**
@@ -88,7 +98,11 @@ export default function makeConnections () {
          *
          * @see module:connections/connection#event:connected
          */
-        connection.on('connected', (...parameters) => this.emit('connected', connection, ...parameters))
+        connection.on('connected', (...parameters) => {
+          clearTimeout(timeOut)
+
+          this.emit('connected', connection, ...parameters)
+        })
         /**
          * @summary Connections disconnected event
          * @description First parameter is the target connection
@@ -99,7 +113,13 @@ export default function makeConnections () {
          *
          * @see module:connections/connection#event:disconnected
          */
-        connection.on('disconnected', (...parameters) => this.emit('disconnected', connection, ...parameters))
+        connection.on('disconnected', (...parameters) => {
+          timeOut = setTimeout(() => {
+            this.remove(connection)
+          }, configs.removeTimeout)
+
+          this.emit('disconnected', connection, ...parameters)
+        })
       }
 
       return connection
