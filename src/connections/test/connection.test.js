@@ -1,4 +1,4 @@
-/* global test, expect, describe, beforeEach, beforeAll, afterAll, jest, TMP_PATH, setImmediate */
+/* global test, expect, describe, beforeEach, beforeAll, afterAll, afterEach, jest, TMP_PATH, setImmediate */
 
 import stream from 'stream'
 import fs from 'fs'
@@ -315,13 +315,13 @@ describe('Connection constructor', () => {
     })
 
     test('Must sends passport authentication factor allowed/denied status messages when passport sends', async () => {
-      expect.assertions(9)
+      expect.assertions(12)
 
       configs.authenticationFactors.confirmation = false
       configs.authenticationFactors.passport = true
       configs.socket = (await getSomeSockets())[0]
 
-      const webSocket = configs.socket.__webSocket__
+      let webSocket = configs.socket.__webSocket__
 
       ;(() => new Connection(configs))()
 
@@ -357,6 +357,21 @@ describe('Connection constructor', () => {
         expect(messageName).toBe('authentication')
         expect(messageBody.factor).toBe('passport')
         expect(messageBody.status).toBe(2)
+      })()
+
+      configs.socket = (await getSomeSockets())[0]
+      webSocket = configs.socket.__webSocket__
+
+      ;(() => new Connection(configs))()
+
+      await (async (/* Ask */) => {
+        message = (await getSomeMessages(1, webSocket))[0]
+        messageName = message[0]
+        messageBody = message[1][0]
+
+        expect(messageName).toBe('authentication')
+        expect(messageBody.factor).toBe('passport')
+        expect(messageBody.status).toBe(0)
       })()
 
       await (async (/* Allow */) => {
@@ -383,13 +398,13 @@ describe('Connection constructor', () => {
     })
 
     test('Must sends authentication status messages when passport sends', async () => {
-      expect.assertions(9)
+      expect.assertions(12)
 
       configs.authenticationFactors.confirmation = false
       configs.authenticationFactors.passport = true
       configs.socket = (await getSomeSockets())[0]
 
-      const webSocket = configs.socket.__webSocket__
+      let webSocket = configs.socket.__webSocket__
 
       ;(() => new Connection(configs))()
 
@@ -428,6 +443,21 @@ describe('Connection constructor', () => {
         expect(messageBody.status).toBe(2)
       })()
 
+      configs.socket = (await getSomeSockets())[0]
+      webSocket = configs.socket.__webSocket__
+
+      ;(() => new Connection(configs))()
+
+      await (async (/* Ask */) => {
+        message = (await getSomeMessages(1, webSocket))[0]
+        messageName = message[0]
+        messageBody = message[1][0]
+
+        expect(messageName).toBe('authentication')
+        expect(messageBody.factor).toBe('passport')
+        expect(messageBody.status).toBe(0)
+      })()
+
       await (async (/* Allow */) => {
         webSocket.send(JSON.stringify([
           'authenticate',
@@ -450,6 +480,58 @@ describe('Connection constructor', () => {
       })()
 
       webSocket.on('message', data => console.error('Unexpected behavior', data))
+    })
+
+    test('Must sends unauthenticated status when authentication failed', async () => {
+      expect.assertions(9)
+
+      const configs = { socket: (await getSomeSockets())[0] }
+
+      const connection = new Connection(configs)
+
+      let message = (await getSomeMessages(1, configs.socket.__webSocket__))[0]
+      let messageName = message[0]
+      let messageBody = message[1][0]
+
+      expect(messageName).toBe('authentication')
+      expect(messageBody.factor).toBe('confirmation')
+      expect(messageBody.status).toBe(0)
+
+      connection.confirm(false)
+
+      message = (await getSomeMessages(2, configs.socket.__webSocket__))
+      messageName = message[0][0]
+      messageBody = message[0][1][0]
+
+      expect(messageName).toBe('authentication')
+      expect(messageBody.factor).toBe('confirmation')
+      expect(messageBody.status).toBe(2)
+
+      messageName = message[1][0]
+      messageBody = message[1][1][0]
+
+      expect(messageName).toBe('authentication')
+      expect(messageBody.factor).toBeUndefined()
+      expect(messageBody.status).toBe(2)
+    })
+
+    test('Must disconnect connection when connection unauthenticated', async done => {
+      const configs = { socket: (await getSomeSockets())[0] }
+
+      const connection = new Connection(configs)
+
+      await new Promise(resolve => connection.on('authentication', event => {
+        if (event.factor === 'confirmation' &&
+          event.status === 0) {
+          connection.confirm(false)
+
+          resolve()
+        }
+      }))
+
+      connection.confirm(false)
+
+      configs.socket.__webSocket__.on('close', () => done())
     })
   })
 
@@ -845,32 +927,27 @@ describe('Connection confirm method', () => {
     })()
   })
 
+  afterEach(async () => {
+    socket = (await getSomeSockets())[0]
+    webSocket = socket.__webSocket__
+
+    connection = new Connection({
+      socket,
+      authenticationFactors: { passport: true },
+      passport: PASSPORT
+    })
+
+    await (new Promise(resolve => webSocket.once('open', resolve)))
+  })
   afterAll(async () => {
-    connection.confirm()
+    socket = (await getSomeSockets())[0]
+    webSocket = socket.__webSocket__
 
-    await getSomeMessages()
+    connection = new Connection({ socket })
 
-    if (connection.isAuthenticate) {
-      connection.confirm(false)
+    await (new Promise(resolve => webSocket.once('open', resolve)))
 
-      await getSomeMessages(2)
-    } else {
-      webSocket.send(JSON.stringify([
-        'authenticate',
-        [
-          {
-            factor: 'passport',
-            passportInput: PASSWORD
-          }
-        ]
-      ]))
-
-      await getSomeMessages(2)
-
-      connection.confirm(false)
-
-      await getSomeMessages(2)
-    }
+    await getSomeMessages(1)
   })
 })
 

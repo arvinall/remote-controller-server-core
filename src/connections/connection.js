@@ -1,10 +1,11 @@
-/* global setImmediate, Buffer */
+/* global Buffer */
 
 /**
  * @module connections/connection
  */
 
-import EventEmitter from 'events'
+import AsyncEventEmitter from '../asyncEventEmitter'
+import http from 'http'
 import WebSocket from 'ws'
 import Passport from '../passport'
 import idGenerator from '../idGenerator'
@@ -38,9 +39,9 @@ const generateId = idGenerator()
  * | `factor`  | `string`  |  Target factor
  * | `passportInput` | `string`  | If factor is passport |
  *
- * @mixes module:remote-controller-server-core~external:EventEmitter
+ * @mixes module:asyncEventEmitter
  */
-export default class Connection extends EventEmitter {
+export default class Connection extends AsyncEventEmitter {
   /**
    * @type {string}
    */
@@ -203,7 +204,7 @@ export default class Connection extends EventEmitter {
 
     // Transform Socket events to Connection
     this.#socket.emit = (eventName, ...args) => {
-      const chain = EventEmitter.prototype.emit.call(this.#socket, eventName, ...args)
+      const chain = AsyncEventEmitter.prototype.emit.call(this.#socket, eventName, ...args)
       const necessaryEvents = ['message', 'disconnected', 'error']
 
       // Change events name
@@ -251,37 +252,36 @@ export default class Connection extends EventEmitter {
       return chain
     }
 
-    setImmediate(() => {
-      if (this.isConnected) this.#emitConnected()
-      this.#emitFirstAuthenticationFactorAsk()
+    this.on('authentication', event => {
+      // Emit/Send next factor ask
+      if (event.factor === 'passport') {
+        if (!this.isAuthenticate &&
+          this.#authenticationFactors.confirmation[0] &&
+          event.status === 1) {
+          const EVENT_PROPS = ['authentication', {
+            factor: 'confirmation',
+            status: 0
+          }]
 
-      this.on('authentication', event => setImmediate(() => {
-        if (event.factor === 'passport') {
-          if (!this.isAuthenticate &&
-            this.#authenticationFactors.confirmation[0] &&
-            event.status === 1) {
-            const EVENT_PROPS = ['authentication', {
-              factor: 'confirmation',
-              status: 0
-            }]
-
-            this.emit(...EVENT_PROPS)
-            this.send(...EVENT_PROPS).catch(() => {})
-          }
+          this.emit(...EVENT_PROPS)
+          this.send(...EVENT_PROPS).catch(() => {})
         }
-      }))
-
-      this.on('authenticate', event => {
-        if (
-          !this.#authenticationFactors[event.factor] ||
-          !this.#authenticationFactors[event.factor][0] ||
-          this.#authenticationFactors[event.factor][1] ||
-          !CLIENT_AUTHENTICATION_FACTORS.includes(event.factor)
-        ) return
-
-        if (event.factor === 'passport') this.#passportChecker(event.passportInput)
-      })
+      } else if (event.factor === undefined && // Disconnect when connection unauthenticated
+        event.status === 2) this.disconnect()
     })
+    this.on('authenticate', event => {
+      if (
+        !this.#authenticationFactors[event.factor] ||
+        !this.#authenticationFactors[event.factor][0] ||
+        this.#authenticationFactors[event.factor][1] ||
+        !CLIENT_AUTHENTICATION_FACTORS.includes(event.factor)
+      ) return
+
+      if (event.factor === 'passport') this.#passportChecker(event.passportInput)
+    })
+
+    if (this.isConnected) this.#emitConnected()
+    this.#emitFirstAuthenticationFactorAsk()
   }
 
   /**
@@ -449,17 +449,15 @@ export default class Connection extends EventEmitter {
     socket.emit = this.#socket.emit
 
     // Change previous socket's emit method with it's default
-    this.#socket.emit = EventEmitter.prototype.emit
+    this.#socket.emit = AsyncEventEmitter.prototype.emit
 
     // Replace private properties
     this.#socket = socket
     this.#address = this.#socket.request.socket.remoteAddress
 
-    setImmediate(() => {
-      if (this.isConnected) this.#emitConnected()
-      this.#emitFirstAuthenticationFactorAsk()
-      this.#emitAuthentication()
-    })
+    if (this.isConnected) this.#emitConnected()
+    this.#emitFirstAuthenticationFactorAsk()
+    this.#emitAuthentication()
   }
 
   /**
