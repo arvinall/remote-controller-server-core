@@ -8,6 +8,7 @@ import EventEmitter from 'events'
 import os from 'os'
 import http from 'http'
 import WebSocket from 'ws'
+import Connection from '../connections/connection'
 
 /**
  * makeEngine creates engine module
@@ -56,7 +57,8 @@ export default function makeEngine (configs = Object.create(null)) {
           connection = connections.add(...parameters)
         } catch (error) {}
 
-        if (!connectionsList.has(connection)) {
+        if (connection instanceof Connection &&
+          !connectionsList.has(connection)) {
           if (process.env.NODE_ENV === 'development') {
             connection.on('authentication', event => {
               switch (event.factor) {
