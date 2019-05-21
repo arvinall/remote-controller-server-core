@@ -76,7 +76,11 @@ export default class Connection extends AsyncEventEmitter {
     const handler = () => {
       // Prevent emit authentication status if:
       if (isAuthenticateCache === this.isAuthenticate || // Authentication status has no change
-        (this.#authenticationFactors.confirmation[0] && // Only one factor passed when two factor needed
+        (this.#authenticationFactors.confirmation[0] && // (confirmation) Only one factor passed when two factor needed
+          this.#authenticationFactors.confirmation[1] !== undefined &&
+          this.#authenticationFactors.passport[0] &&
+          this.#authenticationFactors.passport[1] === undefined) ||
+        (this.#authenticationFactors.confirmation[0] && // (passport) Only one factor passed when two factor needed
           this.#authenticationFactors.confirmation[1] === undefined &&
           this.#authenticationFactors.passport[0])) return
 
