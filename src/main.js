@@ -82,8 +82,9 @@ const storagesList = Object.create(null)
  *
  * @param {object} [configs={}]
  * @param {string} [configs.storagePath=process.cwd()] Storages path address
- * @param {string} [configs.preferenceStorageName='preferences']
- * @param {number} [configs.httpServerPort=7777]
+ * @param {string} [configs.preferenceStorageName='preferences'] Preferences storage name
+ * @param {number} [configs.httpServerPort=7777] Default http server port
+ * @param {number} [configs.connectionRemoveTimeout=1800000] Connections will remove after this time in millisecond
  *
  * @return {module:remote-controller-server-core~core}
  */
@@ -94,7 +95,8 @@ export default function makeCore (configs = Object.create(null)) {
   configs = Object.assign({
     storagePath: process.cwd(),
     preferenceStorageName: 'preferences',
-    httpServerPort: 7777
+    httpServerPort: 7777,
+    connectionRemoveTimeout: 1000 * 60 * 30
   }, configs)
 
   if (typeof configs.storagePath !== 'string') throw new Error('configs.storagePath must be string')
@@ -138,7 +140,7 @@ export default function makeCore (configs = Object.create(null)) {
    *
    * @type {module:connections~Connections}
    */
-  core.connections = makeConnections.call(core)
+  core.connections = makeConnections.call(core, { removeTimeout: configs.connectionRemoveTimeout })
 
   /**
    * Core engine
