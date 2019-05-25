@@ -36,7 +36,7 @@ export default function makeConnections () {
       /** @type {boolean} */
       passport: false
     },
-    /** @type {{type: string, hash: string, salt: string}} */
+    /** @type {{type: string, hash: number[], salt: number[]}} */
     passport: undefined,
     /** @type {number} */
     removeTimeout: 1000 * 60 * 30
