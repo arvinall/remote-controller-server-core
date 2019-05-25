@@ -7,26 +7,40 @@ import EventEmitter from 'events'
 import http from 'http'
 import WebSocket from 'ws'
 import Connection from './connection'
+import Passport from '../passport'
 
 /**
  * makeConnections creates connections module
  *
- * @param {object} [configs={}]
- * @param {number} [configs.removeTimeout=1800000] Connections will remove after this time in millisecond
- *
  * @return {module:connections~Connections}
  */
-export default function makeConnections (configs = Object.create(null)) {
-  if (typeof configs !== 'object') throw new Error('configs parameter must be object')
-
-  // Set default configs
-  configs = Object.assign({
-    removeTimeout: 1000 * 60 * 30
-  }, configs)
-
-  if (typeof configs.removeTimeout !== 'number') throw new Error('configs.removeTimeout must be number')
-
+export default function makeConnections () {
   const connectionsList = new Map()
+  const preference = (defaults => {
+    let preference
+
+    try {
+      preference = this.preferences.initialize('connections', defaults)
+    } catch (error) {
+      preference = this.preferences.get('connections')
+    }
+
+    preference.defaults = defaults
+
+    return preference
+  })({
+    /** @type {object} */
+    authenticationFactors: {
+      /** @type {boolean} */
+      confirmation: true,
+      /** @type {boolean} */
+      passport: false
+    },
+    /** @type {{type: string, hash: string, salt: string}} */
+    passport: undefined,
+    /** @type {number} */
+    removeTimeout: 1000 * 60 * 30
+  })
 
   /**
    * Connections module is a Connection holder/manager
@@ -37,6 +51,117 @@ export default function makeConnections (configs = Object.create(null)) {
    * @mixes module:remote-controller-server-core~external:EventEmitter
    */
   class Connections extends EventEmitter {
+    /**
+     * Authentication factors requirement
+     *
+     * @todo This namespace doesn't show correctly in documentation, so needs to fix it
+     *
+     * @namespace module:connections~Connections#authenticationFactors
+     */
+    authenticationFactors = {
+      /**
+       * @summary Authentication confirmation factor requirement
+       * @description To reset to default value set it to `null` <br>
+       *   Default: `true`
+       *
+       * @type {boolean}
+       */
+      get confirmation () {
+        return preference.body.authenticationFactors.confirmation
+      },
+
+      set confirmation (value) {
+        if (typeof value === 'boolean' ||
+          value === null) {
+          preference.updateSync(body => {
+            if (value !== null) body.authenticationFactors.confirmation = value
+            else body.authenticationFactors.confirmation = preference.defaults.authenticationFactors.confirmation
+
+            return body
+          })
+        }
+      },
+
+      /**
+       * @summary Authentication passport factor requirement
+       * @description To reset to default value set it to `null` <br>
+       *   Default: `false`
+       *
+       * @type {boolean}
+       */
+      get passport () {
+        return preference.body.authenticationFactors.passport
+      },
+
+      set passport (value) {
+        if (typeof value === 'boolean' ||
+          value === null) {
+          preference.updateSync(body => {
+            if (value !== null) body.authenticationFactors.passport = value
+            else body.authenticationFactors.passport = preference.defaults.authenticationFactors.passport
+
+            return body
+          })
+        }
+      }
+    }
+
+    /**
+     * @summary Authentication passport factor
+     * @description To reset to default value set it to `null` <br>
+     *   Default: `undefined`
+     *
+     * @type {module:passport}
+     */
+    get passport () {
+      const passportDetails = preference.body.passport
+
+      return passportDetails
+        ? Passport.from(passportDetails.type, passportDetails)
+        : undefined
+    }
+
+    set passport (value) {
+      if (value instanceof Passport ||
+        value === null) {
+        preference.updateSync(body => {
+          if (value !== null) {
+            body.passport = {
+              type: value.type,
+              hash: value.hash.toJSON().data,
+              salt: value.salt.toJSON().data
+            }
+          } else body.passport = preference.defaults.passport
+
+          return body
+        })
+      }
+    }
+
+    /**
+     * @summary Connections will remove after this time in millisecond
+     * @description To reset to default value set it to `null` <br>
+     *   Default: `1800000`
+     *
+     * @type {number}
+     */
+    get removeTimeout () {
+      return preference.body.removeTimeout
+    }
+
+    set removeTimeout (value) {
+      if (typeof value === 'number' ||
+        value === null) {
+        preference.updateSync(body => {
+          if (value !== null) {
+            body.removeTimeout = value
+          } else body.removeTimeout = preference.defaults.removeTimeout
+
+          return body
+        })
+      }
+    }
+
     /**
      * Add and initial connection
      *
@@ -70,7 +195,11 @@ export default function makeConnections (configs = Object.create(null)) {
         if (initial) { // Create new Connection instance
           delete socket.request.previousSocketId
 
-          connection = new Connection({ socket })
+          connection = new Connection({
+            socket,
+            authenticationFactors: this.authenticationFactors,
+            passport: this.passport
+          })
         } else { // Change an existing connection's socket
           if (!connectionsList.has(socket.request.previousSocketId)) {
             socket.close()
@@ -124,7 +253,7 @@ export default function makeConnections (configs = Object.create(null)) {
         connection.on('disconnected', (...parameters) => {
           timeOut = setTimeout(() => {
             this.remove(connection)
-          }, configs.removeTimeout)
+          }, this.removeTimeout)
 
           this.emit('disconnected', connection, ...parameters)
         })
