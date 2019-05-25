@@ -1,3 +1,4 @@
+/* global console */
 
 /**
  * @module engine
@@ -54,11 +55,16 @@ export default function makeEngine (configs = Object.create(null)) {
       const connectionsList = new WeakSet()
 
       webSocketServer.on('connection', (...parameters) => {
+        const socket = parameters[0]
         let connection
 
         try {
           connection = connections.add(...parameters)
-        } catch (error) {}
+        } catch (error) {
+          console.error(error)
+
+          socket.close(1011)
+        }
 
         if (connection instanceof Connection &&
           !connectionsList.has(connection)) {
