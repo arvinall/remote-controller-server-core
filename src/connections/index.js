@@ -31,6 +31,9 @@ export default function makeConnections (configs = Object.create(null)) {
   /**
    * Connections module is a Connection holder/manager
    *
+   * @memberOf module:connections
+   * @inner
+   *
    * @mixes module:remote-controller-server-core~external:EventEmitter
    */
   class Connections extends EventEmitter {

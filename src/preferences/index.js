@@ -42,6 +42,11 @@ export default function makePreferences (configs) {
   /**
    * Preferences module is a Preference holder/manager
    *
+   * @todo This class doesn't show correctly in documentation, so needs to fix it
+   *
+   * @memberOf module:preferences
+   * @inner
+   *
    * @mixes module:remote-controller-server-core~external:EventEmitter
    */
   class Preferences extends EventEmitter {
@@ -69,6 +74,62 @@ export default function makePreferences (configs) {
      *
      * @see module:preferences/preference#event:removed
      */
+
+    /**
+     * Remove Preference from list and its Storage
+     *
+     * @function remove
+     * @memberOf module:preferences~Preferences
+     * @inner
+     *
+     * @param {(string|module:preferences/preference)} preference Preference or Preference's name to remove
+     * @param {object} [configs={}]
+     * @param {boolean} [configs.sync=true] Async or sync
+     *
+     * @throws Will throw an error if Preference is not accessible
+     * @throws Will throw an error if Preference is not exist in list
+     *
+     * @return {(void|Promise<(void|Error)>)} Return promise if configs.sync equal to false
+     * * Rejection
+     *  * Reject an error if Preference is not accessible
+     *  * Reject an error if Preference is not exist in list
+     */
+    #remove = (preference, configs = Object.create(null)) => {
+      if (preference === undefined || (typeof preference !== 'string' && !(preference instanceof Preference))) {
+        throw new Error('preference parameter is required and must be string/Preference')
+      }
+
+      // Set default configs
+      configs = Object.assign({
+        sync: true
+      }, configs)
+
+      const name = preference.name || preference
+      const deletePreference = () => delete this.#preferencesList[name]
+      const ERRORS = {
+        accessibility: PREFERENCES_GLOBAL_ERRORS.accessibility,
+        existence: PREFERENCES_GLOBAL_ERRORS.existence(name)
+      }
+
+      preference = this.#preferencesList[name]
+
+      if (configs.sync) {
+        if (typeof name !== 'string') throw ERRORS.accessibility
+        if (preference === undefined) throw ERRORS.existence
+
+        preference.removeSync()
+
+        deletePreference()
+
+        return
+      }
+
+      if (typeof name !== 'string') return Promise.reject(ERRORS.accessibility)
+      if (preference === undefined) return Promise.reject(ERRORS.existence)
+
+      return preference.remove()
+        .then(deletePreference, error => Promise.reject(error))
+    }
 
     /**
      * Get Preference instance via it's name
@@ -140,57 +201,25 @@ export default function makePreferences (configs) {
     }
 
     /**
-     * Remove Preference from list and its Storage
+     * Same as {@link module:preferences~Preferences~remove|~remove}(preference, { sync: false })
      *
-     * @param {(string|module:preferences/preference)} preference Preference or Preference's name to remove
-     * @param {object} [configs={}]
-     * @param {boolean} [configs.sync=true] Async or sync
+     * @param {(string|module:preferences/preference)} preference
      *
-     * @throws Will throw an error if Preference is not accessible
-     * @throws Will throw an error if Preference is not exist in list
-     *
-     * @return {(void|Promise<(void|Error)>)} Return promise if configs.sync equal to false
-     * * Rejection
-     *  * Reject an error if Preference is not accessible
-     *  * Reject an error if Preference is not exist in list
+     * @see module:preferences~Preferences~remove
      */
-    remove (preference, configs = Object.create(null)) {
-      if (preference === undefined || (typeof preference !== 'string' && !(preference instanceof Preference))) {
-        throw new Error('preference parameter is required and must be string/Preference')
-      }
+    async remove (preference) {
+      return this.#remove({ sync: false })
+    }
 
-      // Set default configs
-      configs = Object.assign({
-        sync: true
-      }, configs)
-
-      const name = preference.name || preference
-      const deletePreference = () => {
-        delete this.#preferencesList[name]
-      }
-      const ERRORS = {
-        accessibility: PREFERENCES_GLOBAL_ERRORS.accessibility,
-        existence: PREFERENCES_GLOBAL_ERRORS.existence(name)
-      }
-
-      preference = this.#preferencesList[name]
-
-      if (configs.sync) {
-        if (typeof name !== 'string') throw ERRORS.accessibility
-        if (preference === undefined) throw ERRORS.existence
-
-        preference.remove()
-
-        deletePreference()
-
-        return
-      }
-
-      if (typeof name !== 'string') return Promise.reject(ERRORS.accessibility)
-      if (preference === undefined) return Promise.reject(ERRORS.existence)
-
-      return preference.remove({ sync: false })
-        .then(deletePreference, error => Promise.reject(error))
+    /**
+     * Same as {@link module:preferences~Preferences~remove|~remove}(preference)
+     *
+     * @param {(string|module:preferences/preference)} preference
+     *
+     * @see module:preferences~Preferences~remove
+     */
+    removeSync (preference) {
+      return this.#remove()
     }
 
     /**

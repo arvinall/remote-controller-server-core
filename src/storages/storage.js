@@ -33,6 +33,147 @@ export default class Storage extends EventEmitter {
   #body
 
   /**
+   * Remove storage json file
+   *
+   * @function remove
+   * @memberOf module:storages/storage
+   * @inner
+   *
+   * @param {object} [configs={}]
+   * @param {boolean} [configs.sync=true] Async or sync
+   *
+   * @throws Will throw an error if the storage's json file doesn't accessible
+   *
+   * @emits module:storages/storage#event:removed
+   *
+   * @return {(void|Promise<(void|Error)>)} Return promise if configs.sync equal to false
+   * * Rejection
+   *  * Reject an error if the storage's json file doesn't accessible
+   */
+  #remove = (configs = Object.create(null)) => {
+    // Set default configs
+    configs = Object.assign({
+      sync: true
+    }, configs)
+
+    const clearProperties = () => {
+      const EVENT = {
+        name: this.#name,
+        body: this.#body
+      }
+
+      this.#body = undefined
+      this.#name = undefined
+
+      /**
+       * Storage removed event
+       *
+       * @event module:storages/storage#event:removed
+       *
+       * @type {object}
+       * @property {string} name Name of the removed storage
+       * @property {object} body Last body of the removed storage
+       */
+      this.emit('removed', EVENT)
+    }
+
+    if (configs.sync) {
+      try {
+        fs.accessSync(this.#address, fs.constants.F_OK | fs.constants.W_OK)
+      } catch (error) {
+        throw GLOBAL_ERRORS.accessibility
+      }
+
+      fs.unlinkSync(this.#address)
+
+      clearProperties()
+
+      return
+    }
+
+    return promisify(fs.access)(this.#address, fs.constants.F_OK | fs.constants.W_OK)
+      .then(() => {
+        return promisify(fs.unlink)(this.#address)
+          .then(clearProperties, error => Promise.reject(error))
+      }, () => Promise.reject(GLOBAL_ERRORS.accessibility))
+  }
+
+  /**
+   * Update storage content
+   *
+   * @function update
+   * @memberOf module:storages/storage
+   * @inner
+   *
+   * @param {(object|function)} body Updated Storage body, if body is a function, a copy of last body passed to it, then have to return object as storage body
+   * @param {object} [configs={}]
+   * @param {boolean} [configs.sync=true] Async or sync
+   *
+   * @throws Will throw an error if the storage's json file doesn't accessible
+   *
+   * @emits module:storages/storage#event:updated
+   *
+   * @return {(void|Promise<(void|Error)>)} Return promise if configs.sync equal to false
+   * * Rejection
+   *  * Reject an error if the storage's json file doesn't accessible
+   */
+  #update = (body, configs = Object.create(null)) => {
+    if (typeof body === 'function') body = body(this.body)
+
+    // Set default configs
+    configs = Object.assign({
+      sync: true
+    }, configs)
+
+    if (body === undefined || typeof body !== 'object') throw new Error('body parameter is required and must be object/function')
+
+    const setProperties = () => {
+      const EVENT = {
+        lastBody: this.#body,
+        updatedBody: JSON.parse(JSON.stringify(body))
+      }
+
+      this.#body = body
+
+      /**
+       * Storage updated event
+       *
+       * @event module:storages/storage#event:updated
+       *
+       * @type {object}
+       * @property {object} lastBody storage's body before update
+       * @property {object} updatedBody A copy of updated body object
+       */
+      this.emit('updated', EVENT)
+    }
+
+    if (configs.sync) {
+      try {
+        fs.accessSync(this.#address, fs.constants.F_OK | fs.constants.W_OK)
+      } catch (error) {
+        throw GLOBAL_ERRORS.accessibility
+      }
+
+      fs.writeFileSync(this.#address, JSON.stringify(body), {
+        encoding: ENCODING,
+        flag: 'w'
+      })
+
+      setProperties()
+
+      return
+    }
+
+    return promisify(fs.access)(this.#address, fs.constants.F_OK | fs.constants.W_OK)
+      .then(() => {
+        return promisify(fs.writeFile)(this.#address, JSON.stringify(body), {
+          encoding: ENCODING,
+          flag: 'w'
+        }).then(setProperties, error => Promise.reject(error))
+      }, () => Promise.reject(GLOBAL_ERRORS.accessibility))
+  }
+
+  /**
    * Initialize/Read json file
    *
    * @param {object} configs
@@ -119,135 +260,42 @@ export default class Storage extends EventEmitter {
   }
 
   /**
-   * Remove storage json file
+   * Same as {@link module:storages/storage~remove|~remove}({ sync: false })
    *
-   * @param {object} [configs={}]
-   * @param {boolean} [configs.sync=true] Async or sync
-   *
-   * @throws Will throw an error if the storage's json file doesn't accessible
-   *
-   * @emits module:storages/storage#event:removed
-   *
-   * @return {(void|Promise<(void|Error)>)} Return promise if configs.sync equal to false
-   * * Rejection
-   *  * Reject an error if the storage's json file doesn't accessible
+   * @see module:storages/storage~remove
    */
-  remove (configs = Object.create(null)) {
-    // Set default configs
-    configs = Object.assign({
-      sync: true
-    }, configs)
-
-    const clearProperties = () => {
-      const EVENT = {
-        name: this.#name,
-        body: this.#body
-      }
-
-      this.#body = undefined
-      this.#name = undefined
-
-      /**
-       * Storage removed event
-       *
-       * @event module:storages/storage#event:removed
-       *
-       * @type {object}
-       * @property {string} name Name of the removed storage
-       * @property {object} body Last body of the removed storage
-       */
-      this.emit('removed', EVENT)
-    }
-
-    if (configs.sync) {
-      try {
-        fs.accessSync(this.#address, fs.constants.F_OK | fs.constants.W_OK)
-      } catch (error) {
-        throw GLOBAL_ERRORS.accessibility
-      }
-
-      fs.unlinkSync(this.#address)
-
-      clearProperties()
-
-      return
-    }
-
-    return promisify(fs.access)(this.#address, fs.constants.F_OK | fs.constants.W_OK)
-      .then(() => {
-        return promisify(fs.unlink)(this.#address)
-          .then(clearProperties, error => Promise.reject(error))
-      }, () => Promise.reject(GLOBAL_ERRORS.accessibility))
+  async remove () {
+    return this.#remove({ sync: false })
   }
 
   /**
-   * Update storage content
+   * Same as {@link module:storages/storage~remove|~remove}()
    *
-   * @param {(object|function)} body Updated Storage body, if body is a function, a copy of last body passed to it, then have to return object as storage body
-   * @param {object} [configs={}]
-   * @param {boolean} [configs.sync=true] Async or sync
-   *
-   * @throws Will throw an error if the storage's json file doesn't accessible
-   *
-   * @emits module:storages/storage#event:updated
-   *
-   * @return {(void|Promise<(void|Error)>)} Return promise if configs.sync equal to false
-   * * Rejection
-   *  * Reject an error if the storage's json file doesn't accessible
+   * @see module:storages/storage~remove
    */
-  update (body, configs = Object.create(null)) {
-    if (typeof body === 'function') body = body(this.body)
+  removeSync () {
+    return this.#remove()
+  }
 
-    // Set default configs
-    configs = Object.assign({
-      sync: true
-    }, configs)
+  /**
+   * Same as {@link module:storages/storage~update|~update}(body, { sync: false })
+   *
+   * @param {(object|function)} body
+   *
+   * @see module:storages/storage~update
+   */
+  async update (body) {
+    return this.#update(body, { sync: false })
+  }
 
-    if (body === undefined || typeof body !== 'object') throw new Error('body parameter is required and must be object/function')
-
-    const setProperties = () => {
-      const EVENT = {
-        lastBody: this.#body,
-        updatedBody: JSON.parse(JSON.stringify(body))
-      }
-
-      this.#body = body
-
-      /**
-       * Storage updated event
-       *
-       * @event module:storages/storage#event:updated
-       *
-       * @type {object}
-       * @property {object} lastBody storage's body before update
-       * @property {object} updatedBody A copy of updated body object
-       */
-      this.emit('updated', EVENT)
-    }
-
-    if (configs.sync) {
-      try {
-        fs.accessSync(this.#address, fs.constants.F_OK | fs.constants.W_OK)
-      } catch (error) {
-        throw GLOBAL_ERRORS.accessibility
-      }
-
-      fs.writeFileSync(this.#address, JSON.stringify(body), {
-        encoding: ENCODING,
-        flag: 'w'
-      })
-
-      setProperties()
-
-      return
-    }
-
-    return promisify(fs.access)(this.#address, fs.constants.F_OK | fs.constants.W_OK)
-      .then(() => {
-        return promisify(fs.writeFile)(this.#address, JSON.stringify(body), {
-          encoding: ENCODING,
-          flag: 'w'
-        }).then(setProperties, error => Promise.reject(error))
-      }, () => Promise.reject(GLOBAL_ERRORS.accessibility))
+  /**
+   * Same as {@link module:storages/storage~update|~update}(body)
+   *
+   * @param {(object|function)} body
+   *
+   * @see module:storages/storage~update
+   */
+  updateSync (body) {
+    return this.#update(body)
   }
 }

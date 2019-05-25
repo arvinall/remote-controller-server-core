@@ -42,6 +42,9 @@ export default function makeEngine (configs = Object.create(null)) {
   /**
    * Engine module control web server and it's websocket
    *
+   * @memberOf module:engine
+   * @inner
+   *
    * @mixes module:remote-controller-server-core~external:EventEmitter
    */
   class Engine extends EventEmitter {

@@ -30,6 +30,143 @@ export default class Preference extends EventEmitter {
   #name
 
   /**
+   * Update Preference content
+   *
+   * @function update
+   * @memberOf module:preferences/preference
+   * @inner
+   *
+   * @param {(object|function)} body Updated Preference body, if body is a function, a copy of last body passed to it, then have to return object as Preference body
+   * @param {object} [configs={}]
+   * @param {boolean} [configs.sync=true] Async or sync
+   *
+   * @throws Will throw an error if the Preference is not accessible
+   *
+   * @emits module:preferences/preference#event:updated
+   *
+   * @return {(void|Promise<(void|Error)>)} Return promise if configs.sync equal to false
+   * * Rejection
+   *  * Reject an error if the Preference is not accessible
+   */
+  #update = (body, configs = Object.create(null)) => {
+    // Make body object from function
+    if (typeof body === 'function') body = body(this.body)
+
+    if (typeof body !== 'object') throw new Error('body parameter is required and must be object/function')
+
+    // Set default configs
+    configs = Object.assign({
+      sync: true
+    }, configs)
+
+    const updateBody = storageBody => {
+      storageBody[this.#name] = body
+
+      return storageBody
+    }
+    const currentBody = this.body
+    /**
+     * Preference updated event
+     *
+     * @event module:preferences/preference#event:updated
+     *
+     * @type {object}
+     * @property {object} lastBody Preference's body before update
+     * @property {object} updatedBody A copy of updated body object
+     */
+    const fireEvent = () => {
+      const EVENT = {
+        lastBody: currentBody,
+        updatedBody: this.body
+      }
+
+      this.emit('updated', EVENT)
+    }
+
+    if (configs.sync) {
+      if (this.#storage === undefined) throw GLOBAL_ERRORS.accessibility
+
+      this.#storage.updateSync(updateBody)
+
+      fireEvent()
+
+      return
+    }
+
+    if (this.#storage === undefined) return Promise.reject(GLOBAL_ERRORS.accessibility)
+
+    return this.#storage.update(updateBody)
+      .then(fireEvent, error => Promise.reject(error))
+  }
+
+  /**
+   * Remove Preference object
+   *
+   * @function remove
+   * @memberOf module:preferences/preference
+   * @inner
+   *
+   * @param {object} [configs={}]
+   * @param {boolean} [configs.sync=true] Async or sync
+   *
+   * @throws Will throw an error if the Preference is not accessible
+   *
+   * @emits module:preferences/preference#event:removed
+   *
+   * @return {(void|Promise<(void|Error)>)} Return promise if configs.sync equal to false
+   * * Rejection
+   *  * Reject an error if the Preference is not accessible
+   */
+  #remove = (configs = Object.create(null)) => {
+    const lastBody = this.body
+    const deletePreference = body => {
+      delete body[this.name]
+
+      return body
+    }
+    /**
+     * Preference removed event
+     *
+     * @event module:preferences/preference#event:removed
+     *
+     * @type {object}
+     * @property {string} name Name of the removed Preference
+     * @property {object} body Last body of the removed Preference
+     */
+    const clearProperties = () => {
+      const EVENT = {
+        name: this.name,
+        body: lastBody
+      }
+
+      this.#storage = undefined
+      this.#name = undefined
+
+      this.emit('removed', EVENT)
+    }
+
+    // Set default configs
+    configs = Object.assign({
+      sync: true
+    }, configs)
+
+    if (configs.sync) {
+      if (this.#storage === undefined) throw GLOBAL_ERRORS.accessibility
+
+      this.#storage.updateSync(deletePreference)
+
+      clearProperties()
+
+      return
+    }
+
+    if (this.#storage === undefined) return Promise.reject(GLOBAL_ERRORS.accessibility)
+
+    return this.#storage.update(deletePreference)
+      .then(clearProperties, error => Promise.reject(error))
+  }
+
+  /**
    * Initialize/Read Preference
    *
    * @param {object} configs
@@ -89,131 +226,42 @@ export default class Preference extends EventEmitter {
   }
 
   /**
-   * Update Preference content
+   * Same as {@link module:preferences/preference~remove|~remove}({ sync: false })
    *
-   * @param {(object|function)} body Updated Preference body, if body is a function, a copy of last body passed to it, then have to return object as Preference body
-   * @param {object} [configs={}]
-   * @param {boolean} [configs.sync=true] Async or sync
-   *
-   * @throws Will throw an error if the Preference is not accessible
-   *
-   * @emits module:preferences/preference#event:updated
-   *
-   * @return {(void|Promise<(void|Error)>)} Return promise if configs.sync equal to false
-   * * Rejection
-   *  * Reject an error if the Preference is not accessible
+   * @see module:preferences/preference~remove
    */
-  update (body, configs = Object.create(null)) {
-    // Make body object from function
-    if (typeof body === 'function') body = body(this.body)
-
-    if (typeof body !== 'object') throw new Error('body parameter is required and must be object/function')
-
-    // Set default configs
-    configs = Object.assign({
-      sync: true
-    }, configs)
-
-    const updateBody = storageBody => {
-      storageBody[this.#name] = body
-
-      return storageBody
-    }
-    const currentBody = this.body
-    /**
-     * Preference updated event
-     *
-     * @event module:preferences/preference#event:updated
-     *
-     * @type {object}
-     * @property {object} lastBody Preference's body before update
-     * @property {object} updatedBody A copy of updated body object
-     */
-    const fireEvent = () => {
-      const EVENT = {
-        lastBody: currentBody,
-        updatedBody: this.body
-      }
-
-      this.emit('updated', EVENT)
-    }
-
-    if (configs.sync) {
-      if (this.#storage === undefined) throw GLOBAL_ERRORS.accessibility
-
-      this.#storage.update(updateBody)
-
-      fireEvent()
-
-      return
-    }
-
-    if (this.#storage === undefined) return Promise.reject(GLOBAL_ERRORS.accessibility)
-
-    return this.#storage.update(updateBody, { sync: false })
-      .then(fireEvent, error => Promise.reject(error))
+  async remove () {
+    return this.#remove({ sync: false })
   }
 
   /**
-   * Remove Preference object
+   * Same as {@link module:preferences/preference~remove|~remove}()
    *
-   * @param {object} [configs={}]
-   * @param {boolean} [configs.sync=true] Async or sync
-   *
-   * @throws Will throw an error if the Preference is not accessible
-   *
-   * @emits module:preferences/preference#event:removed
-   *
-   * @return {(void|Promise<(void|Error)>)} Return promise if configs.sync equal to false
-   * * Rejection
-   *  * Reject an error if the Preference is not accessible
+   * @see module:preferences/preference~remove
    */
-  remove (configs = Object.create(null)) {
-    const lastBody = this.body
-    const deletePreference = body => {
-      delete body[this.name]
+  removeSync () {
+    return this.#remove()
+  }
 
-      return body
-    }
-    /**
-     * Preference removed event
-     *
-     * @event module:preferences/preference#event:removed
-     *
-     * @type {object}
-     * @property {string} name Name of the removed Preference
-     * @property {object} body Last body of the removed Preference
-     */
-    const clearProperties = () => {
-      const EVENT = {
-        name: this.name,
-        body: lastBody
-      }
+  /**
+   * Same as {@link module:preferences/preference~update|~update}(body, { sync: false })
+   *
+   * @param {(object|function)} body
+   *
+   * @see module:preferences/preference~update
+   */
+  async update (body) {
+    return this.#update(body, { sync: false })
+  }
 
-      this.#storage = undefined
-      this.#name = undefined
-
-      this.emit('removed', EVENT)
-    }
-
-    // Set default configs
-    configs = Object.assign({
-      sync: true
-    }, configs)
-
-    if (configs.sync) {
-      if (this.#storage === undefined) throw GLOBAL_ERRORS.accessibility
-
-      this.#storage.update(deletePreference)
-
-      clearProperties()
-
-      return
-    }
-
-    if (this.#storage === undefined) return Promise.reject(GLOBAL_ERRORS.accessibility)
-
-    return this.#storage.update(deletePreference, { sync: false })
-      .then(clearProperties, error => Promise.reject(error))
+  /**
+   * Same as {@link module:preferences/preference~update|~update}(body)
+   *
+   * @param {(object|function)} body
+   *
+   * @see module:preferences/preference~update
+   */
+  updateSync (body) {
+    return this.#update(body)
   }
 }

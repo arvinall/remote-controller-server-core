@@ -28,6 +28,9 @@ export default function makeStorages (configs = Object.create(null)) {
 
   /**
    * Storages module is a Storage holder/manager
+   *
+   * @memberOf module:storages
+   * @inner
    */
   class Storages {
     /**
@@ -37,6 +40,61 @@ export default function makeStorages (configs = Object.create(null)) {
 
     // JSDoc doesnt use this class without constructor :/
     constructor () {} // eslint-disable-line no-useless-constructor
+
+    /**
+     * Remove Storage from list and it's file
+     *
+     * @function remove
+     * @memberOf module:storages~Storages
+     * @inner
+     *
+     * @param {(string|module:storages/storage)} storage Storage or storage's name to remove
+     * @param {object} [configs={}]
+     * @param {boolean} [configs.sync=true] Async or sync
+     *
+     * @throws Will throw an error if Storage is not accessible
+     * @throws Will throw an error if Storage is not exist in list
+     *
+     * @return {(void|Promise<(void|Error)>)} Return promise if configs.sync equal to false
+     * * Rejection
+     *  * Reject an error if Storage is not accessible
+     *  * Reject an error if Storage is not exist in list
+     */
+    #remove = (storage, configs = Object.create(null)) => {
+      if (storage === undefined || (typeof storage !== 'string' && !(storage instanceof Storage))) {
+        throw new Error('storage parameter is required and must be string/Storage')
+      }
+
+      // Set default configs
+      configs = Object.assign({
+        sync: true
+      }, configs)
+
+      const name = storage.name || storage
+      const deleteStorage = () => delete this.#storagesList[name]
+      const ERRORS = {
+        accessibility: STORAGES_GLOBAL_ERRORS.accessibility,
+        existence: STORAGES_GLOBAL_ERRORS.existence(name)
+      }
+
+      storage = this.#storagesList[name]
+
+      if (configs.sync) {
+        if (typeof name !== 'string') throw ERRORS.accessibility
+        if (storage === undefined) throw ERRORS.existence
+
+        storage.removeSync()
+        deleteStorage()
+
+        return
+      }
+
+      if (typeof name !== 'string') return Promise.reject(ERRORS.accessibility)
+      if (storage === undefined) return Promise.reject(ERRORS.existence)
+
+      return storage.remove()
+        .then(deleteStorage, error => Promise.reject(error))
+    }
 
     /**
      * Get Storage instance via it's name
@@ -84,56 +142,25 @@ export default function makeStorages (configs = Object.create(null)) {
     }
 
     /**
-     * Remove Storage from list and it's file
+     * Same as {@link module:storages~Storages~remove|~remove}(storage, { sync: false })
      *
-     * @param {(string|module:storages/storage)} storage Storage or storage's name to remove
-     * @param {object} [configs={}]
-     * @param {boolean} [configs.sync=true] Async or sync
+     * @param {(string|module:storages/storage)} storage
      *
-     * @throws Will throw an error if Storage is not accessible
-     * @throws Will throw an error if Storage is not exist in list
-     *
-     * @return {(void|Promise<(void|Error)>)} Return promise if configs.sync equal to false
-     * * Rejection
-     *  * Reject an error if Storage is not accessible
-     *  * Reject an error if Storage is not exist in list
+     * @see module:storages~Storages~remove
      */
-    remove (storage, configs = Object.create(null)) {
-      if (storage === undefined || (typeof storage !== 'string' && !(storage instanceof Storage))) {
-        throw new Error('storage parameter is required and must be string/Storage')
-      }
+    async remove (storage) {
+      return this.#remove(storage, { sync: false })
+    }
 
-      // Set default configs
-      configs = Object.assign({
-        sync: true
-      }, configs)
-
-      const name = storage.name || storage
-      const deleteStorage = () => {
-        delete this.#storagesList[name]
-      }
-      const ERRORS = {
-        accessibility: STORAGES_GLOBAL_ERRORS.accessibility,
-        existence: STORAGES_GLOBAL_ERRORS.existence(name)
-      }
-
-      storage = this.#storagesList[name]
-
-      if (configs.sync) {
-        if (typeof name !== 'string') throw ERRORS.accessibility
-        if (storage === undefined) throw ERRORS.existence
-
-        storage.remove()
-        deleteStorage()
-
-        return
-      }
-
-      if (typeof name !== 'string') return Promise.reject(ERRORS.accessibility)
-      if (storage === undefined) return Promise.reject(ERRORS.existence)
-
-      return storage.remove({ sync: false })
-        .then(deleteStorage, error => Promise.reject(error))
+    /**
+     * Same as {@link module:storages~Storages~remove|~remove}(storage)
+     *
+     * @param {(string|module:storages/storage)} storage
+     *
+     * @see module:storages~Storages~remove
+     */
+    removeSync (storage) {
+      return this.#remove(storage)
     }
 
     /**
