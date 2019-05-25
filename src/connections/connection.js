@@ -219,7 +219,7 @@ export default class Connection extends AsyncEventEmitter {
       if (!necessaryEvents.includes(eventName)) return chain
 
       if (eventName !== 'message') this.emit(eventName, ...args)
-      else {
+      else if (this.listenerCount(args[0].split('"')[1])) {
         let message = args[0]
         let name
         let body
