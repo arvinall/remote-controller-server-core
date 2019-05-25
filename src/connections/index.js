@@ -199,6 +199,29 @@ export default function makeConnections (configs = Object.create(null)) {
 
       return connectedList
     }
+
+    /**
+     * @summary Send broadcast message to clients (connected and authenticated)
+     *
+     * @param {string} name Message's name
+     * @param {...*} [body] Message's content
+     * @param {function} [callback] This function listens to event with the same name just once
+     *
+     * @return {Promise<(void|Error)>}
+     */
+    send (name, ...body) {
+      if (typeof name !== 'string') throw new Error('name parameter is required and must be string')
+
+      return (async () => {
+        const connectedConnections = this.get()
+
+        for (const connection of Object.values(connectedConnections)) {
+          if (connection.isAuthenticate) {
+            await connection.send(name, ...body)
+          }
+        }
+      })()
+    }
   }
 
   return new Connections()
