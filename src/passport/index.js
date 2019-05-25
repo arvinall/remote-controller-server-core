@@ -94,14 +94,14 @@ export default class Passport {
   }
 
   /**
-   * @type {string}
+   * @type {(Buffer|string)}
    */
   get hash () {
     return this.#hash
   }
 
   /**
-   * @type {string}
+   * @type {(Buffer|string)}
    */
   get salt () {
     return this.#salt
