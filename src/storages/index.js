@@ -71,7 +71,9 @@ export default function makeStorages (configs = Object.create(null)) {
       }, configs)
 
       const name = storage.name || storage
-      const deleteStorage = () => delete this.#storagesList[name]
+      const deleteStorage = () => {
+        delete this.#storagesList[name]
+      }
       const ERRORS = {
         accessibility: STORAGES_GLOBAL_ERRORS.accessibility,
         existence: STORAGES_GLOBAL_ERRORS.existence(name)
@@ -146,9 +148,11 @@ export default function makeStorages (configs = Object.create(null)) {
      *
      * @param {(string|module:storages/storage)} storage
      *
+     * @async
+     *
      * @see module:storages~Storages~remove
      */
-    async remove (storage) {
+    remove (storage) {
       return this.#remove(storage, { sync: false })
     }
 

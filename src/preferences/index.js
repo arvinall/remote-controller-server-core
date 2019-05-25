@@ -105,7 +105,9 @@ export default function makePreferences (configs) {
       }, configs)
 
       const name = preference.name || preference
-      const deletePreference = () => delete this.#preferencesList[name]
+      const deletePreference = () => {
+        delete this.#preferencesList[name]
+      }
       const ERRORS = {
         accessibility: PREFERENCES_GLOBAL_ERRORS.accessibility,
         existence: PREFERENCES_GLOBAL_ERRORS.existence(name)
@@ -205,10 +207,12 @@ export default function makePreferences (configs) {
      *
      * @param {(string|module:preferences/preference)} preference
      *
+     * @async
+     *
      * @see module:preferences~Preferences~remove
      */
-    async remove (preference) {
-      return this.#remove({ sync: false })
+    remove (preference) {
+      return this.#remove(preference, { sync: false })
     }
 
     /**
@@ -219,7 +223,7 @@ export default function makePreferences (configs) {
      * @see module:preferences~Preferences~remove
      */
     removeSync (preference) {
-      return this.#remove()
+      return this.#remove(preference)
     }
 
     /**

@@ -53,9 +53,9 @@ export default function makeEngine (configs = Object.create(null)) {
 
       const connectionsList = new WeakSet()
 
-      let connection
-
       webSocketServer.on('connection', (...parameters) => {
+        let connection
+
         try {
           connection = connections.add(...parameters)
         } catch (error) {}

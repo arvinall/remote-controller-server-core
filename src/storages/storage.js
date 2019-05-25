@@ -262,9 +262,11 @@ export default class Storage extends EventEmitter {
   /**
    * Same as {@link module:storages/storage~remove|~remove}({ sync: false })
    *
+   * @async
+   *
    * @see module:storages/storage~remove
    */
-  async remove () {
+  remove () {
     return this.#remove({ sync: false })
   }
 
@@ -282,9 +284,11 @@ export default class Storage extends EventEmitter {
    *
    * @param {(object|function)} body
    *
+   * @async
+   *
    * @see module:storages/storage~update
    */
-  async update (body) {
+  update (body) {
     return this.#update(body, { sync: false })
   }
 

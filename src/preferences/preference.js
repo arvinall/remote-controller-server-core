@@ -197,7 +197,7 @@ export default class Preference extends EventEmitter {
     if (initial) {
       if (typeof this.#storage.body[this.#name] === 'object') throw new Error(`${this.#name} is already exist`)
 
-      this.#storage.update(body => {
+      this.#storage.updateSync(body => {
         body[this.#name] = configs.body
 
         return body
@@ -228,9 +228,11 @@ export default class Preference extends EventEmitter {
   /**
    * Same as {@link module:preferences/preference~remove|~remove}({ sync: false })
    *
+   * @async
+   *
    * @see module:preferences/preference~remove
    */
-  async remove () {
+  remove () {
     return this.#remove({ sync: false })
   }
 
@@ -248,9 +250,11 @@ export default class Preference extends EventEmitter {
    *
    * @param {(object|function)} body
    *
+   * @async
+   *
    * @see module:preferences/preference~update
    */
-  async update (body) {
+  update (body) {
     return this.#update(body, { sync: false })
   }
 
