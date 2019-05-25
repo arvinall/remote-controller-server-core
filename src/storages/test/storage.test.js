@@ -91,10 +91,10 @@ describe('Storage remove method', () => {
         body
       })
 
-      storage.remove()
+      storage.removeSync()
 
       expect(storage.body).toBeUndefined()
-      expect(storage.remove.bind(storage)).toThrow('Storage is not accessible')
+      expect(storage.removeSync.bind(storage)).toThrow('Storage is not accessible')
     })
 
     test('Must throw error when remove a removed storage (async)', async () => {
@@ -107,12 +107,12 @@ describe('Storage remove method', () => {
         body
       })
 
-      await storage.remove({ sync: false })
+      await storage.remove()
 
       expect(storage.body).toBeUndefined()
 
       try {
-        await storage.remove({ sync: false })
+        await storage.remove()
       } catch (error) {
         expect(error.message).toBe('Storage is not accessible')
       }
@@ -130,7 +130,7 @@ describe('Storage remove method', () => {
         body
       })
 
-      expect(storage.remove()).toBeUndefined()
+      expect(storage.removeSync()).toBeUndefined()
 
       expect(storage.body).toBeUndefined()
     })
@@ -147,7 +147,7 @@ describe('Storage remove method', () => {
         body
       })
 
-      expect(await storage.remove({ sync: false })).toBeUndefined()
+      expect(await storage.remove()).toBeUndefined()
 
       expect(storage.body).toBeUndefined()
     })
@@ -167,8 +167,9 @@ describe('Storage update method', () => {
       })
 
       expect(storage.update.bind(storage)).toThrow('body parameter is required and must be object/function')
+      expect(storage.updateSync.bind(storage)).toThrow('body parameter is required and must be object/function')
 
-      storage.remove()
+      storage.removeSync()
     })
 
     test('Must throw error when body parameter is not object/function', () => {
@@ -182,6 +183,7 @@ describe('Storage update method', () => {
       })
 
       expect(storage.update.bind(storage, body.test)).toThrow('body parameter is required and must be object/function')
+      expect(storage.updateSync.bind(storage, body.test)).toThrow('body parameter is required and must be object/function')
 
       storage.remove()
     })
@@ -196,9 +198,9 @@ describe('Storage update method', () => {
         body
       })
 
-      storage.remove()
+      storage.removeSync()
 
-      expect(storage.update.bind(storage, Object.assign({}, body, {
+      expect(storage.updateSync.bind(storage, Object.assign({}, body, {
         update: 'Ops'
       }))).toThrow('Storage is not accessible')
     })
@@ -215,12 +217,12 @@ describe('Storage update method', () => {
         body
       })
 
-      await storage.remove({ sync: false })
+      await storage.remove()
 
       try {
         await storage.update(storage, Object.assign({}, body, {
           update: 'Ops'
-        }), { sync: false })
+        }))
       } catch (error) {
         expect(error.message).toBe('Storage is not accessible')
       }
@@ -238,13 +240,13 @@ describe('Storage update method', () => {
         body
       })
 
-      expect(storage.update(Object.assign(body, {
+      expect(storage.updateSync(Object.assign(body, {
         update: 'Updated'
       }))).toBeUndefined()
 
       expect(storage.body).toEqual(body)
 
-      storage.remove()
+      storage.removeSync()
     })
 
     test('Update via object without error (async)', async () => {
@@ -259,13 +261,13 @@ describe('Storage update method', () => {
         body
       })
 
-      expect(await storage.update(Object.assign(body, {
+      expect(await storage.updateSync(Object.assign(body, {
         update: 'Updated'
-      }), { sync: false })).toBeUndefined()
+      }))).toBeUndefined()
 
       expect(storage.body).toEqual(body)
 
-      await storage.remove({ sync: false })
+      await storage.removeSync()
     })
 
     test('Update via function without error (sync)', () => {
@@ -279,7 +281,7 @@ describe('Storage update method', () => {
         body
       })
 
-      expect(storage.update(body => {
+      expect(storage.updateSync(body => {
         body.update = 'Updated'
 
         updatedBody = body
@@ -289,7 +291,7 @@ describe('Storage update method', () => {
 
       expect(storage.body).toEqual(updatedBody)
 
-      storage.remove()
+      storage.removeSync()
     })
 
     test('Update via function without error (async)', async () => {
@@ -311,7 +313,7 @@ describe('Storage update method', () => {
         updatedBody = body
 
         return body
-      }, { sync: false })).toBeUndefined()
+      })).toBeUndefined()
 
       expect(storage.body).toEqual(updatedBody)
 
@@ -321,7 +323,7 @@ describe('Storage update method', () => {
 })
 
 describe('Storage events', () => {
-  test('Must emit removed event when Storage removed', done => {
+  test('Must emit removed event when Storage removed (sync)', done => {
     expect.assertions(1)
 
     const configs = {
@@ -340,10 +342,32 @@ describe('Storage events', () => {
       done()
     })
 
-    storage.remove()
+    storage.removeSync()
   })
 
-  test('Must emit updated event when Storage updated', done => {
+  test('Must emit removed event when Storage removed (async)', async done => {
+    expect.assertions(1)
+
+    const configs = {
+      name: generateId(),
+      body: { test: 'removed event' },
+      path: TMP_PATH
+    }
+    const storage = new Storage(configs)
+
+    storage.once('removed', event => {
+      expect(event).toEqual({
+        name: configs.name,
+        body: configs.body
+      })
+
+      done()
+    })
+
+    await storage.remove()
+  })
+
+  test('Must emit updated event when Storage updated (sync)', done => {
     expect.assertions(1)
 
     const configs = {
@@ -366,8 +390,36 @@ describe('Storage events', () => {
       done()
     })
 
-    storage.update(updatedBody)
+    storage.updateSync(updatedBody)
 
-    storage.remove()
+    storage.removeSync()
+  })
+
+  test('Must emit updated event when Storage updated (async)', async done => {
+    expect.assertions(1)
+
+    const configs = {
+      name: generateId(),
+      body: { test: 'updated event' },
+      path: TMP_PATH
+    }
+    const storage = new Storage(configs)
+
+    let updatedBody = Object.assign({}, configs.body, {
+      update: 'Updated successfully'
+    })
+
+    storage.once('updated', event => {
+      expect(event).toEqual({
+        lastBody: configs.body,
+        updatedBody
+      })
+
+      done()
+    })
+
+    await storage.update(updatedBody)
+
+    await storage.remove()
   })
 })

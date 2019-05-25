@@ -62,7 +62,7 @@ describe('Preference constructor', () => {
 
       configs.storage = storage
 
-      storage.remove()
+      storage.removeSync()
 
       expect(() => new Preference(configs)).toThrow(ERROR)
     })
@@ -90,7 +90,7 @@ describe('Preference constructor', () => {
 
       expect(() => new Preference(configs)).toThrow(ERROR)
 
-      preference.remove()
+      preference.removeSync()
     })
 
     test('Must throw error when configs.body is undefined and Preference is not accessible', () => {
@@ -134,7 +134,7 @@ describe('Preference constructor', () => {
 
 describe('Preference remove method', () => {
   describe('Errors', () => {
-    test('Must throw error when remove a removed Preference', () => {
+    test('Must throw error when remove a removed Preference (sync)', () => {
       const ERROR = 'Preference is not accessible'
       const configs = {
         name: generateId(),
@@ -143,10 +143,32 @@ describe('Preference remove method', () => {
       }
       const preference = new Preference(configs)
 
-      preference.remove()
+      preference.removeSync()
 
       expect(preference.body).toBeUndefined()
-      expect(preference.remove.bind(preference)).toThrow(ERROR)
+      expect(preference.removeSync.bind(preference)).toThrow(ERROR)
+    })
+
+    test('Must throw error when remove a removed Preference (async)', async () => {
+      expect.assertions(2)
+
+      const ERROR = 'Preference is not accessible'
+      const configs = {
+        name: generateId(),
+        storage: preferencesStorage,
+        body: { test: 'Remove a removed Preference' }
+      }
+      const preference = new Preference(configs)
+
+      await preference.remove()
+
+      expect(preference.body).toBeUndefined()
+
+      try {
+        await preference.remove()
+      } catch (error) {
+        expect(error.message).toBe(ERROR)
+      }
     })
   })
 
@@ -159,7 +181,7 @@ describe('Preference remove method', () => {
       }
       const preference = new Preference(configs)
 
-      expect(preference.remove()).toBeUndefined()
+      expect(preference.removeSync()).toBeUndefined()
       expect(preference.body).toBeUndefined()
     })
 
@@ -173,7 +195,7 @@ describe('Preference remove method', () => {
       }
       const preference = new Preference(configs)
 
-      expect(await preference.remove({ sync: false })).toBeUndefined()
+      expect(await preference.remove()).toBeUndefined()
       expect(preference.body).toBeUndefined()
     })
   })
@@ -191,11 +213,12 @@ describe('Preference update method', () => {
       const preference = new Preference(configs)
 
       expect(preference.update.bind(preference, 'wrong')).toThrow(ERROR)
+      expect(preference.updateSync.bind(preference, 'wrong')).toThrow(ERROR)
 
       preference.remove()
     })
 
-    test('Must throw error when update a removed Preference', () => {
+    test('Must throw error when update a removed Preference (sync)', () => {
       const ERROR = 'Preference is not accessible'
       const configs = {
         name: generateId(),
@@ -204,13 +227,37 @@ describe('Preference update method', () => {
       }
       const preference = new Preference(configs)
 
-      preference.remove()
+      preference.removeSync()
 
       expect(preference.body).toBeUndefined()
 
       configs.body.test = 'wrong'
 
-      expect(preference.update.bind(preference, configs.body)).toThrow(ERROR)
+      expect(preference.updateSync.bind(preference, configs.body)).toThrow(ERROR)
+    })
+
+    test('Must throw error when update a removed Preference', async () => {
+      expect.assertions(2)
+
+      const ERROR = 'Preference is not accessible'
+      const configs = {
+        name: generateId(),
+        storage: preferencesStorage,
+        body: { test: 'Update a removed Preference' }
+      }
+      const preference = new Preference(configs)
+
+      await preference.remove()
+
+      expect(preference.body).toBeUndefined()
+
+      configs.body.test = 'wrong'
+
+      try {
+        await preference.update(configs.body)
+      } catch (error) {
+        expect(error.message).toBe(ERROR)
+      }
     })
   })
 
@@ -225,10 +272,10 @@ describe('Preference update method', () => {
 
       configs.body.update = 'Update successfully'
 
-      expect(preference.update(configs.body)).toBeUndefined()
+      expect(preference.updateSync(configs.body)).toBeUndefined()
       expect(preference.body).toEqual(configs.body)
 
-      preference.remove()
+      preference.removeSync()
     })
 
     test('update via object without error (async)', async () => {
@@ -243,10 +290,10 @@ describe('Preference update method', () => {
 
       configs.body.update = 'Update successfully'
 
-      expect(await preference.update(configs.body, { sync: false })).toBeUndefined()
+      expect(await preference.update(configs.body)).toBeUndefined()
       expect(preference.body).toEqual(configs.body)
 
-      await preference.remove({ sync: false })
+      await preference.remove()
     })
 
     test('update via function without error (sync)', () => {
@@ -257,7 +304,7 @@ describe('Preference update method', () => {
       }
       const preference = new Preference(configs)
 
-      expect(preference.update(body => {
+      expect(preference.updateSync(body => {
         body.update = 'Update successfully'
 
         configs.body = body
@@ -266,7 +313,7 @@ describe('Preference update method', () => {
       })).toBeUndefined()
       expect(preference.body).toEqual(configs.body)
 
-      preference.remove()
+      preference.removeSync()
     })
 
     test('update via function without error (async)', async () => {
@@ -285,10 +332,10 @@ describe('Preference update method', () => {
         configs.body = body
 
         return body
-      }, { sync: false })).toBeUndefined()
+      })).toBeUndefined()
       expect(preference.body).toEqual(configs.body)
 
-      await preference.remove({ sync: false })
+      await preference.remove()
     })
   })
 })
@@ -312,7 +359,7 @@ describe('Preference events', () => {
 
       done()
     })
-    preference.remove()
+    preference.removeSync()
   })
 
   test('Must emit updated event when Preference updated', done => {
@@ -336,8 +383,8 @@ describe('Preference events', () => {
 
       done()
     })
-    preference.update(updatedBody)
+    preference.updateSync(updatedBody)
   })
 })
 
-afterAll(() => preferencesStorage.remove())
+afterAll(() => preferencesStorage.removeSync())

@@ -164,9 +164,9 @@ describe('preferences remove method', () => {
         body: { test: 'Remove a removed Preference (sync)' }
       })
 
-      preference.remove()
+      preference.removeSync()
 
-      expect(preferences.remove.bind(preferences, preference)).toThrow(ERROR)
+      expect(preferences.removeSync.bind(preferences, preference)).toThrow(ERROR)
     })
 
     test('Must throw error when Preference removed before (async)', async () => {
@@ -179,10 +179,10 @@ describe('preferences remove method', () => {
         body: { test: 'Remove a removed Preference (async)' }
       })
 
-      await preference.remove({ sync: false })
+      await preference.remove()
 
       try {
-        await preferences.remove(preference, { sync: false })
+        await preferences.remove(preference)
       } catch (error) {
         expect(error.message).toBe(ERROR)
       }
@@ -196,8 +196,8 @@ describe('preferences remove method', () => {
       })
       const ERROR = `${preference.name} is not exist in list`
 
-      expect(preferences.remove.bind(preferences, preference)).toThrow(ERROR)
-      expect(preferences.remove.bind(preferences, preference.name)).toThrow(ERROR)
+      expect(preferences.removeSync.bind(preferences, preference)).toThrow(ERROR)
+      expect(preferences.removeSync.bind(preferences, preference.name)).toThrow(ERROR)
     })
 
     test('Must throw error when Preference doesnt exist in preferences module list (async)', async () => {
@@ -211,13 +211,13 @@ describe('preferences remove method', () => {
       const ERROR = `${preference.name} is not exist in list`
 
       try {
-        await preferences.remove(preference, { sync: false })
+        await preferences.remove(preference)
       } catch (error) {
         expect(error.message).toBe(ERROR)
       }
 
       try {
-        await preferences.remove(preference.name, { sync: false })
+        await preferences.remove(preference.name)
       } catch (error) {
         expect(error.message).toBe(ERROR)
       }
@@ -230,7 +230,7 @@ describe('preferences remove method', () => {
         test: 'Remove via name (sync)'
       })
 
-      expect(preferences.remove(preference.name)).toBeUndefined()
+      expect(preferences.removeSync(preference.name)).toBeUndefined()
       expect(preference).toEqual(expect.objectContaining({
         name: undefined,
         body: undefined
@@ -244,7 +244,7 @@ describe('preferences remove method', () => {
         test: 'Remove via name (async)'
       })
 
-      expect(await preferences.remove(preference.name, { sync: false })).toBeUndefined()
+      expect(await preferences.remove(preference.name)).toBeUndefined()
       expect(preference).toEqual(expect.objectContaining({
         name: undefined,
         body: undefined
@@ -256,7 +256,7 @@ describe('preferences remove method', () => {
         test: 'Remove via Preference instance (sync)'
       })
 
-      expect(preferences.remove(preference)).toBeUndefined()
+      expect(preferences.removeSync(preference)).toBeUndefined()
       expect(preference).toEqual(expect.objectContaining({
         name: undefined,
         body: undefined
@@ -270,7 +270,7 @@ describe('preferences remove method', () => {
         test: 'Remove via Preference instance (async)'
       })
 
-      expect(await preferences.remove(preference, { sync: false })).toBeUndefined()
+      expect(await preferences.remove(preference)).toBeUndefined()
       expect(preference).toEqual(expect.objectContaining({
         name: undefined,
         body: undefined
@@ -285,7 +285,7 @@ test('preferences has method must return right value', () => {
 
   expect(preferences.has(name)).toBe(true)
 
-  preferences.remove(name)
+  preferences.removeSync(name)
 
   expect(preferences.has(name)).toBe(false)
 })
@@ -306,7 +306,7 @@ describe('preferences events', () => {
 
       done()
     })
-    preference.remove()
+    preference.removeSync()
   })
 
   test('Must emit updated event when a Preference updated', done => {
@@ -328,8 +328,8 @@ describe('preferences events', () => {
 
       done()
     })
-    preference.update(updatedBody)
+    preference.updateSync(updatedBody)
   })
 })
 
-afterAll(() => storages.remove(preferencesStorageName))
+afterAll(() => storages.removeSync(preferencesStorageName))

@@ -103,6 +103,8 @@ describe('storages remove method', () => {
 
       expect(storages.remove.bind(storages)).toThrow(ERROR)
       expect(storages.remove.bind(storages, 111)).toThrow(ERROR)
+      expect(storages.removeSync.bind(storages)).toThrow(ERROR)
+      expect(storages.removeSync.bind(storages, 111)).toThrow(ERROR)
     })
 
     test('Must throw error when storage parameter is instance of Storage and deleted before (sync)', () => {
@@ -113,9 +115,9 @@ describe('storages remove method', () => {
         path: TMP_PATH
       })
 
-      storage.remove()
+      storage.removeSync()
 
-      expect(storages.remove.bind(storages, storage)).toThrow(ERROR)
+      expect(storages.removeSync.bind(storages, storage)).toThrow(ERROR)
     })
 
     test('Must throw error when storage parameter is instance of Storage and deleted before (async)', async () => {
@@ -128,10 +130,10 @@ describe('storages remove method', () => {
         path: TMP_PATH
       })
 
-      await storage.remove({ sync: false })
+      await storage.remove()
 
       try {
-        await storages.remove(storage, { sync: false })
+        await storages.remove(storage)
       } catch (error) {
         expect(error.message).toBe(ERROR)
       }
@@ -141,7 +143,7 @@ describe('storages remove method', () => {
       const name = generateId()
       const ERROR = `${name} is not exist in list`
 
-      expect(storages.remove.bind(storages, name)).toThrow(ERROR)
+      expect(storages.removeSync.bind(storages, name)).toThrow(ERROR)
     })
 
     test('Must throw error when Storage is not exist in list (async)', async () => {
@@ -151,7 +153,7 @@ describe('storages remove method', () => {
       const ERROR = `${name} is not exist in list`
 
       try {
-        await storages.remove(name, { sync: false })
+        await storages.remove(name)
       } catch (error) {
         expect(error.message).toBe(ERROR)
       }
@@ -162,7 +164,7 @@ describe('storages remove method', () => {
     test('Remove storage via name without error (sync)', () => {
       const storage = storages.initialize(generateId(), { test: 'Delete Storage via name (sync)' })
 
-      expect(storages.remove(storage.name)).toBeUndefined()
+      expect(storages.removeSync(storage.name)).toBeUndefined()
       expect(storage).toEqual(expect.objectContaining({
         name: undefined,
         body: undefined
@@ -174,7 +176,7 @@ describe('storages remove method', () => {
 
       const storage = storages.initialize(generateId(), { test: 'Delete Storage via name (async)' })
 
-      expect(await storages.remove(storage.name, { sync: false })).toBeUndefined()
+      expect(await storages.remove(storage.name)).toBeUndefined()
       expect(storage).toEqual(expect.objectContaining({
         name: undefined,
         body: undefined
@@ -186,7 +188,7 @@ describe('storages remove method', () => {
         test: 'Delete Storage via Storage instance (sync)'
       })
 
-      expect(storages.remove(storage)).toBeUndefined()
+      expect(storages.removeSync(storage)).toBeUndefined()
       expect(storage).toEqual(expect.objectContaining({
         name: undefined,
         body: undefined
@@ -198,7 +200,7 @@ describe('storages remove method', () => {
 
       const storage = storages.initialize(generateId(), { test: 'Delete Storage via Storage instance (async)' })
 
-      expect(await storages.remove(storage, { sync: false })).toBeUndefined()
+      expect(await storages.remove(storage)).toBeUndefined()
       expect(storage).toEqual(expect.objectContaining({
         name: undefined,
         body: undefined
@@ -213,7 +215,7 @@ test('storages has method must return right value', () => {
 
   expect(storages.has(name)).toBe(true)
 
-  storages.remove(name)
+  storages.removeSync(name)
 
   expect(storages.has(name)).toBe(false)
 })
