@@ -43,7 +43,13 @@ export default function makeConnections () {
   })
 
   /**
-   * Connections module is a Connection holder/manager
+   * @summary Connections module is a Connection holder/manager
+   * @description
+   * ##### Disconnect codes and descriptions
+   * |  Code  | Description |
+   * |  --- | --- |
+   * |  `4001`  | Previous connection that requested is not exist  |
+   * |  `4002`  | Previous connection that requested is already connect  |
    *
    * @memberOf module:connections
    * @inner
@@ -202,17 +208,21 @@ export default function makeConnections () {
           })
         } else { // Change an existing connection's socket
           if (!connectionsList.has(socket.request.previousSocketId)) {
-            socket.close()
+            const ERROR = new Error('Previous connection that requested is not exist')
 
-            throw new Error('Previous connection that requested is not exist')
+            socket.close(4001, ERROR.message)
+
+            throw ERROR
           }
 
           connection = connectionsList.get(socket.request.previousSocketId)
 
           if (connection.isConnected) {
-            socket.close()
+            const ERROR = new Error('Previous connection that requested is already connect')
 
-            throw new Error('Previous connection is already connect')
+            socket.close(4002, ERROR.message)
+
+            throw ERROR
           }
 
           connection.socket = socket

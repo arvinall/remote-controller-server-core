@@ -39,6 +39,12 @@ const generateId = idGenerator()
  * | `factor`  | `string`  |  Target factor
  * | `passportInput` | `string`  | If factor is passport |
  *
+ *
+ * ##### Disconnect codes and descriptions
+ * |  Code  | Description |
+ * |  --- | --- |
+ * |  `4000`  | Connection unauthenticated  |
+ *
  * @mixes module:asyncEventEmitter
  */
 export default class Connection extends AsyncEventEmitter {
@@ -274,7 +280,7 @@ export default class Connection extends AsyncEventEmitter {
           this.send(...EVENT_PROPS).catch(() => {})
         }
       } else if (event.factor === undefined && // Disconnect when connection unauthenticated
-        event.status === 2) this.disconnect()
+        event.status === 2) this.disconnect(4000, 'Connection unauthenticated')
     })
     this.on('authenticate', event => {
       if (
