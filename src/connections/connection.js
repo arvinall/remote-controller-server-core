@@ -149,7 +149,8 @@ export default class Connection extends AsyncEventEmitter {
   }
 
   /**
-   * Transfer events from {@link module:remote-controller-server-core~external:ws.WebSocket|ws.WebSocket}
+   * Transfer events from {@link module:remote-controller-server-core~external:ws.WebSocket|ws.WebSocket}, <br>
+   * Initial connection and send authentication (factor) statuses
    *
    * @param {object} configs
    * @param {module:remote-controller-server-core~external:ws.WebSocket} configs.socket

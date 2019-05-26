@@ -9,7 +9,6 @@ import EventEmitter from 'events'
 import os from 'os'
 import http from 'http'
 import WebSocket from 'ws'
-import Connection from '../connections/connection'
 
 /**
  * makeEngine creates engine module
@@ -55,20 +54,16 @@ export default function makeEngine (configs = Object.create(null)) {
       const connectionsList = new WeakSet()
 
       webSocketServer.on('connection', (...parameters) => {
-        const socket = parameters[0]
-        let connection
-
         try {
-          connection = connections.add(...parameters)
-        } catch (error) {
-          console.error(error)
+          connections.add(...parameters)
+        } catch (error) {}
+      })
 
-          socket.close(1011)
-        }
+      if (process.env.NODE_ENV === 'development') {
+        connections.on('connected', connection => {
+          console.log(connection.id, 'Connected', connection.address)
 
-        if (connection instanceof Connection &&
-          !connectionsList.has(connection)) {
-          if (process.env.NODE_ENV === 'development') {
+          if (!connectionsList.has(connection)) {
             connection.on('authentication', event => {
               switch (event.factor) {
                 case undefined:
@@ -93,19 +88,15 @@ export default function makeEngine (configs = Object.create(null)) {
               }
             })
           }
-
-          connectionsList.add(connection)
-        }
-      })
-
-      if (process.env.NODE_ENV === 'development') {
-        connections.on('connected', connection => {
-          console.log(connection.id, 'Connected', connection.address)
         })
         connections.on('disconnected', connection => {
           console.log(connection.id, 'Disconnected', connection.address)
         })
       }
+
+      connections.on('connected', connection => {
+        if (!connectionsList.has(connection)) connectionsList.add(connection)
+      })
     }
 
     /**

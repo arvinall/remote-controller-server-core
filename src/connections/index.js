@@ -62,7 +62,7 @@ export default function makeConnections () {
       /**
        * @summary Authentication confirmation factor requirement
        * @description To reset to default value set it to `null` <br>
-       *   Default: `true`
+       * Default: `true`
        *
        * @type {boolean}
        */
@@ -85,7 +85,7 @@ export default function makeConnections () {
       /**
        * @summary Authentication passport factor requirement
        * @description To reset to default value set it to `null` <br>
-       *   Default: `false`
+       * Default: `false`
        *
        * @type {boolean}
        */
@@ -109,7 +109,7 @@ export default function makeConnections () {
     /**
      * @summary Authentication passport factor
      * @description To reset to default value set it to `null` <br>
-     *   Default: `undefined`
+     * Default: `undefined`
      *
      * @type {module:passport}
      */
@@ -141,7 +141,7 @@ export default function makeConnections () {
     /**
      * @summary Connections will remove after this time in millisecond
      * @description To reset to default value set it to `null` <br>
-     *   Default: `1800000`
+     * Default: `1800000`
      *
      * @type {number}
      */
