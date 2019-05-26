@@ -1,6 +1,8 @@
-/* global test, expect, describe, jest */
+/* global test, expect, describe, jest, afterAll, TMP_PATH, generateId */
 
 import makeEngine from '../index'
+import makeStorages from '../../storages'
+import makePreferences from '../../preferences'
 import makeConnections from '../../connections'
 
 jest.mock('os', () => {
@@ -17,7 +19,13 @@ jest.mock('os', () => {
   return os
 })
 
-const core = { connections: makeConnections() }
+const core = Object.create(null)
+
+core.storages = makeStorages.call(core, { path: TMP_PATH })
+core.__preferencesStorageName = generateId()
+core.preferences = makePreferences.call(core, { name: core.__preferencesStorageName })
+core.connections = makeConnections.call(core)
+
 const engine = makeEngine.call(core)
 
 describe('engine start method', () => {
@@ -33,3 +41,5 @@ describe('engine start method', () => {
     }
   })
 })
+
+afterAll(async () => core.storages.remove(core.__preferencesStorageName))

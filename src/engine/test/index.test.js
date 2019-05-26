@@ -1,12 +1,20 @@
-/* global test, expect, describe, jest, afterAll, beforeEach */
+/* global test, expect, describe, jest, afterAll, beforeEach, TMP_PATH, generateId */
 
 import http from 'http'
 import envConfigs from '../../test/configs'
 import WebSocket from 'ws'
 import makeEngine from '../index'
+import makeStorages from '../../storages'
+import makePreferences from '../../preferences'
 import makeConnections from '../../connections'
 
-const core = { connections: makeConnections() }
+const core = Object.create(null)
+
+core.storages = makeStorages.call(core, { path: TMP_PATH })
+core.__preferencesStorageName = generateId()
+core.preferences = makePreferences.call(core, { name: core.__preferencesStorageName })
+core.connections = makeConnections.call(core)
+
 const engineConfigs = { port: 8888, path: '/test' }
 
 let engine
@@ -150,4 +158,8 @@ describe('engine events', () => {
   })
 })
 
-afterAll(async () => { if (engine.isActive) await engine.stop() })
+afterAll(async () => {
+  if (engine.isActive) await engine.stop()
+
+  await core.storages.remove(core.__preferencesStorageName)
+})
