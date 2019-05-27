@@ -1,19 +1,16 @@
-/* global test, expect, describe, jest, afterAll, beforeEach, TMP_PATH, generateId */
+/* global test, expect, describe, jest, afterAll, beforeEach */
 
 import http from 'http'
 import envConfigs from '../../test/configs'
 import WebSocket from 'ws'
 import makeEngine from '../index'
-import makeStorages from '../../storages'
-import makePreferences from '../../preferences'
-import makeConnections from '../../connections'
 
-const core = Object.create(null)
-
-core.storages = makeStorages.call(core, { path: TMP_PATH })
-core.__preferencesStorageName = generateId()
-core.preferences = makePreferences.call(core, { name: core.__preferencesStorageName })
-core.connections = makeConnections.call(core)
+const core = {
+  connections: {
+    add: jest.fn(),
+    on () {}
+  }
+}
 
 const engineConfigs = { port: 8888, path: '/test' }
 
@@ -66,7 +63,7 @@ describe('makeEngine', () => {
     engine = makeEngine.call(core, engineConfigs)
 
     webSocketParameters = [
-      `ws://${engine.address.address}:${engine.address.port}` + engineConfigs.path,
+      `ws://${engine.address.address}:${engine.address.port}` + engine.address.path,
       { perMessageDeflate: true }
     ]
   })
@@ -105,9 +102,12 @@ describe('engine start method', () => {
 
     const webSocketClient = new WebSocket(...webSocketParameters)
 
+    webSocketClient.on('error', () => {})
+
     await (new Promise(resolve => webSocketClient.on('open', resolve)))
+
     expect(webSocketClient.readyState).toBe(WebSocket.OPEN)
-    webSocketClient.close()
+
     await engine.stop()
   })
 })
@@ -134,12 +134,36 @@ describe('engine stop method', () => {
 
     const webSocketClient = new WebSocket(...webSocketParameters)
 
-    await new Promise(resolve => webSocketClient.on('open', resolve))
-      .then(async () => expect(await engine.stop()).toBeUndefined())
+    webSocketClient.on('error', () => {})
 
-    return new Promise(resolve => webSocketClient.on('close', resolve))
-      .then(() => expect(webSocketClient.readyState).toBe(WebSocket.CLOSED))
+    await new Promise(resolve => webSocketClient.on('open', resolve))
+
+    expect(await engine.stop()).toBeUndefined()
+
+    await new Promise(resolve => webSocketClient.on('close', resolve))
+
+    expect(webSocketClient.readyState).toBe(WebSocket.CLOSED)
   })
+})
+
+test('engine constructor must pass socket and request from websocket to connections module', async () => {
+  expect.assertions(2)
+
+  core.connections.add.mockClear()
+
+  await engine.start()
+
+  const webSocketClient = new WebSocket(...webSocketParameters)
+
+  webSocketClient.on('error', () => {})
+
+  await (new Promise(resolve => webSocketClient.on('open', resolve)))
+
+  expect(core.connections.add).toHaveBeenCalledTimes(1)
+  expect(core.connections.add)
+    .toHaveBeenCalledWith(expect.any(WebSocket), expect.any(http.IncomingMessage))
+
+  await engine.stop()
 })
 
 describe('engine events', () => {
@@ -160,6 +184,4 @@ describe('engine events', () => {
 
 afterAll(async () => {
   if (engine.isActive) await engine.stop()
-
-  await core.storages.remove(core.__preferencesStorageName)
 })
