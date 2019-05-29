@@ -17,12 +17,15 @@ import Passport from '../passport'
 export default function makeConnections () {
   const connectionsList = new Map()
   const preference = (defaults => {
+    const NAME = 'connections'
     let preference
 
     try {
-      preference = this.preferences.initialize('connections', defaults)
+      preference = this.preferences.add(NAME, defaults)
     } catch (error) {
-      preference = this.preferences.get('connections')
+      if (error.message === `${NAME} is already exist`) {
+        preference = this.preferences.get(NAME)
+      } else throw error
     }
 
     preference.defaults = defaults

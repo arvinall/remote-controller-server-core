@@ -33,9 +33,11 @@ export default function makePreferences (configs) {
   }
   const preferencesStorage = (() => {
     try {
-      return this.storages.get(configs.name)
+      return this.storages.add(configs.name)
     } catch (error) {
-      return this.storages.initialize(configs.name)
+      if (error.message === `${configs.name} is already exist`) {
+        return this.storages.get(configs.name)
+      } else throw error
     }
   })()
 
@@ -167,9 +169,9 @@ export default function makePreferences (configs) {
     }
 
     /**
-     * Initialize Preference
+     * Add/Initialize Preference
      *
-     * @param {string} name Preference's name
+     * @param {(module:preferences/preference|string)} preference Preference instance or preference's name
      * @param {object} [body={}] Preference's initial content
      *
      * @throws Will throw an error if Preference is already exist in list
@@ -182,24 +184,34 @@ export default function makePreferences (configs) {
      *
      * @return {module:preferences/preference}
      */
-    initialize (name, body = Object.create(null)) {
-      if (typeof name !== 'string') throw new Error('name parameter is required and must be string')
+    add (preference, body = Object.create(null)) {
+      if (!(preference instanceof Preference) &&
+        typeof preference !== 'string') throw new Error('preference parameter is required and must be Preference/string')
       else if (typeof body !== 'object') throw new Error('body parameter must be object')
-      else if (this.#preferencesList.hasOwnProperty(name)) throw new Error(`${name} is already exist`)
 
-      this.#preferencesList[name] = new Preference({
-        name,
-        body,
-        storage: preferencesStorage
-      })
+      let name = preference.name || preference
 
-      this.#preferencesList[name].on('updated', event => this.emit('updated', {
+      if (!(preference instanceof Preference)) preference = undefined
+
+      if (this.#preferencesList.hasOwnProperty(name)) throw new Error(`${name} is already exist`)
+
+      if (preference) {
+        this.#preferencesList[name] = preference
+      } else {
+        this.#preferencesList[name] = preference = new Preference({
+          name,
+          body,
+          storage: preferencesStorage
+        })
+      }
+
+      preference.on('updated', event => this.emit('updated', {
         name,
         ...event
       }))
-      this.#preferencesList[name].on('removed', event => this.emit('removed', event))
+      preference.on('removed', event => this.emit('removed', event))
 
-      return this.#preferencesList[name]
+      return preference
     }
 
     /**

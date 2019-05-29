@@ -48,7 +48,7 @@ describe('makePreferences', () => {
 
     expect(makePreferences(configs)).toEqual(expect.objectContaining({
       get: expect.any(Function),
-      initialize: expect.any(Function),
+      add: expect.any(Function),
       remove: expect.any(Function),
       has: expect.any(Function)
     }))
@@ -106,19 +106,19 @@ describe('preferences get method', () => {
   })
 })
 
-describe('preferences initialize method', () => {
+describe('preferences add method', () => {
   describe('Errors', () => {
-    test('Must throw error when name parameter is not string', () => {
-      const ERROR = 'name parameter is required and must be string'
+    test('Must throw error when preference parameter is not Preference/string', () => {
+      const ERROR = 'preference parameter is required and must be Preference/string'
 
-      expect(preferences.initialize.bind(preferences, ['wrong'])).toThrow(ERROR)
-      expect(preferences.initialize.bind(preferences)).toThrow(ERROR)
+      expect(preferences.add.bind(preferences, ['wrong'])).toThrow(ERROR)
+      expect(preferences.add.bind(preferences)).toThrow(ERROR)
     })
 
     test('Must throw error when body parameter is defined but not string', () => {
       const ERROR = 'body parameter must be object'
 
-      expect(preferences.initialize.bind(preferences, generateId(), 'wrong')).toThrow(ERROR)
+      expect(preferences.add.bind(preferences, generateId(), 'wrong')).toThrow(ERROR)
     })
 
     test('Must throw error when initializing an existing Preference', () => {
@@ -133,17 +133,35 @@ describe('preferences initialize method', () => {
 
       preferences.get(name)
 
-      expect(preferences.initialize.bind(preferences, name, preference.body)).toThrow(ERROR)
+      expect(preferences.add.bind(preferences, name, preference.body)).toThrow(ERROR)
     })
   })
 
-  test('Initialize and return Preference without error', () => {
-    const name = generateId()
-    const body = { test: 'Initialize Preference successfully' }
-    const preference = preferences.initialize(name, body)
+  describe('Success', () => {
+    test('Add Preference without error', () => {
+      const configs = {
+        name: generateId(),
+        body: { test: 'Initialize Preference successfully' }
+      }
+      const preference = preferences.add(new Preference({
+        ...configs,
+        storage: storages.get(preferencesStorageName)
+      }))
 
-    expect(preference.name).toBe(name)
-    expect(preference.body).toEqual(body)
+      expect(preference).toEqual(expect.objectContaining(configs))
+      expect(preferences.get(preference.name)).toBe(preference)
+    })
+
+    test('Initialize and return Preference without error', () => {
+      const configs = {
+        name: generateId(),
+        body: { test: 'Initialize Preference successfully' }
+      }
+      const preference = preferences.add(configs.name, configs.body)
+
+      expect(preference).toEqual(expect.objectContaining(configs))
+      expect(preferences.get(preference.name)).toBe(preference)
+    })
   })
 })
 
@@ -226,7 +244,7 @@ describe('preferences remove method', () => {
 
   describe('Success', () => {
     test('Remove Preference via name without error (sync)', () => {
-      const preference = preferences.initialize(generateId(), {
+      const preference = preferences.add(generateId(), {
         test: 'Remove via name (sync)'
       })
 
@@ -240,7 +258,7 @@ describe('preferences remove method', () => {
     test('Remove Preference via name without error (async)', async () => {
       expect.assertions(2)
 
-      const preference = preferences.initialize(generateId(), {
+      const preference = preferences.add(generateId(), {
         test: 'Remove via name (async)'
       })
 
@@ -252,7 +270,7 @@ describe('preferences remove method', () => {
     })
 
     test('Remove Preference via Preference instance without error (sync)', () => {
-      const preference = preferences.initialize(generateId(), {
+      const preference = preferences.add(generateId(), {
         test: 'Remove via Preference instance (sync)'
       })
 
@@ -266,7 +284,7 @@ describe('preferences remove method', () => {
     test('Remove Preference via Preference instance without error (async)', async () => {
       expect.assertions(2)
 
-      const preference = preferences.initialize(generateId(), {
+      const preference = preferences.add(generateId(), {
         test: 'Remove via Preference instance (async)'
       })
 
@@ -280,7 +298,7 @@ describe('preferences remove method', () => {
 })
 
 test('preferences has method must return right value', () => {
-  const preference = preferences.initialize(generateId(), { test: 'has method' })
+  const preference = preferences.add(generateId(), { test: 'has method' })
   const name = preference.name
 
   expect(preferences.has(name)).toBe(true)
@@ -296,7 +314,7 @@ describe('preferences events', () => {
 
     const name = generateId()
     const body = { test: 'removed event' }
-    const preference = preferences.initialize(name, body)
+    const preference = preferences.add(name, body)
 
     preferences.once('removed', event => {
       expect(event).toEqual({
@@ -314,7 +332,7 @@ describe('preferences events', () => {
 
     const name = generateId()
     const body = { test: 'updated event' }
-    const preference = preferences.initialize(name, body)
+    const preference = preferences.add(name, body)
     const updatedBody = Object.assign({}, body, {
       update: 'Updated successfully'
     })

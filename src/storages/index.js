@@ -120,25 +120,35 @@ export default function makeStorages (configs = Object.create(null)) {
     }
 
     /**
-     * Initialize Storage
+     * Add/Initialize Storage
      *
-     * @param {string} name Storage's name
+     * @param {(module:storages/storage|string)} storage Storage instance or storage's name
      * @param {object} [body={}] Storage's initial content
      *
      * @throws Will throw an error if Storage is already exist in list
      *
      * @return {module:storages/storage}
      */
-    initialize (name, body = Object.create(null)) {
-      if (typeof name !== 'string') throw new Error('name parameter is required and must be string')
+    add (storage, body = Object.create(null)) {
+      if (!(storage instanceof Storage) &&
+        typeof storage !== 'string') throw new Error('storage parameter is required and must be Storage/string')
       else if (typeof body !== 'object') throw new Error('body parameter must be object')
-      else if (this.#storagesList.hasOwnProperty(name)) throw new Error(`${name} is already exist`)
 
-      this.#storagesList[name] = new Storage({
-        name,
-        body,
-        path: configs.path
-      })
+      let name = storage.name || storage
+
+      if (!(storage instanceof Storage)) storage = undefined
+
+      if (this.#storagesList.hasOwnProperty(name)) throw new Error(`${name} is already exist`)
+
+      if (storage) {
+        this.#storagesList[name] = storage
+      } else {
+        this.#storagesList[name] = new Storage({
+          name,
+          body,
+          path: configs.path
+        })
+      }
 
       return this.#storagesList[name]
     }
