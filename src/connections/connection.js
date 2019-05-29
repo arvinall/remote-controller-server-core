@@ -561,14 +561,20 @@ export default class Connection extends AsyncEventEmitter {
       while (!readableStream.closed) {
         readableStream.resume()
 
+        let closeListener
+        let dataListener
+
         const chunk = await Promise.race([
-          new Promise(resolve => readableStream.once('data', data => {
+          new Promise(resolve => readableStream.once('data', dataListener = data => { // eslint-disable-line no-return-assign
             readableStream.pause()
 
             resolve(data)
           })),
-          new Promise(resolve => readableStream.once('close', resolve))
+          new Promise(resolve => readableStream.once('close', closeListener = resolve)) // eslint-disable-line no-return-assign
         ])
+
+        readableStream.off('data', dataListener)
+        readableStream.off('close', closeListener)
 
         if (chunk) {
           if (multiChunk) chunks.push(chunk)
