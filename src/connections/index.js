@@ -148,7 +148,7 @@ export default function makeConnections () {
     }
 
     /**
-     * @summary Connections will remove after this time in millisecond
+     * @summary Connections will remove after this time in millisecond when disconnect
      * @description To reset to default value set it to `null` <br>
      * Default: `1800000`
      *
@@ -193,7 +193,7 @@ export default function makeConnections () {
         !(request instanceof http.IncomingMessage)) throw new Error('request parameter is required when socket parameter is ws.WebSocket and must be http.IncomingMessage')
 
       let connection = socket instanceof Connection ? socket : undefined
-      let initial
+      let initial = true
 
       if (connection === undefined) {
         socket.request = request
@@ -230,12 +230,12 @@ export default function makeConnections () {
 
           connection.socket = socket
         }
-      } else initial = true
+      }
 
       if (initial) {
         connectionsList.set(connection.id, connection)
 
-        let timeOut
+        let removeTimeOut
 
         // Transfer events
         /**
@@ -249,7 +249,7 @@ export default function makeConnections () {
          * @see module:connections/connection#event:connected
          */
         connection.on('connected', (...parameters) => {
-          clearTimeout(timeOut)
+          clearTimeout(removeTimeOut)
 
           this.emit('connected', connection, ...parameters)
         })
@@ -264,7 +264,7 @@ export default function makeConnections () {
          * @see module:connections/connection#event:disconnected
          */
         connection.on('disconnected', (...parameters) => {
-          timeOut = setTimeout(() => {
+          removeTimeOut = setTimeout(() => {
             this.remove(connection)
           }, this.removeTimeout)
 

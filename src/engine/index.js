@@ -67,9 +67,10 @@ export default function makeEngine (configs = Object.create(null)) {
             connection.on('authentication', event => {
               switch (event.factor) {
                 case undefined:
-                  console.log(connection.id, event.status === 1
-                    ? 'Connection authenticated'
-                    : 'Connection unauthenticated')
+                  console.log(connection.id, [
+                    'Connection authenticated',
+                    'Connection unauthenticated'
+                  ][event.status - 1])
                   break
                 case 'confirmation':
                   console.log(connection.id, [
