@@ -11,6 +11,7 @@ import Connection, {
   bufferToUint8ArrayLike,
   uint8ArrayLikeToBuffer
 } from '../connection'
+import * as helpers from './helpers'
 
 const PASSWORD = 'aB_54321'
 const PASSPORT = new Passport('password', PASSWORD)
@@ -29,45 +30,16 @@ let connection
 let socket
 let webSocket
 
-async function getSocket () {
-  return new Promise(resolve => {
-    webSocketServer.once('connection', (...args) => resolve(args))
-  })
-}
-
 async function getSomeSockets (size = 1) {
-  const sockets = []
-
-  for (let counter = 1; counter <= size; counter++) {
-    let webSocket = new WebSocket(webSocketServerOptions.address, webSocketOptions)
-
-    webSocket.once('error', () => {})
-
-    let socket = await getSocket()
-    socket[0].request = socket[1]
-    socket = socket[0]
-    socket.__webSocket__ = webSocket
-
-    sockets.push(socket)
-  }
-
-  return sockets
+  return helpers.getSomeSockets.call({
+    webSocketServerOptions,
+    webSocketOptions,
+    webSocketServer
+  }, size)
 }
 
 async function getSomeMessages (size = 1, ws = webSocket) {
-  return new Promise(resolve => {
-    const result = []
-
-    ws.on('message', function getData (data) {
-      result.push(JSON.parse(data))
-
-      if (result.length >= size) {
-        ws.off('message', getData)
-
-        resolve(result)
-      }
-    })
-  })
+  return helpers.getSomeMessages.call(ws, size)
 }
 
 function makeFileWithSpecificSize (size = DEFAULT_STREAM_CHUNK_SIZE) {
