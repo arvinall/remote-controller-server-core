@@ -333,10 +333,15 @@ export default function makeConnections () {
 
       if (id) return connectionsList.get(id)
 
-      const connectedList = {}
+      const connectedListPrototype = { length: 0 }
+      const connectedList = Object.create(connectedListPrototype)
 
       for (const connection of connectionsList.values()) {
-        if (connection.isConnected) connectedList[connection.id] = connection
+        if (connection.isConnected) {
+          connectedList[connection.id] = connection
+
+          connectedListPrototype.length++
+        }
       }
 
       return connectedList
