@@ -8,6 +8,7 @@ import http from 'http'
 import WebSocket from 'ws'
 import Connection from './connection'
 import Passport from '../passport'
+import * as helpers from '../helpers'
 
 /**
  * makeConnections creates connections module
@@ -333,7 +334,10 @@ export default function makeConnections () {
 
       if (id) return connectionsList.get(id)
 
-      const connectedListPrototype = { length: 0 }
+      const connectedListPrototype = {
+        length: 0,
+        [Symbol.iterator]: helpers.object.iterateOverValues
+      }
       const connectedList = Object.create(connectedListPrototype)
 
       for (const connection of connectionsList.values()) {
@@ -360,12 +364,8 @@ export default function makeConnections () {
       if (typeof name !== 'string') throw new Error('name parameter is required and must be string')
 
       return (async () => {
-        const connectedConnections = this.get()
-
-        for (const connection of Object.values(connectedConnections)) {
-          if (connection.isAuthenticate) {
-            await connection.send(name, ...body)
-          }
+        for (const connection of this.get()) {
+          if (connection.isAuthenticate) await connection.send(name, ...body)
         }
       })()
     }
