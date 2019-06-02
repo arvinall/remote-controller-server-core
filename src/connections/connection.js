@@ -170,9 +170,9 @@ export default class Connection extends AsyncEventEmitter {
    * @emits module:connections/connection#event:connected
    */
   constructor (configs) {
-    if (typeof configs !== 'object') throw new Error('configs parameter is required and must be object')
-    else if (!(configs.socket instanceof WebSocket)) throw new Error('configs.socket is required and must be ws.WebSocket')
-    else if (!(configs.socket.request instanceof http.IncomingMessage)) throw new Error('configs.socket.request is required and must be http.IncomingMessage')
+    if (typeof configs !== 'object') throw new TypeError('configs parameter is required and must be object')
+    else if (!(configs.socket instanceof WebSocket)) throw new TypeError('configs.socket is required and must be ws.WebSocket')
+    else if (!(configs.socket.request instanceof http.IncomingMessage)) throw new TypeError('configs.socket.request is required and must be http.IncomingMessage')
     else if (
       (configs.authenticationFactors !== undefined &&
         typeof configs.authenticationFactors !== 'object') ||
@@ -180,7 +180,7 @@ export default class Connection extends AsyncEventEmitter {
         typeof configs.authenticationFactors.confirmation !== 'boolean') ||
       ((configs.authenticationFactors && configs.authenticationFactors.passport) !== undefined &&
         typeof configs.authenticationFactors.passport !== 'boolean')
-    ) throw new Error('configs.authenticationFactors must be object with boolean values')
+    ) throw new TypeError('configs.authenticationFactors must be object with boolean values')
 
     super()
 
@@ -203,9 +203,8 @@ export default class Connection extends AsyncEventEmitter {
     }
     if (withoutAuthFactor) throw new Error('One authentication factor require at least')
 
-    if (configs.authenticationFactors.passport === true && !(configs.passport instanceof Passport)) {
-      throw new Error('configs.passport is required and must be Passport')
-    }
+    if (configs.authenticationFactors.passport === true &&
+      !(configs.passport instanceof Passport)) throw new TypeError('configs.passport is required and must be Passport')
 
     this.#id = generateId()
     this.#socket = configs.socket
@@ -318,10 +317,11 @@ export default class Connection extends AsyncEventEmitter {
    *  * Reject an error if Connection is not connected
    */
   send (name, ...body) {
-    if (typeof name !== 'string') throw new Error('name parameter is required and must be string')
+    if (typeof name !== 'string') throw new TypeError('name parameter is required and must be string')
 
     return (async () => {
-      if (name !== 'authentication' && !this.isAuthenticate) throw new Error('Connection is not authenticated')
+      if (name !== 'authentication' &&
+        !this.isAuthenticate) throw new Error('Connection is not authenticated')
       else if (!this.isConnected) throw new Error('Connection is not connected')
 
       let message = [ name, body ]
@@ -357,9 +357,9 @@ export default class Connection extends AsyncEventEmitter {
    */
   disconnect (code, description) {
     if (code !== undefined &&
-      typeof code !== 'number') throw new Error('code parameter must be number')
+      typeof code !== 'number') throw new TypeError('code parameter must be number')
     else if (description !== undefined &&
-      typeof description !== 'string') throw new Error('description parameter must be string')
+      typeof description !== 'string') throw new TypeError('description parameter must be string')
 
     /**
      * @summary Connection disconnected event
@@ -457,7 +457,7 @@ export default class Connection extends AsyncEventEmitter {
    * @emits module:connections/connection#event:authentication
    */
   set socket (socket) {
-    if (!(socket instanceof WebSocket)) throw new Error('Value must be ws.WebSocket')
+    if (!(socket instanceof WebSocket)) throw new TypeError('Value must be ws.WebSocket')
 
     // Reset authentication factors
     for (const factorKey of CLIENT_AUTHENTICATION_FACTORS) {
@@ -539,7 +539,7 @@ export default class Connection extends AsyncEventEmitter {
    */
   static readStreamChunks (readableStream, multiChunk = true) {
     if (!(readableStream instanceof stream.Readable)) {
-      throw new Error('readableStream parameter is required and must be readableStream')
+      throw new TypeError('readableStream parameter is required and must be readableStream')
     }
 
     /**

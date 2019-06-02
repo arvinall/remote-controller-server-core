@@ -17,14 +17,14 @@ import Preference from './preference'
  * @return {module:preferences~Preferences}
  */
 export default function makePreferences (configs) {
-  if (typeof configs !== 'object') throw new Error('configs parameter is required and must be object')
+  if (typeof configs !== 'object') throw new TypeError('configs parameter is required and must be object')
 
   // Set default configs
   configs = Object.assign({
     name: 'preferences'
   }, configs)
 
-  if (typeof configs.name !== 'string') throw new Error('configs.name must be string')
+  if (typeof configs.name !== 'string') throw new TypeError('configs.name must be string')
   else if (this.storages.has(configs.name)) throw new Error(`${configs.name} is already in use`)
 
   const PREFERENCES_GLOBAL_ERRORS = {
@@ -97,8 +97,10 @@ export default function makePreferences (configs) {
      *  * Reject an error if Preference is not exist in list
      */
     #remove = (preference, configs = Object.create(null)) => {
-      if (preference === undefined || (typeof preference !== 'string' && !(preference instanceof Preference))) {
-        throw new Error('preference parameter is required and must be string/Preference')
+      if (preference === undefined ||
+        (typeof preference !== 'string' &&
+          !(preference instanceof Preference))) {
+        throw new TypeError('preference parameter is required and must be string/Preference')
       }
 
       // Set default configs
@@ -149,7 +151,7 @@ export default function makePreferences (configs) {
      * @return {module:preferences/preference}
      */
     get (name) {
-      if (typeof name !== 'string') throw new Error('name parameter is required and must be string')
+      if (typeof name !== 'string') throw new TypeError('name parameter is required and must be string')
 
       // Return Preference from list if exist
       if (this.#preferencesList.hasOwnProperty(name)) return this.#preferencesList[name]
@@ -186,8 +188,8 @@ export default function makePreferences (configs) {
      */
     add (preference, body = Object.create(null)) {
       if (!(preference instanceof Preference) &&
-        typeof preference !== 'string') throw new Error('preference parameter is required and must be Preference/string')
-      else if (typeof body !== 'object') throw new Error('body parameter must be object')
+        typeof preference !== 'string') throw new TypeError('preference parameter is required and must be Preference/string')
+      else if (typeof body !== 'object') throw new TypeError('body parameter must be object')
 
       let name = preference.name || preference
 

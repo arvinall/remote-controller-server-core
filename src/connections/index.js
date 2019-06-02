@@ -189,9 +189,9 @@ export default function makeConnections () {
      */
     add (socket, request) {
       if (!(socket instanceof WebSocket) &&
-        !(socket instanceof Connection)) throw new Error('socket parameter is required and must be ws.WebSocket/Connection')
+        !(socket instanceof Connection)) throw new TypeError('socket parameter is required and must be ws.WebSocket/Connection')
       else if (socket instanceof WebSocket &&
-        !(request instanceof http.IncomingMessage)) throw new Error('request parameter is required when socket parameter is ws.WebSocket and must be http.IncomingMessage')
+        !(request instanceof http.IncomingMessage)) throw new TypeError('request parameter is required and must be http.IncomingMessage')
 
       let connection = socket instanceof Connection ? socket : undefined
       let initial = true
@@ -296,7 +296,7 @@ export default function makeConnections () {
      */
     remove (connection) {
       if (!(connection instanceof Connection) &&
-      typeof connection !== 'string') throw new Error('connection parameter is required and must be Connection/string')
+      typeof connection !== 'string') throw new TypeError('connection parameter is required and must be Connection/string')
 
       if (typeof connection === 'string') {
         connection = connectionsList.get(connection)
@@ -330,7 +330,7 @@ export default function makeConnections () {
      */
     get (id) {
       if (id !== undefined &&
-        typeof id !== 'string') throw new Error('id parameter must be string')
+        typeof id !== 'string') throw new TypeError('id parameter must be string')
 
       if (id) return connectionsList.get(id)
 
@@ -361,7 +361,7 @@ export default function makeConnections () {
      * @return {Promise<(void|Error)>}
      */
     send (name, ...body) {
-      if (typeof name !== 'string') throw new Error('name parameter is required and must be string')
+      if (typeof name !== 'string') throw new TypeError('name parameter is required and must be string')
 
       return (async () => {
         for (const connection of this.get()) {

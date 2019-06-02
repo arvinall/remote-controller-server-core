@@ -125,7 +125,8 @@ export default class Storage extends EventEmitter {
       sync: true
     }, configs)
 
-    if (body === undefined || typeof body !== 'object') throw new Error('body parameter is required and must be object/function')
+    if (body === undefined ||
+      typeof body !== 'object') throw new TypeError('body parameter is required and must be object/function')
 
     const setProperties = () => {
       const EVENT = {
@@ -186,22 +187,23 @@ export default class Storage extends EventEmitter {
    * @throws Will throw an error if the body property not provided and storage is not accessible
    */
   constructor (configs) {
-    let initial = false
-    let storageAccessible
-    let storageAddress
-
-    if (typeof configs !== 'object') throw new Error('configs parameter is required and must be object')
-
-    super()
+    if (typeof configs !== 'object') throw new TypeError('configs parameter is required and must be object')
 
     // Set default configs
     configs = Object.assign({
       path: process.cwd()
     }, configs)
 
-    if (typeof configs.name !== 'string') throw new Error('configs.name is required and must be string')
-    else if (configs.body !== undefined && typeof configs.body !== 'object') throw new Error('configs.body must be object')
-    else if (typeof configs.path !== 'string') throw new Error('configs.path must be string')
+    if (typeof configs.name !== 'string') throw new TypeError('configs.name is required and must be string')
+    else if (configs.body !== undefined &&
+      typeof configs.body !== 'object') throw new TypeError('configs.body must be object')
+    else if (typeof configs.path !== 'string') throw new TypeError('configs.path must be string')
+
+    super()
+
+    let initial = false
+    let storageAccessible
+    let storageAddress
 
     // Mark as must initial if configs.body property is defined
     if (configs.body !== undefined) initial = true

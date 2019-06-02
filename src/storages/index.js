@@ -19,7 +19,7 @@ export default function makeStorages (configs = Object.create(null)) {
     path: process.cwd()
   }, configs)
 
-  if (typeof configs.path !== 'string') throw new Error('configs.path must be string')
+  if (typeof configs.path !== 'string') throw new TypeError('configs.path must be string')
 
   const STORAGES_GLOBAL_ERRORS = {
     accessibility: new Error('Storage is not accessible'),
@@ -61,8 +61,10 @@ export default function makeStorages (configs = Object.create(null)) {
      *  * Reject an error if Storage is not exist in list
      */
     #remove = (storage, configs = Object.create(null)) => {
-      if (storage === undefined || (typeof storage !== 'string' && !(storage instanceof Storage))) {
-        throw new Error('storage parameter is required and must be string/Storage')
+      if (storage === undefined ||
+        (typeof storage !== 'string' &&
+          !(storage instanceof Storage))) {
+        throw new TypeError('storage parameter is required and must be string/Storage')
       }
 
       // Set default configs
@@ -106,7 +108,7 @@ export default function makeStorages (configs = Object.create(null)) {
      * @return {module:storages/storage}
      */
     get (name) {
-      if (typeof name !== 'string') throw new Error('name parameter is required and must be string')
+      if (typeof name !== 'string') throw new TypeError('name parameter is required and must be string')
 
       // Return Storage from list if exist
       if (this.#storagesList.hasOwnProperty(name)) return this.#storagesList[name]
@@ -131,8 +133,8 @@ export default function makeStorages (configs = Object.create(null)) {
      */
     add (storage, body = Object.create(null)) {
       if (!(storage instanceof Storage) &&
-        typeof storage !== 'string') throw new Error('storage parameter is required and must be Storage/string')
-      else if (typeof body !== 'object') throw new Error('body parameter must be object')
+        typeof storage !== 'string') throw new TypeError('storage parameter is required and must be Storage/string')
+      else if (typeof body !== 'object') throw new TypeError('body parameter must be object')
 
       let name = storage.name || storage
 

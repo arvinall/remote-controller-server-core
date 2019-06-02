@@ -4,10 +4,16 @@ import crypto from 'crypto'
 import * as passGenerator from './passGenerator'
 import encryption from '../encryption'
 
-test('Must throw error when password parameter is not string or characters are less than 2', () => {
-  const ERROR = 'password parameter is required and must be string with at least two character'
+test('Must throw error when password parameter is not string', () => {
+  const ERROR = 'password parameter is required and must be string'
 
   expect(encryption).toThrow(ERROR)
+  expect(encryption.bind(null, [ 'wrong' ])).toThrow(ERROR)
+})
+
+test('Must throw error when password parameter characters are less than 2', () => {
+  const ERROR = 'password parameter must have at least two characters'
+
   expect(encryption.bind(null, '')).toThrow(ERROR)
   expect(encryption.bind(null, '1')).toThrow(ERROR)
 })

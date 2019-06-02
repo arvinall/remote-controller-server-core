@@ -88,7 +88,7 @@ const storagesList = Object.create(null)
  * @return {module:remote-controller-server-core~core}
  */
 export default function makeCore (configs = Object.create(null)) {
-  if (typeof configs !== 'object') throw new Error('configs parameter must be object')
+  if (typeof configs !== 'object') throw new TypeError('configs parameter must be object')
 
   // Set default configs
   configs = Object.assign({
@@ -97,9 +97,9 @@ export default function makeCore (configs = Object.create(null)) {
     httpServerPort: 7777
   }, configs)
 
-  if (typeof configs.storagePath !== 'string') throw new Error('configs.storagePath must be string')
-  else if (typeof configs.preferenceStorageName !== 'string') throw new Error('configs.preferencesStorageName must be string')
-  else if (typeof configs.httpServerPort !== 'number') throw new Error('configs.httpServerPort must be number')
+  if (typeof configs.storagePath !== 'string') throw new TypeError('configs.storagePath must be string')
+  else if (typeof configs.preferenceStorageName !== 'string') throw new TypeError('configs.preferencesStorageName must be string')
+  else if (typeof configs.httpServerPort !== 'number') throw new TypeError('configs.httpServerPort must be number')
 
   /**
    * @namespace module:remote-controller-server-core~core

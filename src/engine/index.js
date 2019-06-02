@@ -20,7 +20,7 @@ import WebSocket from 'ws'
  * @return {module:engine~Engine}
  */
 export default function makeEngine (configs = Object.create(null)) {
-  if (typeof configs !== 'object') throw new Error('configs parameter must be object')
+  if (typeof configs !== 'object') throw new TypeError('configs parameter must be object')
 
   // Set default configs
   configs = Object.assign({
@@ -28,8 +28,9 @@ export default function makeEngine (configs = Object.create(null)) {
     path: '/'
   }, configs)
 
-  if (typeof configs.port !== 'number') throw new Error('configs.port must be number')
-  else if (typeof configs.path !== 'string' || !configs.path.startsWith('/')) throw new Error('configs.path must be string and starts with "/"')
+  if (typeof configs.port !== 'number') throw new TypeError('configs.port must be number')
+  else if (typeof configs.path !== 'string') throw new TypeError('configs.path must be string')
+  else if (!configs.path.startsWith('/')) throw new Error('configs.path must starts with "/"')
 
   const connections = this.connections
   const httpServer = http.createServer()
@@ -114,7 +115,7 @@ export default function makeEngine (configs = Object.create(null)) {
      *  * Reject an error if there is no network
      */
     start (port = configs.port) {
-      if (typeof port !== 'number') throw new Error('port parameter must be number')
+      if (typeof port !== 'number') throw new TypeError('port parameter must be number')
 
       return (async () => {
         if (this.isActive) throw new Error('Engine already started')

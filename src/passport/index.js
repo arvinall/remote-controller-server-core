@@ -5,7 +5,7 @@
  */
 
 const GLOBAL_ERRORS = {
-  passportInputRequired: new Error('passportInput parameter is required')
+  passportInputRequired: new TypeError('passportInput parameter is required')
 }
 const passports = {
   password: require('./password').default
@@ -33,14 +33,14 @@ export default class Passport {
    * @param {{salt: Buffer, hash: Buffer}} [passport]
    */
   constructor (type, passportInput, passport) {
-    if (typeof type !== 'string' || !passports.hasOwnProperty(type)) {
-      throw new Error('type parameter is required and must be string and one of passport types')
-    } else if (passportInput === undefined) throw GLOBAL_ERRORS.passportInputRequired
+    if (typeof type !== 'string') throw new TypeError('type parameter is required and must be string')
+    else if (!passports.hasOwnProperty(type)) throw new Error('type parameter must be one of the passport types')
+    else if (passportInput === undefined) throw GLOBAL_ERRORS.passportInputRequired
     else if (passportInput === null &&
       (typeof passport !== 'object' ||
         !(passport.hash instanceof Buffer) ||
         !(passport.hash instanceof Buffer))) {
-      throw new Error('passport parameter must be an encryption object')
+      throw new TypeError('passport parameter must be an encryption object')
     }
 
     this.#type = type

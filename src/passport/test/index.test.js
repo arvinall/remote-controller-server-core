@@ -11,11 +11,16 @@ passports.types = Object.keys(passports)
 
 describe('Passport constructor', () => {
   describe('Errors', () => {
-    test('Must throw error when type parameter is not string or none of passport types', () => {
-      const ERROR = 'type parameter is required and must be string and one of passport types'
+    test('Must throw error when type parameter is not string', () => {
+      const ERROR = 'type parameter is required and must be string'
 
       expect(() => new Passport()).toThrow(ERROR)
       expect(() => new Passport(2)).toThrow(ERROR)
+    })
+
+    test('Must throw error when type parameter is not one of the passport types', () => {
+      const ERROR = 'type parameter must be one of the passport types'
+
       expect(() => new Passport('wrong')).toThrow(ERROR)
     })
 

@@ -22,7 +22,11 @@ export const pattern = /(?=^.{8,}$)((?=.*\d)|(?=.*\W+))(?![.\n])(?=.*[A-Z])(?=.*
  * @return {{salt: Buffer, hash: Buffer}}
  */
 export default (password, salt) => {
-  if (!pattern.test(password)) throw new Error('password is not secure')
+  if (typeof password !== 'string') {
+    throw new TypeError('password parameter is required and must be string')
+  }
+
+  if (!pattern.test(password)) throw new Error('Password is not secure')
 
   return encrypt(password, salt)
 }

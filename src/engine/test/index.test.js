@@ -34,12 +34,17 @@ describe('makeEngine', () => {
       expect(makeEngine.bind(core, configs)).toThrow(ERROR)
     })
 
-    test('Must throw error when configs.path property is not string and dont starts with "/"', () => {
-      const ERROR = 'configs.path must be string and starts with "/"'
-      const configs = { path: 'wrong' }
+    test('Must throw error when configs.path property is not string', () => {
+      const ERROR = 'configs.path must be string'
+      const configs = { path: [ 'wrong' ] }
 
       expect(makeEngine.bind(core, configs)).toThrow(ERROR)
-      configs.path = false
+    })
+
+    test('Must throw error when configs.path property does not starts with "/"', () => {
+      const ERROR = 'configs.path must starts with "/"'
+      const configs = { path: 'wrong' }
+
       expect(makeEngine.bind(core, configs)).toThrow(ERROR)
     })
   })

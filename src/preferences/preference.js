@@ -52,7 +52,7 @@ export default class Preference extends EventEmitter {
     // Make body object from function
     if (typeof body === 'function') body = body(this.body)
 
-    if (typeof body !== 'object') throw new Error('body parameter is required and must be object/function')
+    if (typeof body !== 'object') throw new TypeError('body parameter is required and must be object/function')
 
     // Set default configs
     configs = Object.assign({
@@ -179,18 +179,20 @@ export default class Preference extends EventEmitter {
    * @throws Will throw an error if the body property not provided and storage is not accessible
    */
   constructor (configs) {
-    let initial = false
-
-    if (typeof configs !== 'object') throw new Error('configs parameter is required and must be object')
-    else if (typeof configs.name !== 'string') throw new Error('configs.name is required and must be string')
-    else if (configs.storage === undefined || !(configs.storage instanceof Storage)) throw new Error('configs.storage is required and must be Storage')
+    if (typeof configs !== 'object') throw new TypeError('configs parameter is required and must be object')
+    else if (typeof configs.name !== 'string') throw new TypeError('configs.name is required and must be string')
+    else if (configs.storage === undefined ||
+      !(configs.storage instanceof Storage)) throw new TypeError('configs.storage is required and must be Storage')
     else if (configs.storage.body === undefined) throw new Error('Storage is not accessible')
-    else if (configs.body !== undefined && typeof configs.body !== 'object') throw new Error('configs.body must be object')
+    else if (configs.body !== undefined &&
+      typeof configs.body !== 'object') throw new TypeError('configs.body must be object')
 
     super()
 
     this.#storage = configs.storage
     this.#name = configs.name
+
+    let initial = false
 
     if (configs.body) initial = true
 

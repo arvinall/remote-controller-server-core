@@ -95,7 +95,7 @@ describe('connections add method', () => {
     test('Must throw error when socket parameter is ws.WebSocket and request parameter is not http.IncomingMessage', async () => {
       expect.assertions(2)
 
-      const ERROR = 'request parameter is required when socket parameter is ws.WebSocket and must be http.IncomingMessage'
+      const ERROR = 'request parameter is required and must be http.IncomingMessage'
       const socket = (await getSomeSockets())[0]
 
       expect(core.connections.add.bind(core.connections, socket)).toThrow(ERROR)

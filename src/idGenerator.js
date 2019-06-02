@@ -65,14 +65,14 @@ export default function idGenerator (charCodesList = keyCodesList, lastId) {
  * @returns {number}
  */
 function rangeOf (charCodesList, charCode) {
-  if (typeof charCode !== 'number') throw new Error('charCode parameter is required and mus be number')
+  if (typeof charCode !== 'number') throw new TypeError('charCode parameter is required and mus be number')
 
   for (const rangeIndex in charCodesList) {
     if (charCode > charCodesList[rangeIndex][0] - 1 &&
       charCode < charCodesList[rangeIndex][1] + 1) return Number(rangeIndex)
   }
 
-  throw new Error('ID is not in range of charCodesList parameter')
+  throw new RangeError('ID is not in range of charCodesList parameter')
 }
 
 /**
