@@ -36,7 +36,11 @@ export default function makePreferences (configs) {
       return this.storages.add(configs.name)
     } catch (error) {
       if (error.message === `${configs.name} is already exist`) {
-        return this.storages.get(configs.name)
+        try {
+          return this.storages.get(configs.name)
+        } catch (error) {
+          throw error
+        }
       } else throw error
     }
   })()

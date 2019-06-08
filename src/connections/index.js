@@ -10,6 +10,10 @@ import Connection from './connection'
 import Passport from '../passport'
 import * as helpers from '../helpers'
 
+const GLOBAL_ERRORS = {
+  authenticationFactorsRequirement: new Error('One authentication factor require at least')
+}
+
 /**
  * makeConnections creates connections module
  *
@@ -25,7 +29,11 @@ export default function makeConnections () {
       preference = this.preferences.add(NAME, defaults)
     } catch (error) {
       if (error.message === `${NAME} is already exist`) {
-        preference = this.preferences.get(NAME)
+        try {
+          preference = this.preferences.get(NAME)
+        } catch (error) {
+          throw error
+        }
       } else throw error
     }
 
@@ -61,18 +69,13 @@ export default function makeConnections () {
    * @mixes module:remote-controller-server-core~external:EventEmitter
    */
   class Connections extends EventEmitter {
-    /**
-     * Authentication factors requirement
-     *
-     * @todo This namespace doesn't show correctly in documentation, so needs to fix it
-     *
-     * @namespace module:connections~Connections#authenticationFactors
-     */
-    authenticationFactors = {
+    #__authenticationFactors = {
       /**
        * @summary Authentication confirmation factor requirement
        * @description To reset to default value set it to `null` <br>
        * Default: `true`
+       *
+       * @memberOf module:connections~Connections#authenticationFactors
        *
        * @type {boolean}
        */
@@ -83,6 +86,9 @@ export default function makeConnections () {
       set confirmation (value) {
         if (typeof value === 'boolean' ||
           value === null) {
+          if (value === false &&
+            !this.passport) throw GLOBAL_ERRORS.authenticationFactorsRequirement
+
           preference.updateSync(body => {
             if (value !== null) body.authenticationFactors.confirmation = value
             else body.authenticationFactors.confirmation = preference.defaults.authenticationFactors.confirmation
@@ -97,6 +103,8 @@ export default function makeConnections () {
        * @description To reset to default value set it to `null` <br>
        * Default: `false`
        *
+       * @memberOf module:connections~Connections#authenticationFactors
+       *
        * @type {boolean}
        */
       get passport () {
@@ -106,6 +114,9 @@ export default function makeConnections () {
       set passport (value) {
         if (typeof value === 'boolean' ||
           value === null) {
+          if (value === false &&
+            !this.confirmation) throw GLOBAL_ERRORS.authenticationFactorsRequirement
+
           preference.updateSync(body => {
             if (value !== null) body.authenticationFactors.passport = value
             else body.authenticationFactors.passport = preference.defaults.authenticationFactors.passport
@@ -114,6 +125,15 @@ export default function makeConnections () {
           })
         }
       }
+    }
+
+    /**
+     * Authentication factors requirement
+     *
+     * @namespace module:connections~Connections#authenticationFactors
+     */
+    get authenticationFactors () {
+      return this.#__authenticationFactors
     }
 
     /**
@@ -151,7 +171,7 @@ export default function makeConnections () {
     /**
      * @summary Connections will remove after this time in millisecond when disconnect
      * @description To reset to default value set it to `null` <br>
-     * Default: `1800000`
+     * Default: `1800000` (30 minutes)
      *
      * @type {number}
      */
