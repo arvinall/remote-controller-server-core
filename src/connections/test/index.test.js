@@ -23,6 +23,8 @@ const webSocketServer = new WebSocket.Server(webSocketServerOptions)
 
 webSocketServerOptions.address = `ws://${webSocketServerOptions.host}:${webSocketServerOptions.port}`
 
+// let connectionsPreference
+
 async function getSomeSockets (size = 1, id) {
   return helpers.getSomeSockets.call({
     webSocketServerOptions: id ? {
@@ -80,6 +82,10 @@ describe('makeConnections', () => {
 
   afterAll(() => {
     core.connections = makeConnections.call(core)
+
+    core.connections.removeTimeout = envConfigs.connectionsRemoveTimeout
+
+    // connectionsPreference = core.preferences.get('connections')
   })
 })
 
@@ -121,16 +127,13 @@ describe('connections add method', () => {
       expect(core.connections.add.bind(core.connections, socket, request)).toThrow(ERROR)
     })
 
-    /**
-     * @todo This test prevent process to exit, it should be corrected
-     */
     test('Must throw error when socket requested id is already connect and close socket with 4002 code', async done => {
       expect.assertions(3)
 
       const ERROR = 'Previous connection that requested is already connect'
       const CLOSE_CODE = 4002
 
-      let connection = (await getSomeSockets(1))[0]
+      let connection = (await getSomeSockets())[0]
 
       connection = core.connections.add(connection, connection.request)
 
@@ -138,32 +141,32 @@ describe('connections add method', () => {
       const request = socket.request
       const webSocket = socket.__webSocket__
 
+      expect(core.connections.add.bind(core.connections, socket, request)).toThrow(ERROR)
+
       webSocket.once('close', (code, description) => {
         expect(code).toBe(CLOSE_CODE)
         expect(description).toBe(ERROR)
 
         done()
       })
-
-      expect(core.connections.add.bind(core.connections, socket, request)).toThrow(ERROR)
     })
   })
 })
 
 afterAll(async () => {
-  const connects = core.connections.get().length
+  const connectedConnections = core.connections.get().length
 
   await new Promise(resolve => webSocketServer.close(resolve))
 
   await new Promise(resolve => {
     let counter = 0
 
-    if (counter >= connects) return resolve()
+    if (counter >= connectedConnections) return resolve()
 
-    core.connections.on('disconnected', () => {
+    core.connections.on('removed', () => {
       counter++
 
-      if (counter >= connects) resolve()
+      if (counter >= connectedConnections) resolve()
     })
   })
 
