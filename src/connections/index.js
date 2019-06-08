@@ -221,7 +221,7 @@ export default function makeConnections () {
 
           connection = connectionsList.get(socket.request.previousSocketId)
 
-          if (connection.isConnected) {
+          if (connection.isConnect) {
             const ERROR = new Error('Previous connection that requested is already connect')
 
             socket.close(4002, ERROR.message)
@@ -346,7 +346,7 @@ export default function makeConnections () {
       const connectedList = Object.create(connectedListPrototype)
 
       for (const connection of connectionsList.values()) {
-        if (connection.isConnected) {
+        if (connection.isConnect) {
           connectedList[connection.id] = connection
 
           connectedListPrototype.length++

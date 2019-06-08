@@ -292,7 +292,7 @@ export default class Connection extends AsyncEventEmitter {
       if (event.factor === 'passport') this.#passportChecker(event.passportInput)
     })
 
-    if (this.isConnected) this.#emitConnected()
+    if (this.isConnect) this.#emitConnected()
     this.#emitFirstAuthenticationFactorAsk()
   }
 
@@ -322,7 +322,7 @@ export default class Connection extends AsyncEventEmitter {
     return (async () => {
       if (name !== 'authentication' &&
         !this.isAuthenticate) throw new Error('Connection is not authenticated')
-      else if (!this.isConnected) throw new Error('Connection is not connected')
+      else if (!this.isConnect) throw new Error('Connection is not connected')
 
       let message = [ name, body ]
       let callback
@@ -430,7 +430,7 @@ export default class Connection extends AsyncEventEmitter {
   /**
    * @type {boolean}
    */
-  get isConnected () {
+  get isConnect () {
     return this.#socket.readyState === WebSocket.OPEN
   }
 
@@ -476,7 +476,7 @@ export default class Connection extends AsyncEventEmitter {
     this.#socket = socket
     this.#address = this.#socket.request.socket.remoteAddress
 
-    if (this.isConnected) this.#emitConnected()
+    if (this.isConnect) this.#emitConnected()
     this.#emitFirstAuthenticationFactorAsk()
     this.#emitAuthentication()
   }

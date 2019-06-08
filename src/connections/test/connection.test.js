@@ -566,15 +566,15 @@ describe('Connection properties', () => {
     })
   })
 
-  describe('isConnected', () => {
+  describe('isConnect', () => {
     test('Must return true when connection is established', () => {
-      expect(connection.isConnected).toBe(true)
+      expect(connection.isConnect).toBe(true)
     })
 
     test('Must return false when connection is not established', () => {
       socket.close()
 
-      expect(connection.isConnected).toBe(false)
+      expect(connection.isConnect).toBe(false)
     })
   })
 
