@@ -40,19 +40,19 @@ export default function makeConnections () {
     preference.defaults = defaults
 
     return preference
-  })({
+  })(Object.freeze({
     /** @type {object} */
-    authenticationFactors: {
+    authenticationFactors: Object.freeze({
       /** @type {boolean} */
       confirmation: true,
       /** @type {boolean} */
       passport: false
-    },
+    }),
     /** @type {{type: string, hash: number[], salt: number[]}} */
     passport: undefined,
     /** @type {number} */
     removeTimeout: 1000 * 60 * 30
-  })
+  }))
 
   /**
    * @summary Connections module is a Connection holder/manager
