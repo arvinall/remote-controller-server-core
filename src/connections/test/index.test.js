@@ -23,7 +23,7 @@ const webSocketServer = new WebSocket.Server(webSocketServerOptions)
 
 webSocketServerOptions.address = `ws://${webSocketServerOptions.host}:${webSocketServerOptions.port}`
 
-// let connectionsPreference
+let connectionsPreference
 
 async function getSomeSockets (size = 1, id) {
   return helpers.getSomeSockets.call({
@@ -83,9 +83,131 @@ describe('makeConnections', () => {
   afterAll(() => {
     core.connections = makeConnections.call(core)
 
-    core.connections.removeTimeout = envConfigs.connectionsRemoveTimeout
+    connectionsPreference = core.preferences.get('connections')
+  })
+})
 
-    // connectionsPreference = core.preferences.get('connections')
+describe('connections properties', () => {
+  describe('authenticationFactors', () => {
+    test('confirmation property default value must be true', () => {
+      expect(core.connections.authenticationFactors.confirmation).toBe(true)
+    })
+
+    test('confirmation property must ignore non boolean/null value types', () => {
+      core.connections.authenticationFactors.confirmation = 'wrong'
+
+      expect(core.connections.authenticationFactors.confirmation).toBe(true)
+
+      core.connections.authenticationFactors.confirmation = [ 'wrong' ]
+
+      expect(core.connections.authenticationFactors.confirmation).toBe(true)
+
+      core.connections.authenticationFactors.confirmation = 123
+
+      expect(core.connections.authenticationFactors.confirmation).toBe(true)
+    })
+
+    test('confirmation property must throw error when setted to false and there is not any active authentication factor', () => {
+      const ERROR = 'One authentication factor require at least'
+
+      expect(() => {
+        core.connections.authenticationFactors.confirmation = false
+      }).toThrow(ERROR)
+    })
+
+    test('passport property default value must be false', () => {
+      expect(core.connections.authenticationFactors.passport).toBe(false)
+    })
+
+    test('passport property must ignore non boolean/null value types', () => {
+      core.connections.authenticationFactors.passport = 'wrong'
+
+      expect(core.connections.authenticationFactors.passport).toBe(false)
+
+      core.connections.authenticationFactors.passport = [ 'wrong' ]
+
+      expect(core.connections.authenticationFactors.passport).toBe(false)
+
+      core.connections.authenticationFactors.passport = 123
+
+      expect(core.connections.authenticationFactors.passport).toBe(false)
+    })
+
+    test('passport property must write/read boolean values into/from preference', () => {
+      core.connections.authenticationFactors.passport = true
+
+      expect(connectionsPreference.body.authenticationFactors.passport).toBe(true)
+
+      expect(core.connections.authenticationFactors.passport).toBe(true)
+
+      core.connections.authenticationFactors.passport = false
+
+      expect(connectionsPreference.body.authenticationFactors.passport).toBe(false)
+
+      expect(core.connections.authenticationFactors.passport).toBe(false)
+    })
+
+    test('passport property must reset to its default value when setted to null', () => {
+      core.connections.authenticationFactors.passport = true
+      core.connections.authenticationFactors.passport = null
+
+      expect(connectionsPreference.body.authenticationFactors.passport)
+        .toBe(connectionsPreference.defaults.authenticationFactors.passport)
+
+      expect(core.connections.authenticationFactors.passport)
+        .toBe(connectionsPreference.defaults.authenticationFactors.passport)
+    })
+
+    test('confirmation property must write/read boolean values into/from preference', () => {
+      core.connections.authenticationFactors.passport = true
+
+      core.connections.authenticationFactors.confirmation = false
+
+      expect(connectionsPreference.body.authenticationFactors.confirmation).toBe(false)
+
+      expect(core.connections.authenticationFactors.confirmation).toBe(false)
+
+      core.connections.authenticationFactors.confirmation = true
+
+      expect(connectionsPreference.body.authenticationFactors.confirmation).toBe(true)
+
+      expect(core.connections.authenticationFactors.confirmation).toBe(true)
+
+      core.connections.authenticationFactors.passport = null
+    })
+
+    test('confirmation property must reset to its default value when setted to null', () => {
+      core.connections.authenticationFactors.passport = true
+
+      core.connections.authenticationFactors.confirmation = false
+      core.connections.authenticationFactors.confirmation = null
+
+      expect(connectionsPreference.body.authenticationFactors.confirmation)
+        .toBe(connectionsPreference.defaults.authenticationFactors.confirmation)
+
+      expect(core.connections.authenticationFactors.confirmation)
+        .toBe(connectionsPreference.defaults.authenticationFactors.confirmation)
+
+      core.connections.authenticationFactors.passport = null
+    })
+
+    test('passport property must throw error when setted to false and there is not any active authentication factor', () => {
+      const ERROR = 'One authentication factor require at least'
+
+      core.connections.authenticationFactors.passport = true
+      core.connections.authenticationFactors.confirmation = false
+
+      expect(() => {
+        core.connections.authenticationFactors.passport = false
+      }).toThrow(ERROR)
+
+      core.connections.authenticationFactors.confirmation = null
+      core.connections.authenticationFactors.passport = null
+    })
+  })
+
+  afterAll(() => {
+    core.connections.removeTimeout = envConfigs.connectionsRemoveTimeout
   })
 })
 
