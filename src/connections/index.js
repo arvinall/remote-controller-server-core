@@ -214,15 +214,15 @@ export default function makeConnections () {
         !(request instanceof http.IncomingMessage)) throw new TypeError('request parameter is required and must be http.IncomingMessage')
 
       let connection = socket instanceof Connection ? socket : undefined
-      let initial = true
+      let isNew = true
 
       if (connection === undefined) {
         socket.request = request
         socket.request.previousSocketId = (new URLSearchParams(request.url.split('?')[1])).get('id')
 
-        initial = socket.request.previousSocketId === null
+        isNew = socket.request.previousSocketId === null
 
-        if (initial) { // Create new Connection instance
+        if (isNew) { // Create new Connection instance
           delete socket.request.previousSocketId
 
           connection = new Connection({
@@ -253,7 +253,7 @@ export default function makeConnections () {
         }
       }
 
-      if (initial) {
+      if (isNew) {
         connectionsList.set(connection.id, connection)
 
         let removeTimeOut
@@ -318,9 +318,7 @@ export default function makeConnections () {
       if (!(connection instanceof Connection) &&
       typeof connection !== 'string') throw new TypeError('connection parameter is required and must be Connection/string')
 
-      if (typeof connection === 'string') {
-        connection = connectionsList.get(connection)
-      }
+      if (typeof connection === 'string') connection = connectionsList.get(connection)
 
       let result = false
 
