@@ -417,6 +417,15 @@ describe('connections add method', () => {
   })
 })
 
+describe('connections remove method', () => {
+  test('Must throw error when connection parameter is not Connection/string', () => {
+    const ERROR = 'connection parameter is required and must be Connection/string'
+
+    expect(core.connections.remove.bind(core.connections)).toThrow(ERROR)
+    expect(core.connections.remove.bind(core.connections, [ 'wrong' ])).toThrow(ERROR)
+  })
+})
+
 afterAll(async () => {
   const connectedConnections = core.connections.get().length
 
