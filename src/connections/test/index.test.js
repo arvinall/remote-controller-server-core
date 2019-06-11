@@ -6,6 +6,7 @@ import makeStorages from '../../storages'
 import WebSocket from 'ws'
 import * as helpers from './helpers'
 import envConfigs from '../../test/configs'
+import Passport from '../../passport'
 
 const core = Object.create(null)
 const preferencesStorageName = generateId()
@@ -203,6 +204,104 @@ describe('connections properties', () => {
 
       core.connections.authenticationFactors.confirmation = null
       core.connections.authenticationFactors.passport = null
+    })
+  })
+
+  describe('removeTimeout', () => {
+    test('Default value must be 1800000(ms)', () => {
+      expect(core.connections.removeTimeout).toBe(1800000)
+    })
+
+    test('Must ignore non number/null value types', () => {
+      core.connections.removeTimeout = 'wrong'
+
+      expect(core.connections.removeTimeout).toBe(1800000)
+
+      core.connections.removeTimeout = [ 'wrong' ]
+
+      expect(core.connections.removeTimeout).toBe(1800000)
+
+      core.connections.removeTimeout = false
+
+      expect(core.connections.removeTimeout).toBe(1800000)
+    })
+
+    test('Must write/read number values into/from preference', () => {
+      core.connections.removeTimeout = 123
+
+      expect(connectionsPreference.body.removeTimeout).toBe(123)
+
+      expect(core.connections.removeTimeout).toBe(123)
+
+      core.connections.removeTimeout = 1800000
+    })
+
+    test('Must reset to its default value when setted to null', () => {
+      core.connections.removeTimeout = 123
+      core.connections.removeTimeout = null
+
+      expect(connectionsPreference.body.removeTimeout)
+        .toBe(connectionsPreference.defaults.removeTimeout)
+
+      expect(core.connections.removeTimeout)
+        .toBe(connectionsPreference.defaults.removeTimeout)
+    })
+  })
+
+  describe('passport', () => {
+    test('Default value must be undefined', () => {
+      expect(core.connections.passport).toBeUndefined()
+    })
+
+    test('Must ignore non passport/null value types', () => {
+      core.connections.passport = 'wrong'
+
+      expect(core.connections.passport).toBeUndefined()
+
+      core.connections.passport = [ 'wrong' ]
+
+      expect(core.connections.passport).toBeUndefined()
+
+      core.connections.passport = 123
+
+      expect(core.connections.passport).toBeUndefined()
+
+      core.connections.passport = false
+
+      expect(core.connections.passport).toBeUndefined()
+    })
+
+    test('Must write/read passport values into/from preference', () => {
+      const password = 'aB_54321'
+      const passport = new Passport('password', password)
+
+      core.connections.passport = passport
+
+      expect(connectionsPreference.body.passport).toEqual(expect.objectContaining({
+        type: passport.type,
+        hash: passport.hash.toJSON().data,
+        salt: passport.salt.toJSON().data
+      }))
+
+      expect(core.connections.passport.isEqual(password)).toBe(true)
+    })
+
+    test('Must reset to its default value when setted to null', () => {
+      const password = 'aB_54321'
+      const passport = new Passport('password', password)
+
+      core.connections.passport = passport
+      core.connections.passport = null
+
+      expect(connectionsPreference.body.passport)
+        .toBe(connectionsPreference.defaults.passport)
+
+      expect(core.connections.passport)
+        .toBe(connectionsPreference.defaults.passport)
+    })
+
+    afterAll(() => {
+      core.connections.passport = null
     })
   })
 
