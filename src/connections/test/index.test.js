@@ -7,6 +7,7 @@ import WebSocket from 'ws'
 import * as helpers from './helpers'
 import envConfigs from '../../test/configs'
 import Passport from '../../passport'
+import Connection from '../connection'
 
 const core = Object.create(null)
 const preferencesStorageName = generateId()
@@ -370,6 +371,48 @@ describe('connections add method', () => {
 
         done()
       })
+    })
+  })
+
+  describe('Success', () => {
+    test('Initial/Add new connection via ws.WebSocket instance', async () => {
+      expect.assertions(2)
+
+      const socket = (await getSomeSockets())[0]
+      const request = socket.request
+      const connection = core.connections.add(socket, request)
+
+      expect(connection).toBeInstanceOf(Connection)
+      expect(connection.socket).toBe(socket)
+    })
+
+    test('Add connection via Connection instance', async () => {
+      expect.assertions(1)
+
+      const socket = (await getSomeSockets())[0]
+      const connection = new Connection({ socket })
+
+      expect(core.connections.add(connection)).toBe(connection)
+    })
+
+    test('Change previous disconnected connection socket via id', async () => {
+      expect.assertions(3)
+
+      let socket = (await getSomeSockets())[0]
+      let request = socket.request
+
+      const firstConnection = core.connections.add(socket, request)
+
+      firstConnection.disconnect()
+
+      socket = (await getSomeSockets(1, firstConnection.id))[0]
+      request = socket.request
+
+      const secondConnection = core.connections.add(socket, request)
+
+      expect(secondConnection).toBe(firstConnection)
+      expect(secondConnection.socket).toBe(socket)
+      expect(secondConnection.isConnect).toBe(true)
     })
   })
 })
