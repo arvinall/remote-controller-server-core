@@ -426,6 +426,15 @@ describe('connections add method', () => {
   })
 })
 
+describe('connections get method', () => {
+  test('Must throw error when id parameter is not string', () => {
+    const ERROR = 'id parameter must be string'
+
+    expect(core.connections.get.bind(core.connections, 123)).toThrow(ERROR)
+    expect(core.connections.get.bind(core.connections, [ 'wrong' ])).toThrow(ERROR)
+  })
+})
+
 describe('connections remove method', () => {
   test('Must throw error when connection parameter is not Connection/string', () => {
     const ERROR = 'connection parameter is required and must be Connection/string'

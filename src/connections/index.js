@@ -361,6 +361,7 @@ export default function makeConnections () {
      * `{@link module:connections~Connections#get|connections.get()}[Symbol.iterator]`
      *
      * @param  {string} [id]
+     *
      * @return {(module:connections/connection|object<string, module:connections/connection>)}
      */
     get (id) {
