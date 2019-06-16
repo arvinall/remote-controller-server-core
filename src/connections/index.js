@@ -126,6 +126,10 @@ export default function makeConnections () {
         }
       }
     }
+    /**
+     * @type {module:passport}
+     */
+    #passport
 
     /**
      * Authentication factors requirement
@@ -144,11 +148,15 @@ export default function makeConnections () {
      * @type {module:passport}
      */
     get passport () {
-      const passportDetails = preference.body.passport
+      if (!(this.#passport instanceof Passport)) {
+        const passportDetails = preference.body.passport
 
-      return passportDetails
-        ? Passport.from(passportDetails.type, passportDetails)
-        : undefined
+        this.#passport = passportDetails
+          ? Passport.from(passportDetails.type, passportDetails)
+          : undefined
+      }
+
+      return this.#passport
     }
 
     set passport (value) {
@@ -165,6 +173,10 @@ export default function makeConnections () {
 
           return body
         })
+
+        this.#passport = value !== null
+          ? value
+          : preference.defaults.passport
       }
     }
 

@@ -301,6 +301,15 @@ describe('connections properties', () => {
         .toBe(connectionsPreference.defaults.passport)
     })
 
+    test('Must return same instance of Passport on every setting and getting', () => {
+      const password = 'aB_54321'
+      const passport = new Passport('password', password)
+
+      core.connections.passport = passport
+
+      expect(core.connections.passport).toBe(passport)
+    })
+
     afterAll(() => {
       core.connections.passport = null
     })
