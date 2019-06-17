@@ -318,41 +318,6 @@ export default function makeConnections () {
     }
 
     /**
-     * Remove connection from list
-     *
-     * @param {(module:connections/connection|string)} connection Instance of Connection or connection's id
-     *
-     * @emits module:connections~Connections#event:removed
-     *
-     * @return {boolean}
-     */
-    remove (connection) {
-      if (!(connection instanceof Connection) &&
-      typeof connection !== 'string') throw new TypeError('connection parameter is required and must be Connection/string')
-
-      if (typeof connection === 'string') connection = connectionsList.get(connection)
-
-      let result = false
-
-      if (connection instanceof Connection) {
-        connection.disconnect()
-
-        result = connectionsList.delete(connection.id)
-
-        /**
-         * Connections removed event
-         *
-         * @event module:connections~Connections#event:removed
-         *
-         * @type {module:connections/connection}
-         */
-        this.emit('removed', connection)
-      }
-
-      return result
-    }
-
-    /**
      * @summary Get specific connection or all connected list
      * @description
      * Object that returned when call this method without id parameter is iterable (over values) <br>
@@ -385,6 +350,41 @@ export default function makeConnections () {
       }
 
       return connectedList
+    }
+
+    /**
+     * Remove connection from list
+     *
+     * @param {(module:connections/connection|string)} connection Instance of Connection or connection's id
+     *
+     * @emits module:connections~Connections#event:removed
+     *
+     * @return {boolean}
+     */
+    remove (connection) {
+      if (!(connection instanceof Connection) &&
+      typeof connection !== 'string') throw new TypeError('connection parameter is required and must be Connection/string')
+
+      if (typeof connection === 'string') connection = connectionsList.get(connection)
+
+      let result = false
+
+      if (connection instanceof Connection) {
+        connection.disconnect()
+
+        result = connectionsList.delete(connection.id)
+      }
+
+      /**
+       * Connections removed event
+       *
+       * @event module:connections~Connections#event:removed
+       *
+       * @type {module:connections/connection}
+       */
+      if (result) this.emit('removed', connection)
+
+      return result
     }
 
     /**
