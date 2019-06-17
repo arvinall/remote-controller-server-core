@@ -501,6 +501,45 @@ describe('connections remove method', () => {
     expect(core.connections.remove.bind(core.connections)).toThrow(ERROR)
     expect(core.connections.remove.bind(core.connections, [ 'wrong' ])).toThrow(ERROR)
   })
+
+  describe('Success', () => {
+    test('Must return false when id is not exist', async () => {
+      expect.assertions(2)
+
+      expect(core.connections.remove('wrong')).toBe(false)
+
+      const socket = (await getSomeSockets())[0]
+      const connection = new Connection({ socket })
+
+      expect(core.connections.remove(connection)).toBe(false)
+    })
+
+    test('Must remove connection and return true when id is exist', async () => {
+      expect.assertions(4)
+
+      const sockets = await getSomeSockets(4)
+      const connections = [
+        core.connections.add(sockets[0], sockets[0].request),
+        core.connections.add(sockets[1], sockets[1].request)
+      ]
+
+      expect(core.connections.remove(connections[0])).toBe(true)
+      expect(core.connections.get(connections[0].id)).toBeUndefined()
+      expect(core.connections.remove(connections[1].id)).toBe(true)
+      expect(core.connections.get(connections[1].id)).toBeUndefined()
+    })
+
+    test('Must disconnect connection when remove it', async () => {
+      expect.assertions(1)
+
+      const socket = (await getSomeSockets())[0]
+      const connection = core.connections.add(socket, socket.request)
+
+      core.connections.remove(connection)
+
+      expect(connection.isConnect).toBe(false)
+    })
+  })
 })
 
 describe('connections send method', () => {
