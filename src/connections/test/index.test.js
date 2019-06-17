@@ -433,6 +433,65 @@ describe('connections get method', () => {
     expect(core.connections.get.bind(core.connections, 123)).toThrow(ERROR)
     expect(core.connections.get.bind(core.connections, [ 'wrong' ])).toThrow(ERROR)
   })
+
+  describe('Success', () => {
+    beforeEach(() => {
+      for (const connection of core.connections.get()) {
+        connection.disconnect()
+      }
+    })
+
+    test('Must return undefined when id is not exist', async () => {
+      expect.assertions(1)
+
+      expect(core.connections.get('wrong')).toBeUndefined()
+    })
+
+    test('Must return connection by id', async () => {
+      expect.assertions(1)
+
+      const socket = (await getSomeSockets())[0]
+      const request = socket.request
+      const connection = core.connections.add(socket, request)
+
+      expect(core.connections.get(connection.id)).toBe(connection)
+    })
+
+    test('Must return an object without any key and length prototype property and it must be iterable', () => {
+      const connections = core.connections.get()
+
+      expect(Object.keys(connections).length).toBe(0)
+      expect(connections.length).toBe(0)
+      expect(connections[Symbol.iterator]).toBeInstanceOf(Function)
+      expect(connections[Symbol.iterator]().next).toBeInstanceOf(Function)
+    })
+
+    test('Must return connected connections', async () => {
+      expect.assertions(8)
+
+      const sockets = await getSomeSockets(3)
+      const connections = Object.create({ length: sockets.length })
+
+      for (const socket of sockets) {
+        const connection = core.connections.add(socket, socket.request)
+
+        connections[connection.id] = connection
+      }
+
+      const connectedConnections = core.connections.get()
+
+      expect(connectedConnections.length).toBe(connections.length)
+      expect(Object.keys(connectedConnections).length).toBe(connections.length)
+
+      for (const connectionId of Object.keys(connectedConnections)) {
+        expect(connectedConnections[connectionId]).toBe(connections[connectionId])
+      }
+
+      for (const connection of connectedConnections) {
+        expect(connection).toBe(connections[connection.id])
+      }
+    })
+  })
 })
 
 describe('connections remove method', () => {
