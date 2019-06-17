@@ -503,6 +503,15 @@ describe('connections remove method', () => {
   })
 })
 
+describe('connections send method', () => {
+  test('Must throw error when name parameter is not string', () => {
+    const ERROR = 'name parameter is required and must be string'
+
+    expect(core.connections.send.bind(core.connections)).toThrow(ERROR)
+    expect(core.connections.send.bind(core.connections, [ 'wrong' ])).toThrow(ERROR)
+  })
+})
+
 afterAll(async () => {
   const connectedConnections = core.connections.get().length
 
