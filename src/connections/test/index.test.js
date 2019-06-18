@@ -707,6 +707,92 @@ describe('connections send method', () => {
   })
 })
 
+describe('connections events', () => {
+  test('Must emit added event when new connection added', async () => {
+    expect.assertions(2)
+
+    const socket = (await getSomeSockets())[0]
+    const request = socket.request
+    const connection = []
+
+    core.connections.once('added', con => {
+      expect(con).toBeInstanceOf(Connection)
+
+      connection[1] = con
+    })
+
+    connection[0] = core.connections.add(socket, request)
+
+    expect(connection[1]).toBe(connection[0])
+  })
+
+  test('Must emit connected event when new connection added', async () => {
+    expect.assertions(1)
+
+    const socket = (await getSomeSockets())[0]
+    const request = socket.request
+    const connection = core.connections.add(socket, request)
+
+    await new Promise(resolve => core.connections.once('connected', con => {
+      expect(con).toBe(connection)
+
+      resolve()
+    }))
+  })
+
+  test('Must emit connected event when connection socket changed', async () => {
+    expect.assertions(2)
+
+    const socket = (await getSomeSockets())[0]
+    const request = socket.request
+    const connection = core.connections.add(socket, request)
+
+    await new Promise(resolve => core.connections.once('connected', con => {
+      expect(con).toBe(connection)
+
+      resolve()
+    }))
+
+    connection.socket = (await getSomeSockets())[0]
+
+    await new Promise(resolve => core.connections.once('connected', con => {
+      expect(con).toBe(connection)
+
+      resolve()
+    }))
+  })
+
+  test('Must emit removed event when connection removed', async () => {
+    expect.assertions(1)
+
+    const socket = (await getSomeSockets())[0]
+    const request = socket.request
+    const connection = core.connections.add(socket, request)
+
+    core.connections.once('removed', con => expect(con).toBeInstanceOf(Connection))
+
+    core.connections.remove(connection)
+
+    await new Promise(resolve => connection.once('disconnected', resolve))
+  })
+
+  test('Must emit disconnected event when connection disconnected', async () => {
+    expect.assertions(1)
+
+    const socket = (await getSomeSockets())[0]
+    const request = socket.request
+    const connection = core.connections.add(socket, request)
+
+    connection.once('connected', connection.disconnect.bind(connection))
+
+    await new Promise(resolve => core.connections.once('disconnected', con => {
+      expect(con).toBe(connection)
+
+      resolve()
+    }))
+  })
+})
+
 afterAll(async () => {
   const connectedConnections = core.connections.get().length
 
