@@ -388,7 +388,7 @@ export default function makeConnections () {
     }
 
     /**
-     * @summary Send broadcast message to clients (connected and authenticated)
+     * @summary Send broadcast message to clients (connected and authenticated connections)
      *
      * @param {string} name Message's name
      * @param {...*} [body] Message's content

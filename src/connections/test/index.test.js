@@ -1,4 +1,4 @@
-/* global test, expect, describe, beforeAll, beforeEach, afterAll, TMP_PATH, generateId */
+/* global test, expect, describe, beforeAll, beforeEach, afterAll, TMP_PATH, generateId, Buffer */
 
 import makeConnections from '../index'
 import makePreferences from '../../preferences'
@@ -7,7 +7,7 @@ import WebSocket from 'ws'
 import * as helpers from './helpers'
 import envConfigs from '../../test/configs'
 import Passport from '../../passport'
-import Connection from '../connection'
+import Connection, { bufferToUint8ArrayLike } from '../connection'
 
 const core = Object.create(null)
 const preferencesStorageName = generateId()
@@ -37,11 +37,11 @@ async function getSomeSockets (size = 1, id) {
     webSocketServer
   }, size)
 }
-/*
+
 async function getSomeMessages (size = 1, ws) {
   return helpers.getSomeMessages.call(ws, size)
 }
-*/
+
 beforeAll(async () => new Promise(resolve => {
   if (!webSocketServer._server.listening) webSocketServer._server.once('listening', resolve)
   else resolve()
@@ -548,6 +548,162 @@ describe('connections send method', () => {
 
     expect(core.connections.send.bind(core.connections)).toThrow(ERROR)
     expect(core.connections.send.bind(core.connections, [ 'wrong' ])).toThrow(ERROR)
+  })
+
+  describe('Success', () => {
+    beforeEach(() => {
+      for (const connection of core.connections.get()) {
+        connection.disconnect()
+      }
+    })
+
+    test('Must not send message when connection(s) is not authenticate', async done => {
+      const numberOfConnections = 3
+
+      let counter = 0
+
+      expect.assertions(0)
+
+      setTimeout(() => {
+        if (counter === numberOfConnections) done()
+      }, envConfigs.timeout / 2)
+
+      const sockets = await getSomeSockets(3)
+
+      for (const socket of sockets) {
+        core.connections.add(socket, socket.request)
+
+        getSomeMessages(1, socket.__webSocket__)
+          .then(() => {
+            counter++
+
+            getSomeMessages(1, socket.__webSocket__)
+              .then(() => counter++)
+          })
+      }
+
+      await core.connections.send('test')
+    })
+
+    test('Must send message via name', async done => {
+      const numberOfConnections = 3
+
+      expect.assertions(numberOfConnections)
+
+      const sockets = await getSomeSockets(3)
+
+      let counter = 0
+
+      for (const socket of sockets) {
+        core.connections.add(socket, socket.request).confirm()
+
+        getSomeMessages(numberOfConnections + 1, socket.__webSocket__)
+          .then(([ ,,, [ name ] ]) => {
+            expect(name).toBe('test')
+
+            counter++
+
+            if (counter >= numberOfConnections) done()
+          })
+      }
+
+      await core.connections.send('test')
+    })
+
+    test('Must send message via name and body', async done => {
+      const numberOfConnections = 3
+
+      expect.assertions(numberOfConnections * 3)
+
+      const sockets = await getSomeSockets(3)
+
+      let counter = 0
+
+      const body = [ 'Some data', Buffer.from('test') ]
+
+      for (const socket of sockets) {
+        core.connections.add(socket, socket.request).confirm()
+
+        getSomeMessages(numberOfConnections + 1, socket.__webSocket__)
+          .then(([ ,,, [ name, data ] ]) => {
+            expect(name).toBe('test')
+            expect(data[0]).toBe(body[0])
+            expect(data[1]).toEqual(bufferToUint8ArrayLike(body[1]))
+
+            counter++
+
+            if (counter >= numberOfConnections) done()
+          })
+      }
+
+      await core.connections.send('test', ...body)
+    })
+
+    test('Must send message via name and callback', async done => {
+      const numberOfConnections = 3
+
+      expect.assertions(numberOfConnections * 2)
+
+      const sockets = await getSomeSockets(3)
+
+      let counter = 0
+
+      for (const socket of sockets) {
+        core.connections.add(socket, socket.request).confirm()
+
+        getSomeMessages(numberOfConnections + 1, socket.__webSocket__)
+          .then(([ ,,, [ name ] ]) => {
+            expect(name).toBe('test')
+
+            socket.__webSocket__.send(JSON
+              .stringify([ 'test', [ 'client' ] ]))
+          })
+      }
+
+      await core.connections.send('test', function callback (data) {
+        expect(data).toBe('client')
+
+        counter++
+
+        if (counter >= numberOfConnections) done()
+      })
+    })
+
+    test('Must send message via name and body and callback', async done => {
+      const numberOfConnections = 3
+
+      expect.assertions((numberOfConnections * 2) * 3)
+
+      const sockets = await getSomeSockets(3)
+
+      let counter = 0
+
+      const body = [ 'Some data', Buffer.from('test') ]
+
+      for (const socket of sockets) {
+        core.connections.add(socket, socket.request).confirm()
+
+        getSomeMessages(numberOfConnections + 1, socket.__webSocket__)
+          .then(([ ,,, [ name, data ] ]) => {
+            expect(name).toBe('test')
+            expect(data[0]).toBe(body[0])
+            expect(data[1]).toEqual(bufferToUint8ArrayLike(body[1]))
+
+            socket.__webSocket__.send(JSON
+              .stringify([ 'test', [ 'client', bufferToUint8ArrayLike(body[1]) ] ]))
+          })
+      }
+
+      await core.connections.send('test', ...body, function callback (...data) {
+        expect(data[0]).toBe('client')
+        expect(data[1]).toBeInstanceOf(Buffer)
+        expect(data[1].equals(body[1])).toBe(true)
+
+        counter++
+
+        if (counter >= numberOfConnections) done()
+      })
+    })
   })
 })
 
