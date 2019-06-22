@@ -1497,8 +1497,8 @@ describe('Connection setReadStreamDefaults static method', () => {
 })
 
 describe('Connection readStreamChunks static method', () => {
-  test('Must throw error when readableStream parameter is not readableStream', () => {
-    const ERROR = 'readableStream parameter is required and must be readableStream'
+  test('Must throw error when readableStream parameter is not stream.Readable', () => {
+    const ERROR = 'readableStream parameter is required and must be stream.Readable'
 
     expect(() => Connection.readStreamChunks()).toThrow(ERROR)
     expect(() => Connection.readStreamChunks('wrong')).toThrow(ERROR)

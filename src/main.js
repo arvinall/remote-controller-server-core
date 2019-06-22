@@ -19,6 +19,32 @@
  */
 
 /**
+ * Nodejs stream module
+ *
+ * @external module:remote-controller-server-core~external:stream
+ *
+ * @see {@link https://nodejs.org/api/stream.html|Stream}
+ */
+/**
+ * Nodejs stream.Readable class
+ *
+ * @name Readable
+ * @memberOf module:remote-controller-server-core~external:stream
+ * @static
+ *
+ * @see {@link https://nodejs.org/api/stream.html#stream_readable_streams|Readable Streams}
+ */
+/**
+ * Nodejs stream.Writable class
+ *
+ * @name Writable
+ * @memberOf module:remote-controller-server-core~external:stream
+ * @static
+ *
+ * @see {@link https://nodejs.org/api/stream.html#stream_writable_streams|Writable Stream}
+ */
+
+/**
  * Nodejs http module
  *
  * @external module:remote-controller-server-core~external:http
@@ -35,7 +61,7 @@
  * @see {@link https://nodejs.org/api/http.html#http_class_http_server|HTTP Server}
  */
 /**
- * Nodejs IncomingMessage class
+ * Nodejs http.IncomingMessage class
  *
  * @name IncomingMessage
  * @memberOf module:remote-controller-server-core~external:http

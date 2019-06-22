@@ -523,7 +523,7 @@ export default class Connection extends AsyncEventEmitter {
   /**
    * A helper to read readable stream chunks
    *
-   * @param {module:remote-controller-server-core~external:readableStream} readableStream
+   * @param {module:remote-controller-server-core~external:stream.Readable} readableStream
    * @param {boolean} [multiChunk=true]
    *
    * @returns {module:connections/connection~streamChunksReader}
@@ -539,7 +539,7 @@ export default class Connection extends AsyncEventEmitter {
    */
   static readStreamChunks (readableStream, multiChunk = true) {
     if (!(readableStream instanceof stream.Readable)) {
-      throw new TypeError('readableStream parameter is required and must be readableStream')
+      throw new TypeError('readableStream parameter is required and must be stream.Readable')
     }
 
     /**
