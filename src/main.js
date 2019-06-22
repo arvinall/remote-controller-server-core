@@ -11,11 +11,11 @@
  * @see {@link https://nodejs.org/docs/latest-v10.x/api/events.html#events_class_eventemitter|EventEmitter}
  */
 /**
- * Nodejs readableStream class
+ * Nodejs Console class
  *
- * @external module:remote-controller-server-core~external:readableStream
+ * @external module:remote-controller-server-core~external:Console
  *
- * @see {@link https://nodejs.org/api/stream.html#stream_readable_streams|Readable Streams}
+ * @see {@link https://nodejs.org/api/console.html#console_class_console|Console}
  */
 
 /**
@@ -187,3 +187,4 @@ export * as idGenerator from './idGenerator'
 export * as connections from './connections'
 export * as asyncEventEmitter from './asyncEventEmitter'
 export * as helpers from './helpers'
+export * as logger from './logger'
