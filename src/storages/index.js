@@ -4,6 +4,7 @@
  */
 
 import Storage from './storage'
+import { logSymbol } from '../logger'
 
 /**
  * makeStorages creates storages module
@@ -197,6 +198,14 @@ export default function makeStorages (configs = Object.create(null)) {
      */
     get path () {
       return configs.path
+    }
+
+    get [logSymbol] () {
+      return {
+        storages: {
+          path: this.path
+        }
+      }
     }
   }
 

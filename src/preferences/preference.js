@@ -5,6 +5,7 @@
 
 import EventEmitter from 'events'
 import Storage from '../storages/storage'
+import { logSymbol } from '../logger'
 
 const GLOBAL_ERRORS = {
   accessibility: new Error('Preference is not accessible')
@@ -269,5 +270,14 @@ export default class Preference extends EventEmitter {
    */
   updateSync (body) {
     return this.#update(body)
+  }
+
+  get [logSymbol] () {
+    return {
+      preference: {
+        name: this.name
+      },
+      ...this.#storage[logSymbol]
+    }
   }
 }

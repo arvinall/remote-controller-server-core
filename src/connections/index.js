@@ -1,3 +1,4 @@
+/* global console */
 
 /**
  * @module connections
@@ -9,6 +10,7 @@ import WebSocket from 'ws'
 import Connection from './connection'
 import Passport from '../passport'
 import * as helpers from '../helpers'
+import { logSymbol } from '../logger'
 
 const GLOBAL_ERRORS = {
   authenticationFactorsRequirement: new Error('One authentication factor require at least')
@@ -20,6 +22,7 @@ const GLOBAL_ERRORS = {
  * @return {module:connections~Connections}
  */
 export default function makeConnections () {
+  const logger = this.logger
   const connectionsList = new Map()
   const preference = (defaults => {
     const NAME = 'connections'
@@ -405,9 +408,89 @@ export default function makeConnections () {
         }
       })()
     }
+
+    get [logSymbol] () {
+      return {
+        connections: {
+          authenticationFactors: this.authenticationFactors,
+          removeTimeout: this.removeTimeout
+        }
+      }
+    }
   }
 
-  return new Connections()
+  const connections = new Connections()
+
+  // Logging
+  ;(() => {
+    const loggedList = new WeakSet()
+
+    connections.on('connected', connection => {
+      if (process.env.NODE_ENV === 'development') {
+        console.log(connection.id, 'Connected', connection.address)
+      }
+
+      logger.info('makeConnections', {
+        module: 'connections',
+        event: 'connected'
+      }, connection)
+
+      if (!loggedList.has(connection)) {
+        connection.on('authentication', event => {
+          let state
+
+          switch (event.factor) {
+            case undefined:
+              state = [
+                'connection authenticated',
+                'connection unauthenticated'
+              ][event.status - 1]
+              break
+            case 'confirmation':
+              state = [
+                'connection ask for confirmation',
+                'connection confirmation allowed',
+                'connection confirmation denied'
+              ][event.status]
+              break
+            case 'passport':
+              state = [
+                'connection ask for passport',
+                'connection passport allowed',
+                'connection passport denied'
+              ][event.status]
+              break
+          }
+
+          if (process.env.NODE_ENV === 'development') {
+            console.log(connection.id, state)
+          }
+
+          logger.info('makeConnections', {
+            module: 'connections',
+            event: 'authentication',
+            status: state
+          }, connection, { _event: event })
+        })
+
+        loggedList.add(connection)
+      }
+    })
+    connections.on('disconnected', connection => {
+      const state = 'disconnected'
+
+      if (process.env.NODE_ENV === 'development') {
+        console.log(connection.id, state, connection.address)
+      }
+
+      logger.info('makeConnections', {
+        module: 'connections',
+        event: state
+      }, connection)
+    })
+  })()
+
+  return connections
 }
 
 export Connection from './connection'

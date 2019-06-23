@@ -27,6 +27,7 @@ export default function makePreferences (configs) {
   if (typeof configs.name !== 'string') throw new TypeError('configs.name must be string')
   else if (this.storages.has(configs.name)) throw new Error(`${configs.name} is already in use`)
 
+  const logger = this.logger
   const PREFERENCES_GLOBAL_ERRORS = {
     accessibility: new Error(`Preference is not accessible`),
     existence: name => new Error(`${name} is not exist in list`)
@@ -41,7 +42,9 @@ export default function makePreferences (configs) {
         } catch (error) {
           throw error
         }
-      } else throw error
+      } else {
+        throw error
+      }
     }
   })()
 
@@ -184,6 +187,7 @@ export default function makePreferences (configs) {
      *
      * @emits module:preferences~Preferences#event:updated
      * @emits module:preferences~Preferences#event:removed
+     * @emits module:preferences~Preferences#event:added
      *
      * @listens module:preferences/preference#event:updated
      * @listens module:preferences/preference#event:removed
@@ -195,7 +199,7 @@ export default function makePreferences (configs) {
         typeof preference !== 'string') throw new TypeError('preference parameter is required and must be Preference/string')
       else if (typeof body !== 'object') throw new TypeError('body parameter must be object')
 
-      let name = preference.name || preference
+      const name = preference.name || preference
 
       if (!(preference instanceof Preference)) preference = undefined
 
@@ -216,6 +220,15 @@ export default function makePreferences (configs) {
         ...event
       }))
       preference.on('removed', event => this.emit('removed', event))
+
+      /**
+       * Preference added event
+       *
+       * @event module:preferences~Preferences#event:added
+       *
+       * @type module:preferences/preference
+       */
+      this.emit('added', preference)
 
       return preference
     }
@@ -256,7 +269,33 @@ export default function makePreferences (configs) {
     }
   }
 
-  return new Preferences()
+  const preferences = new Preferences()
+
+  // Logging
+  ;(() => {
+    preferences.on('added', preference => {
+      logger.info('makePreferences', {
+        module: 'preferences',
+        event: 'added'
+      }, preference)
+    })
+
+    preferences.on('removed', ({ name }) => {
+      logger.info('makePreferences', {
+        module: 'preferences',
+        event: 'removed'
+      }, { preference: { name } })
+    })
+
+    preferences.on('updated', ({ name }) => {
+      logger.info('makePreferences', {
+        module: 'preferences',
+        event: 'updated'
+      }, { preference: { name } })
+    })
+  })()
+
+  return preferences
 }
 
 export Preference from './preference'

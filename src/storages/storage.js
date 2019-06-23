@@ -7,6 +7,7 @@ import { promisify } from 'util'
 import fs from 'fs'
 import path from 'path'
 import EventEmitter from 'events'
+import { logSymbol } from '../logger'
 
 const ENCODING = 'utf8'
 const GLOBAL_ERRORS = {
@@ -303,5 +304,14 @@ export default class Storage extends EventEmitter {
    */
   updateSync (body) {
     return this.#update(body)
+  }
+
+  get [logSymbol] () {
+    return {
+      storage: {
+        name: this.name,
+        address: this.#address
+      }
+    }
   }
 }

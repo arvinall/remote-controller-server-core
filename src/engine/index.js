@@ -1,4 +1,3 @@
-/* global console */
 
 /**
  * @module engine
@@ -9,6 +8,7 @@ import EventEmitter from 'events'
 import os from 'os'
 import http from 'http'
 import WebSocket from 'ws'
+import { logSymbol } from '../logger'
 
 /**
  * makeEngine creates engine module
@@ -32,6 +32,7 @@ export default function makeEngine (configs = Object.create(null)) {
   else if (typeof configs.path !== 'string') throw new TypeError('configs.path must be string')
   else if (!configs.path.startsWith('/')) throw new Error('configs.path must starts with "/"')
 
+  const logger = this.logger
   const connections = this.connections
   const httpServer = http.createServer()
   const webSocketServer = new WebSocket.Server({
@@ -52,52 +53,39 @@ export default function makeEngine (configs = Object.create(null)) {
     constructor () {
       super()
 
-      const connectionsList = new WeakSet()
-
       webSocketServer.on('connection', (...parameters) => {
-        try {
-          connections.add(...parameters)
-        } catch (error) {}
-      })
-
-      if (process.env.NODE_ENV === 'development') {
-        connections.on('connected', connection => {
-          console.log(connection.id, 'Connected', connection.address)
-
-          if (!connectionsList.has(connection)) {
-            connection.on('authentication', event => {
-              switch (event.factor) {
-                case undefined:
-                  console.log(connection.id, [
-                    'Connection authenticated',
-                    'Connection unauthenticated'
-                  ][event.status - 1])
-                  break
-                case 'confirmation':
-                  console.log(connection.id, [
-                    'Connection ask for confirmation',
-                    'Connection confirmation allowed',
-                    'Connection confirmation denied'
-                  ][event.status])
-                  break
-                case 'passport':
-                  console.log(connection.id, [
-                    'Connection ask for passport',
-                    'Connection passport allowed',
-                    'Connection passport denied'
-                  ][event.status])
-                  break
-              }
-            })
+        const logParameters = {
+          socket: {
+            readyState: parameters[0].readyState,
+            bufferedAmount: parameters[0].bufferedAmount,
+            extensions: parameters[0].extensions
+          },
+          request: {
+            url: parameters[1].url,
+            socket: {
+              address: parameters[1].socket.address,
+              remoteAddress: parameters[1].socket.remoteAddress,
+              remoteFamily: parameters[1].socket.remoteFamily,
+              remotePort: parameters[1].socket.remotePort,
+              localAddress: parameters[1].socket.localAddress,
+              localPort: parameters[1].socket.localPort
+            }
           }
-        })
-        connections.on('disconnected', connection => {
-          console.log(connection.id, 'Disconnected', connection.address)
-        })
-      }
+        }
 
-      connections.on('connected', connection => {
-        if (!connectionsList.has(connection)) connectionsList.add(connection)
+        try {
+          logger.info('engine', {
+            module: 'ws.Server',
+            event: 'connection'
+          }, logParameters)
+
+          connections.add(...parameters)
+        } catch (error) {
+          logger.error('engine', {
+            module: 'connections',
+            method: 'add'
+          }, error, logParameters)
+        }
       })
     }
 
@@ -202,9 +190,37 @@ export default function makeEngine (configs = Object.create(null)) {
     get httpServer () {
       return httpServer
     }
+
+    get [logSymbol] () {
+      return {
+        engine: {
+          address: this.address,
+          isActive: this.isActive
+        }
+      }
+    }
   }
 
-  return new Engine()
+  const engine = new Engine()
+
+  // Logging
+  ;(() => {
+    engine.on('started', () => {
+      logger.info('makeEngine', {
+        module: 'engine',
+        event: 'started'
+      }, engine)
+    })
+
+    engine.on('stopped', () => {
+      logger.info('makeEngine', {
+        module: 'engine',
+        event: 'stopped'
+      }, engine)
+    })
+  })()
+
+  return engine
 }
 
 // Get Network IP

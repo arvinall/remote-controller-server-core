@@ -10,6 +10,7 @@ import WebSocket from 'ws'
 import Passport from '../passport'
 import idGenerator from '../idGenerator'
 import stream from 'stream'
+import { logSymbol } from '../logger'
 
 const CLIENT_AUTHENTICATION_FACTORS = [ 'passport' ]
 const generateId = idGenerator()
@@ -479,6 +480,17 @@ export default class Connection extends AsyncEventEmitter {
     if (this.isConnect) this.#emitConnected()
     this.#emitFirstAuthenticationFactorAsk()
     this.#emitAuthentication()
+  }
+
+  get [logSymbol] () {
+    return {
+      connection: {
+        id: this.id,
+        address: this.address,
+        isConnect: this.isConnect,
+        isAuthenticate: this.isAuthenticate
+      }
+    }
   }
 
   /**
