@@ -102,4 +102,76 @@ export default class Logger extends EventEmitter {
 
     return message
   }
+
+  /**
+   * Log errors
+   *
+   * @param {string} [scope]
+   * @param {...any} errors
+   *
+   * @return {(object|undefined)} Returns produced object or undefined if errors parameter left empty
+   */
+  error (scope, ...errors) {
+    if (typeof this.#errorPath !== 'string') return
+
+    const error = Object.create(null)
+
+    if (typeof scope !== 'string') errors.unshift(scope)
+
+    if (!errors.length) return
+
+    const errorsMustRemove = []
+
+    for (const errorId in errors) {
+      if (errors[errorId][logSymbol] !== undefined) {
+        errors[errorId] = errors[errorId][logSymbol]
+      }
+
+      if (errors[errorId] instanceof Error) {
+        errorsMustRemove.unshift(errorId)
+
+        const _error = errors[errorId]
+        const result = Object.create(null)
+
+        Object.assign(result, _error)
+
+        for (const key of Object.getOwnPropertyNames(Object.getPrototypeOf(_error))) {
+          result[key] = _error[key]
+        }
+
+        for (const key of Object.getOwnPropertyNames(_error)) {
+          result[key] = _error[key]
+        }
+
+        Object.assign(error, result)
+      } else if (errors[errorId] instanceof Object &&
+        !(errors[errorId] instanceof Array)) {
+        errorsMustRemove.unshift(errorId)
+
+        Object.assign(error, errors[errorId])
+      }
+    }
+
+    for (const errorId of errorsMustRemove) {
+      errors.splice(errorId, 1)
+    }
+
+    error.errors = errors.length ? errors : undefined
+
+    Object.assign(error, {
+      scope: typeof scope === 'string' ? scope : undefined,
+      date: Date(Date.now())
+    })
+
+    this.#logger.error(JSON.stringify(error, null, 2) + ',')
+
+    return error
+  }
 }
+
+/**
+ * Use this symbol as key on any object for custom logging
+ *
+ * @type {symbol}
+ */
+export const logSymbol = Symbol('log')
