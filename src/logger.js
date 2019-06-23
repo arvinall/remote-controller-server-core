@@ -6,8 +6,7 @@
 import EventEmitter from 'events'
 import fs from 'fs'
 import path from 'path'
-import stream from 'stream'
-import { Console } from 'console'
+import { promisify } from 'util'
 
 /**
  * Simple logger
@@ -16,17 +15,25 @@ import { Console } from 'console'
  */
 export default class Logger extends EventEmitter {
   /**
-   * @type module:remote-controller-server-core~external:Console
+   * @type string
    */
-  #logger
+  #infoPath
   /**
-   * @type module:remote-controller-server-core~external:stream.Writable
+   * @type string
    */
-  #infoStream
-  /**
-   * @type module:remote-controller-server-core~external:stream.Writable
-   */
-  #errorStream
+  #errorPath
+  #logger = {
+    info: async message => {
+      if (typeof this.#infoPath !== 'string') return
+
+      return promisify(fs.appendFile)(this.#infoPath, message)
+    },
+    error: async error => {
+      if (typeof this.#errorPath !== 'string') return
+
+      return promisify(fs.appendFile)(this.#errorPath, error)
+    }
+  }
 
   /**
    * @param {string} [directory]
@@ -40,34 +47,12 @@ export default class Logger extends EventEmitter {
     try {
       if (fs.statSync(directory).isDirectory()) {
         // Info
-        this.#infoStream = fs.createWriteStream(path.join(directory, 'info.log'), { flags: 'a' })
-
-        this.#infoStream.on('error', error => {
-          if (error.code === 'ENOENT') this.#infoStream = undefined
-        })
+        this.#infoPath = path.join(directory, 'info.log')
 
         // Error
-        this.#errorStream = fs.createWriteStream(path.join(directory, 'error.log'), { flags: 'a' })
-
-        this.#errorStream.on('error', error => {
-          if (error.code === 'ENOENT') this.#errorStream = undefined
-        })
+        this.#errorPath = path.join(directory, 'error.log')
       }
     } catch (e) {}
-
-    if (this.#infoStream instanceof stream.Writable ||
-      this.#errorStream instanceof stream.Writable) {
-      this.#logger = new Console({
-        stdout: this.#infoStream,
-        stderr: this.#errorStream,
-        colorMode: false
-      })
-    } else {
-      this.#logger = {
-        info () {},
-        error () {}
-      }
-    }
   }
 
   /**
@@ -75,21 +60,35 @@ export default class Logger extends EventEmitter {
    *
    * @param {string} [scope]
    * @param {...any} messages
+   *
    * @return {(object|undefined)} Returns produced object or undefined if messages parameter left empty
    */
   info (scope, ...messages) {
-    if (!(this.#infoStream instanceof stream.Writable) ||
-      !messages.length) return
+    if (typeof this.#infoPath !== 'string') return
 
     const message = Object.create(null)
 
     if (typeof scope !== 'string') messages.unshift(scope)
 
+    if (!messages.length) return
+
+    const messagesMustRemove = []
+
     for (const messageId in messages) {
+      if (messages[messageId][logSymbol] !== undefined) {
+        messages[messageId] = messages[messageId][logSymbol]
+      }
+
       if (messages[messageId] instanceof Object &&
         !(messages[messageId] instanceof Array)) {
-        Object.assign(message, messages.splice(messageId, 1)[0])
+        messagesMustRemove.unshift(messageId)
+
+        Object.assign(message, messages[messageId])
       }
+    }
+
+    for (const messageId of messagesMustRemove) {
+      messages.splice(messageId, 1)
     }
 
     message.messages = messages.length ? messages : undefined
