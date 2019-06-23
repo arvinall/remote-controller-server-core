@@ -1,5 +1,6 @@
 
 const path = require('path')
+const webpack = require('webpack')
 
 const isDevelopment = process.env.NODE_ENV === 'development'
 const EXCLUDE = [ /node_modules/ ]
@@ -33,7 +34,12 @@ const CONFIG = {
         ]
       }
     ]
-  }
+  },
+  plugins: [
+    new webpack.DefinePlugin({
+      'process.env.NODE_ENV': JSON.stringify(isDevelopment ? 'development' : 'production')
+    })
+  ]
 }
 
 // Clear source maps links
