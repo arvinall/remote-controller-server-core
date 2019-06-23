@@ -10,13 +10,6 @@
  *
  * @see {@link https://nodejs.org/docs/latest-v10.x/api/events.html#events_class_eventemitter|EventEmitter}
  */
-/**
- * Nodejs Console class
- *
- * @external module:remote-controller-server-core~external:Console
- *
- * @see {@link https://nodejs.org/api/console.html#console_class_console|Console}
- */
 
 /**
  * Nodejs stream module
@@ -33,15 +26,6 @@
  * @static
  *
  * @see {@link https://nodejs.org/api/stream.html#stream_readable_streams|Readable Streams}
- */
-/**
- * Nodejs stream.Writable class
- *
- * @name Writable
- * @memberOf module:remote-controller-server-core~external:stream
- * @static
- *
- * @see {@link https://nodejs.org/api/stream.html#stream_writable_streams|Writable Stream}
  */
 
 /**
@@ -96,6 +80,7 @@
  * @see {@link https://github.com/websockets/ws/blob/master/doc/ws.md#class-websocketserver|Class: WebSocket.Server}
  */
 
+import Logger from './logger'
 import makeStorages from './storages'
 import makePreferences from './preferences'
 import makeEngine from './engine'
@@ -110,6 +95,7 @@ const storagesList = Object.create(null)
  * @param {string} [configs.storagePath=process.cwd()] Storages path address
  * @param {string} [configs.preferenceStorageName='preferences'] Preferences storage name
  * @param {number} [configs.httpServerPort=7777] Default http server port
+ * @param {string} [configs.loggerPath=configs.storagePath] Logger directory path
  *
  * @return {module:remote-controller-server-core~core}
  */
@@ -123,17 +109,30 @@ export default function makeCore (configs = Object.create(null)) {
     httpServerPort: 7777
   }, configs)
 
+  configs = Object.assign({
+    loggerPath: configs.storagePath
+  }, configs)
+
   if (typeof configs.storagePath !== 'string') throw new TypeError('configs.storagePath must be string')
   else if (typeof configs.preferenceStorageName !== 'string') throw new TypeError('configs.preferencesStorageName must be string')
   else if (typeof configs.httpServerPort !== 'number') throw new TypeError('configs.httpServerPort must be number')
+  if (typeof configs.loggerPath !== 'string') throw new TypeError('configs.loggerPath must be string')
 
   /**
    * @namespace module:remote-controller-server-core~core
    */
   const core = Object.create(null)
 
+  core.logger = new Logger(configs.loggerPath)
+
   if (storagesList[configs.storagePath] === undefined) {
-    storagesList[configs.storagePath] = makeStorages.call(core, { path: configs.storagePath })
+    try {
+      storagesList[configs.storagePath] = makeStorages.call(core, { path: configs.storagePath })
+    } catch (error) {
+      core.logger.error('core', error, { module: 'storages' })
+
+      throw error
+    }
   }
 
   /**
@@ -146,35 +145,53 @@ export default function makeCore (configs = Object.create(null)) {
    */
   core.storages = storagesList[configs.storagePath]
 
-  /**
-   * Preference manager module
-   *
-   * @name preferences
-   * @memberOf module:remote-controller-server-core~core
-   *
-   * @type {module:preferences~Preferences}
-   */
-  core.preferences = makePreferences.call(core, { name: configs.preferenceStorageName })
+  try {
+    /**
+     * Preference manager module
+     *
+     * @name preferences
+     * @memberOf module:remote-controller-server-core~core
+     *
+     * @type {module:preferences~Preferences}
+     */
+    core.preferences = makePreferences.call(core, { name: configs.preferenceStorageName })
+  } catch (error) {
+    core.logger.error('core', error, { module: 'preferences' })
 
-  /**
-   * Connection manager module
-   *
-   * @name connections
-   * @memberOf module:remote-controller-server-core~core
-   *
-   * @type {module:connections~Connections}
-   */
-  core.connections = makeConnections.call(core)
+    throw error
+  }
 
-  /**
-   * Core engine
-   *
-   * @name engine
-   * @memberOf module:remote-controller-server-core~core
-   *
-   * @type {module:engine~Engine}
-   */
-  core.engine = makeEngine.call(core, { port: configs.httpServerPort })
+  try {
+    /**
+     * Connection manager module
+     *
+     * @name connections
+     * @memberOf module:remote-controller-server-core~core
+     *
+     * @type {module:connections~Connections}
+     */
+    core.connections = makeConnections.call(core)
+  } catch (error) {
+    core.logger.error('core', error, { module: 'connections' })
+
+    throw error
+  }
+
+  try {
+    /**
+     * Core engine
+     *
+     * @name engine
+     * @memberOf module:remote-controller-server-core~core
+     *
+     * @type {module:engine~Engine}
+     */
+    core.engine = makeEngine.call(core, { port: configs.httpServerPort })
+  } catch (error) {
+    core.logger.error('core', error, { module: 'engine' })
+
+    throw error
+  }
 
   return Object.freeze(core)
 }

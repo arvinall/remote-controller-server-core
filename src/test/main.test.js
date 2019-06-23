@@ -2,9 +2,7 @@
 
 import makeCore from '../main'
 
-const serverCore = makeCore({
-  storagePath: TMP_PATH
-})
+const serverCore = makeCore({ storagePath: TMP_PATH })
 
 test('Core must return core module correctly', () => {
   expect(serverCore).toEqual(expect.objectContaining({
