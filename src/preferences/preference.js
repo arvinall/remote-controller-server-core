@@ -273,11 +273,8 @@ export default class Preference extends EventEmitter {
   }
 
   get [logSymbol] () {
-    return {
-      preference: {
-        name: this.name
-      },
-      ...this.#storage[logSymbol]
-    }
+    return Object.assign({
+      preference: { name: this.name }
+    }, this.#storage && this.#storage[logSymbol])
   }
 }
