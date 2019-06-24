@@ -413,7 +413,10 @@ export default function makeConnections () {
       return {
         connections: {
           authenticationFactors: this.authenticationFactors,
-          removeTimeout: this.removeTimeout
+          removeTimeout: this.removeTimeout,
+          passport: this.passport !== undefined
+            ? this.passport.toString()
+            : undefined
         }
       }
     }
@@ -488,6 +491,12 @@ export default function makeConnections () {
         event: state
       }, connection)
     })
+
+    preference.on('updated', () => logger
+      .info('makeConnections', {
+        module: 'preference',
+        event: 'updated'
+      }, connections, preference))
   })()
 
   return connections
