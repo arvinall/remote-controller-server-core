@@ -67,22 +67,36 @@ export default function makePreferences (configs) {
     #preferencesList = {}
 
     /**
-     * Preference updated event
+     * @summary Preference updated event
+     * @description Target Preference pass as first parameter, and event pass as second parameter
      *
      * @event module:preferences~Preferences#event:updated
      *
-     * @type {object}
-     * @property {string} name Preference's name that updated
+     * @type {module:preferences/preference}
      *
      * @see module:preferences/preference#event:updated
      */
     /**
-     * Preference removed event
+     * @summary Preference removed event
+     * @description Target Preference pass as first parameter, and event pass as second parameter
      *
      * @event module:preferences~Preferences#event:removed
      *
+     * @type {module:preferences/preference}
+     *
      * @see module:preferences/preference#event:removed
      */
+
+    /**
+     * Transfer event from preference instance to preferences module
+     *
+     * @param {module:preferences/preference} preference
+     * @param {string} eventName
+     *
+     * @return {module:preferences/preference}
+     */
+    #transferEvent = (preference, eventName) => preference
+      .on(eventName, event => this.emit(eventName, preference, event))
 
     /**
      * Remove Preference from list and its Storage
@@ -168,11 +182,8 @@ export default function makePreferences (configs) {
         storage: preferencesStorage
       })
 
-      this.#preferencesList[name].on('updated', event => this.emit('updated', {
-        name,
-        ...event
-      }))
-      this.#preferencesList[name].on('removed', event => this.emit('removed', event))
+      this.#transferEvent(this.#preferencesList[name], 'updated')
+      this.#transferEvent(this.#preferencesList[name], 'removed')
 
       return this.#preferencesList[name]
     }
@@ -215,11 +226,8 @@ export default function makePreferences (configs) {
         })
       }
 
-      preference.on('updated', event => this.emit('updated', {
-        name,
-        ...event
-      }))
-      preference.on('removed', event => this.emit('removed', event))
+      this.#transferEvent(preference, 'updated')
+      this.#transferEvent(preference, 'removed')
 
       /**
        * Preference added event
@@ -273,26 +281,23 @@ export default function makePreferences (configs) {
 
   // Logging
   ;(() => {
-    preferences.on('added', preference => {
-      logger.info('makePreferences', {
+    preferences.on('added', preference => logger
+      .info('makePreferences', {
         module: 'preferences',
         event: 'added'
-      }, preference)
-    })
+      }, preference))
 
-    preferences.on('removed', ({ name }) => {
-      logger.info('makePreferences', {
+    preferences.on('removed', (preference, { name }) => logger
+      .info('makePreferences', {
         module: 'preferences',
         event: 'removed'
-      }, { preference: { name } })
-    })
+      }, preference, { preference: { name } }))
 
-    preferences.on('updated', ({ name }) => {
-      logger.info('makePreferences', {
+    preferences.on('updated', preference => logger
+      .info('makePreferences', {
         module: 'preferences',
         event: 'updated'
-      }, { preference: { name } })
-    })
+      }, preference))
   })()
 
   return preferences

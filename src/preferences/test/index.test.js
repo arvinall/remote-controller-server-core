@@ -314,13 +314,14 @@ test('preferences has method must return right value', () => {
 
 describe('preferences events', () => {
   test('Must emit removed event when a Preference removed', done => {
-    expect.assertions(1)
+    expect.assertions(2)
 
     const name = generateId()
     const body = { test: 'removed event' }
     const preference = preferences.add(name, body)
 
-    preferences.once('removed', event => {
+    preferences.once('removed', (_preference, event) => {
+      expect(_preference).toBe(preference)
       expect(event).toEqual({
         name: name,
         body: body
@@ -332,7 +333,7 @@ describe('preferences events', () => {
   })
 
   test('Must emit updated event when a Preference updated', done => {
-    expect.assertions(1)
+    expect.assertions(2)
 
     const name = generateId()
     const body = { test: 'updated event' }
@@ -341,9 +342,9 @@ describe('preferences events', () => {
       update: 'Updated successfully'
     })
 
-    preferences.once('updated', event => {
+    preferences.once('updated', (_preference, event) => {
+      expect(_preference).toBe(preference)
       expect(event).toEqual({
-        name,
         lastBody: body,
         updatedBody
       })
