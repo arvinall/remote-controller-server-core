@@ -4,6 +4,7 @@
  */
 
 import Storage from './storage'
+import EventEmitter from 'events'
 import { logSymbol } from '../logger'
 
 /**
@@ -22,6 +23,7 @@ export default function makeStorages (configs = Object.create(null)) {
 
   if (typeof configs.path !== 'string') throw new TypeError('configs.path must be string')
 
+  const logger = this.logger
   const STORAGES_GLOBAL_ERRORS = {
     accessibility: new Error('Storage is not accessible'),
     existence: name => new Error(`${name} is not exist in list`)
@@ -33,14 +35,46 @@ export default function makeStorages (configs = Object.create(null)) {
    * @memberOf module:storages
    * @inner
    */
-  class Storages {
+  class Storages extends EventEmitter {
     /**
      * @type {Object}
      */
     #storagesList = {}
 
     // JSDoc doesnt use this class without constructor :/
-    constructor () {} // eslint-disable-line no-useless-constructor
+    constructor () { super() } // eslint-disable-line no-useless-constructor
+
+    /**
+     * @summary Storage updated event
+     * @description Target Storage pass as first parameter, and event pass as second parameter
+     *
+     * @event module:storages~Storages#event:updated
+     *
+     * @type {module:storages/storage}
+     *
+     * @see module:storages/storage#event:updated
+     */
+    /**
+     * @summary Storage removed event
+     * @description Target Storage pass as first parameter, and event pass as second parameter
+     *
+     * @event module:storages~Storages#event:removed
+     *
+     * @type {module:storages/storage}
+     *
+     * @see module:storages/storage#event:removed
+     */
+
+    /**
+     * Transfer event from storage instance to storages module
+     *
+     * @param {module:storages/storage} storage
+     * @param {string} eventName
+     *
+     * @return {module:storages/storage}
+     */
+    #transferEvent = (storage, eventName) => storage
+      .on(eventName, event => this.emit(eventName, storage, event))
 
     /**
      * Remove Storage from list and it's file
@@ -106,6 +140,12 @@ export default function makeStorages (configs = Object.create(null)) {
      *
      * @param {string} name Target storage's name
      *
+     * @emits module:storages~Storages#event:updated
+     * @emits module:storages~Storages#event:removed
+     *
+     * @listens module:storages/storage#event:updated
+     * @listens module:storages/storage#event:removed
+     *
      * @return {module:storages/storage}
      */
     get (name) {
@@ -119,6 +159,9 @@ export default function makeStorages (configs = Object.create(null)) {
         path: configs.path
       })
 
+      this.#transferEvent(this.#storagesList[name], 'updated')
+      this.#transferEvent(this.#storagesList[name], 'removed')
+
       return this.#storagesList[name]
     }
 
@@ -127,6 +170,13 @@ export default function makeStorages (configs = Object.create(null)) {
      *
      * @param {(module:storages/storage|string)} storage Storage instance or storage's name
      * @param {object} [body={}] Storage's initial content
+     *
+     * @emits module:storages~Storages#event:updated
+     * @emits module:storages~Storages#event:removed
+     * @emits module:storages~Storages#event:added
+     *
+     * @listens module:storages/storage#event:updated
+     * @listens module:storages/storage#event:removed
      *
      * @throws Will throw an error if Storage is already exist in list
      *
@@ -146,14 +196,26 @@ export default function makeStorages (configs = Object.create(null)) {
       if (storage) {
         this.#storagesList[name] = storage
       } else {
-        this.#storagesList[name] = new Storage({
+        this.#storagesList[name] = storage = new Storage({
           name,
           body,
           path: configs.path
         })
       }
 
-      return this.#storagesList[name]
+      this.#transferEvent(storage, 'updated')
+      this.#transferEvent(storage, 'removed')
+
+      /**
+       * Storage added event
+       *
+       * @event module:storages~Storages#event:added
+       *
+       * @type module:storages/storage
+       */
+      this.emit('added', storage)
+
+      return storage
     }
 
     /**
@@ -209,7 +271,30 @@ export default function makeStorages (configs = Object.create(null)) {
     }
   }
 
-  return new Storages()
+  const storages = new Storages()
+
+  // Logging
+  ;(() => {
+    storages.on('added', storage => logger
+      .info('makeStorages', {
+        module: 'storages',
+        event: 'added'
+      }, storage, storages))
+
+    storages.on('removed', (storage, { name }) => logger
+      .info('makeStorages', {
+        module: 'storages',
+        event: 'removed'
+      }, storage, { storage: { name } }, storages))
+
+    storages.on('updated', storage => logger
+      .info('makeStorages', {
+        module: 'storages',
+        event: 'updated'
+      }, storage, storages))
+  })()
+
+  return storages
 }
 
 export Storage from './storage'
