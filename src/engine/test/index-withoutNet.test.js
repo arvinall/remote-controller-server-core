@@ -1,5 +1,6 @@
-/* global test, expect, describe, jest */
+/* global test, expect, describe, jest, TMP_PATH */
 
+import Logger from '../../logger'
 import makeEngine from '../index'
 
 jest.mock('os', () => {
@@ -17,6 +18,7 @@ jest.mock('os', () => {
 })
 
 const core = {
+  logger: new Logger(TMP_PATH),
   connections: {
     add () {},
     on () {}

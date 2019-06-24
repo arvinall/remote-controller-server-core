@@ -1,11 +1,15 @@
 /* global test, expect, describe, afterAll, generateId, TMP_PATH */
 
+import Logger from '../../logger'
 import makeStorages from '../../storages'
 import preferencesMaker from '../index'
 import Preference from '../preference'
 
-const storages = makeStorages({ path: TMP_PATH })
-const core = { storages }
+const core = { logger: new Logger(TMP_PATH) }
+const storages = makeStorages.call(core, { path: TMP_PATH })
+
+core.storages = storages
+
 const makePreferences = preferencesMaker.bind(core)
 
 let preferencesStorageName

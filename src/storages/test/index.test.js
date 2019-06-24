@@ -1,13 +1,16 @@
 /* global test, expect, describe, afterAll, generateId, TMP_PATH */
 
+import Logger from '../../logger'
 import Storage from '../storage'
 import makeStorages from '../index'
 
 let storages
 
+const core = { logger: new Logger(TMP_PATH) }
+
 describe('makeStorages', () => {
   test('must return storages module without error', () => {
-    let storages = makeStorages({ path: TMP_PATH })
+    let storages = makeStorages.call(core, { path: TMP_PATH })
 
     expect(storages).toEqual(expect.any(Object))
     expect(storages).toEqual(expect.objectContaining({
@@ -17,7 +20,7 @@ describe('makeStorages', () => {
     }))
   })
 
-  afterAll(() => { storages = makeStorages({ path: TMP_PATH }) })
+  afterAll(() => { storages = makeStorages.call(core, { path: TMP_PATH }) })
 })
 
 describe('storages get method', () => {

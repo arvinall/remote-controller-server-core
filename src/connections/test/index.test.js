@@ -1,5 +1,6 @@
 /* global test, expect, describe, beforeAll, beforeEach, afterAll, TMP_PATH, generateId, Buffer */
 
+import Logger from '../../logger'
 import makeConnections from '../index'
 import makePreferences from '../../preferences'
 import makeStorages from '../../storages'
@@ -12,7 +13,8 @@ import Connection, { bufferToUint8ArrayLike } from '../connection'
 const core = Object.create(null)
 const preferencesStorageName = generateId()
 
-core.storages = makeStorages({ path: TMP_PATH })
+core.logger = new Logger(TMP_PATH)
+core.storages = makeStorages.call(core, { path: TMP_PATH })
 core.preferences = makePreferences.call(core, { name: preferencesStorageName })
 
 const webSocketOptions = { perMessageDeflate: true }

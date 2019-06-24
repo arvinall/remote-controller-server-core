@@ -1,11 +1,13 @@
-/* global test, expect, describe, jest, afterAll, beforeEach */
+/* global test, expect, describe, jest, afterAll, beforeEach, TMP_PATH */
 
+import Logger from '../../logger'
 import http from 'http'
 import envConfigs from '../../test/configs'
 import WebSocket from 'ws'
 import makeEngine from '../index'
 
 const core = {
+  logger: new Logger(TMP_PATH),
   connections: {
     add: jest.fn(),
     on () {}
