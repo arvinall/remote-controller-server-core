@@ -243,3 +243,55 @@ test('storages has method must return right value', () => {
 test(`storages path property must return ${TMP_PATH}`, () => {
   expect(storages.path).toBe(TMP_PATH)
 })
+
+describe('storages events', () => {
+  test('Must emit added event when a Storage added', () => {
+    const name = generateId()
+    const body = { test: 'added event' }
+    const _storages = []
+
+    storages.once('added', _storages.push.bind(_storages))
+
+    _storages.push(storages.add(name, body))
+
+    expect(_storages[0]).toBe(_storages[1])
+
+    _storages[1].removeSync()
+  })
+
+  test('Must emit removed event when a Storage removed', () => {
+    const name = generateId()
+    const body = { test: 'removed event' }
+    const storage = storages.add(name, body)
+
+    storages.once('removed', (_storage, event) => {
+      expect(_storage).toBe(storage)
+      expect(event).toEqual({
+        name: name,
+        body: body
+      })
+    })
+
+    storage.removeSync()
+  })
+
+  test('Must emit updated event when a Storage updated', () => {
+    const name = generateId()
+    const body = { test: 'updated event' }
+    const storage = storages.add(name, body)
+    const updatedBody = Object.assign({}, body, {
+      update: 'Updated successfully'
+    })
+
+    storages.once('updated', (_storage, event) => {
+      expect(_storage).toBe(storage)
+      expect(event).toEqual({
+        lastBody: body,
+        updatedBody
+      })
+    })
+
+    storage.updateSync(updatedBody)
+    storage.removeSync()
+  })
+})
