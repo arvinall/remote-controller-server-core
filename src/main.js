@@ -1,3 +1,4 @@
+/* global console, process, setImmediate */
 
 /**
  * @module remote-controller-server-core
@@ -80,12 +81,14 @@
  * @see {@link https://github.com/websockets/ws/blob/master/doc/ws.md#class-websocketserver|Class: WebSocket.Server}
  */
 
+import path from 'path'
 import Logger from './logger'
 import makeStorages from './storages'
 import makePreferences from './preferences'
 import makeEngine from './engine'
 import makeConnections from './connections'
 
+const handleUncaughtExceptions = !process.listenerCount('uncaughtException')
 const storagesList = Object.create(null)
 
 /**
@@ -125,11 +128,22 @@ export default function makeCore (configs = Object.create(null)) {
 
   core.logger = new Logger(configs.loggerPath)
 
+  if (handleUncaughtExceptions) {
+    process.prependListener('uncaughtException', error => {
+      if (!error._dontLog) core.logger.error('core', error)
+
+      setImmediate(() => console
+        .log('For more information check error log file at', path.join(configs.loggerPath, 'error.log')))
+    })
+  }
+
   if (storagesList[configs.storagePath] === undefined) {
     try {
       storagesList[configs.storagePath] = makeStorages.call(core, { path: configs.storagePath })
     } catch (error) {
       core.logger.error('core', error, { module: 'storages' })
+
+      error._dontLog = true
 
       throw error
     }
@@ -158,6 +172,8 @@ export default function makeCore (configs = Object.create(null)) {
   } catch (error) {
     core.logger.error('core', error, { module: 'preferences' })
 
+    error._dontLog = true
+
     throw error
   }
 
@@ -173,6 +189,8 @@ export default function makeCore (configs = Object.create(null)) {
     core.connections = makeConnections.call(core)
   } catch (error) {
     core.logger.error('core', error, { module: 'connections' })
+
+    error._dontLog = true
 
     throw error
   }
@@ -190,10 +208,20 @@ export default function makeCore (configs = Object.create(null)) {
   } catch (error) {
     core.logger.error('core', error, { module: 'engine' })
 
+    error._dontLog = true
+
     throw error
   }
 
   return Object.freeze(core)
+}
+
+if (handleUncaughtExceptions) {
+  process.on('uncaughtException', error => {
+    console.error(error.toString() + "\n") // eslint-disable-line quotes
+
+    setImmediate(() => process.exit(1))
+  })
 }
 
 export * as storages from './storages'
