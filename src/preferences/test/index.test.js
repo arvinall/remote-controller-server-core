@@ -313,9 +313,21 @@ test('preferences has method must return right value', () => {
 })
 
 describe('preferences events', () => {
-  test('Must emit removed event when a Preference removed', done => {
-    expect.assertions(2)
+  test('Must emit added event when a Preference added', () => {
+    const name = generateId()
+    const body = { test: 'added event' }
+    const _preferences = []
 
+    preferences.once('added', _preferences.push.bind(_preferences))
+
+    _preferences.push(preferences.add(name, body))
+
+    expect(_preferences[0]).toBe(_preferences[1])
+
+    _preferences[1].removeSync()
+  })
+
+  test('Must emit removed event when a Preference removed', () => {
     const name = generateId()
     const body = { test: 'removed event' }
     const preference = preferences.add(name, body)
@@ -326,15 +338,12 @@ describe('preferences events', () => {
         name: name,
         body: body
       })
-
-      done()
     })
+
     preference.removeSync()
   })
 
-  test('Must emit updated event when a Preference updated', done => {
-    expect.assertions(2)
-
+  test('Must emit updated event when a Preference updated', () => {
     const name = generateId()
     const body = { test: 'updated event' }
     const preference = preferences.add(name, body)
@@ -348,10 +357,10 @@ describe('preferences events', () => {
         lastBody: body,
         updatedBody
       })
-
-      done()
     })
+
     preference.updateSync(updatedBody)
+    preference.removeSync()
   })
 })
 
