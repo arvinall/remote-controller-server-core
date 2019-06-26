@@ -137,14 +137,42 @@ export default function makeCore (configs = Object.create(null)) {
 
   core.logger = new Logger(configs.loggerPath)
 
+  /*
+  Handle unexpected behaviors
+   */
   if (handleUncaughtExceptions) {
     process.prependListener('uncaughtException', error => {
-      if (!error._dontLog) core.logger.error('core', error)
+      if (!error._dontLog) {
+        core.logger.error('process', {
+          module: 'core',
+          event: 'uncaughtException'
+        }, error)
+      }
 
-      setImmediate(() => console
-        .log('For more information check error log file at', path.join(configs.loggerPath, 'error.log')))
+      if (process.env.NODE_ENV !== 'development') {
+        setImmediate(() => console.log('For more information check error log file at', path
+          .join(configs.loggerPath, 'error.log')))
+      }
     })
   }
+  process.on('unhandledRejection', reason => {
+    if (!reason._dontLog) {
+      core.logger.error('process', {
+        module: 'core',
+        event: 'unhandledRejection'
+      }, reason)
+    }
+
+    if (process.env.NODE_ENV !== 'development') {
+      console.log('For more information check error log file at', path
+        .join(configs.loggerPath, 'error.log'))
+    }
+  })
+  process.on('warning', warning => core.logger
+    .warn('process', {
+      module: 'core',
+      event: 'warning'
+    }, warning))
 
   if (storagesList[configs.storagePath] === undefined) {
     try {
@@ -227,11 +255,29 @@ export default function makeCore (configs = Object.create(null)) {
 
 if (handleUncaughtExceptions) {
   process.on('uncaughtException', error => {
-    console.error(error.toString() + "\n") // eslint-disable-line quotes
+    if (process.env.NODE_ENV !== 'development') {
+      console.error('uncaughtException', error.toString() + "\n") // eslint-disable-line quotes
+    } else {
+      console.error('uncaughtException', error) // eslint-disable-line quotes
+    }
 
     setImmediate(() => process.exit(1))
   })
 }
+process.on('unhandledRejection', reason => {
+  if (process.env.NODE_ENV !== 'development') {
+    console.error('unhandledRejection', reason.toString() + "\n") // eslint-disable-line quotes
+  } else {
+    console.error('unhandledRejection', reason)
+  }
+})
+process.on('warning', warning => {
+  if (process.env.NODE_ENV !== 'development') {
+    console.warn('warning', warning.toString() + "\n") // eslint-disable-line quotes
+  } else {
+    console.warn('warning', warning)
+  }
+})
 
 export * as storages from './storages'
 export * as preferences from './preferences'
