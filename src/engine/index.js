@@ -9,6 +9,7 @@ import os from 'os'
 import http from 'http'
 import WebSocket from 'ws'
 import { logSymbol } from '../logger'
+import * as helpers from '../helpers'
 
 /**
  * makeEngine creates engine module
@@ -200,6 +201,9 @@ export default function makeEngine (configs = Object.create(null)) {
       }
     }
   }
+
+  // Set string tag
+  helpers.decorator.setStringTag()(Engine)
 
   const engine = new Engine()
 

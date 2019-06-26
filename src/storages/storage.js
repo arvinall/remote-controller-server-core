@@ -8,6 +8,7 @@ import fs from 'fs'
 import path from 'path'
 import EventEmitter from 'events'
 import { logSymbol } from '../logger'
+import * as helpers from '../helpers'
 
 const ENCODING = 'utf8'
 const GLOBAL_ERRORS = {
@@ -315,3 +316,6 @@ export default class Storage extends EventEmitter {
     }
   }
 }
+
+// Set string tag
+helpers.decorator.setStringTag()(Storage)

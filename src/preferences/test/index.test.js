@@ -49,13 +49,15 @@ describe('makePreferences', () => {
 
   test('Must return preferences module without error', () => {
     const configs = { name: generateId() }
+    const preferences = makePreferences(configs)
 
-    expect(makePreferences(configs)).toEqual(expect.objectContaining({
+    expect(preferences).toEqual(expect.objectContaining({
       get: expect.any(Function),
       add: expect.any(Function),
       remove: expect.any(Function),
       has: expect.any(Function)
     }))
+    expect(preferences + '').toBe('[object Preferences]')
 
     storages.remove(configs.name)
   })

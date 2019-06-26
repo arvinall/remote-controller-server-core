@@ -18,6 +18,7 @@ describe('makeStorages', () => {
       add: expect.any(Function),
       remove: expect.any(Function)
     }))
+    expect(storages + '').toBe('[object Storages]')
   })
 
   afterAll(() => { storages = makeStorages.call(core, { path: TMP_PATH }) })

@@ -81,6 +81,7 @@ describe('makeConnections', () => {
         get: expect.any(Function),
         send: expect.any(Function)
       }))
+      expect(connections + '').toBe('[object Connections]')
     })
   })
 

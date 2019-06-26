@@ -5,6 +5,7 @@
 
 import EventEmitter from 'events'
 import Storage from '../storages/storage'
+import * as helpers from '../helpers'
 import { logSymbol } from '../logger'
 
 const GLOBAL_ERRORS = {
@@ -278,3 +279,6 @@ export default class Preference extends EventEmitter {
     }, this.#storage && this.#storage[logSymbol])
   }
 }
+
+// Set string tag
+helpers.decorator.setStringTag()(Preference)

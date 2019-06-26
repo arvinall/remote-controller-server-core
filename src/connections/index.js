@@ -422,6 +422,9 @@ export default function makeConnections () {
     }
   }
 
+  // Set string tag
+  helpers.decorator.setStringTag()(Connections)
+
   const connections = new Connections()
 
   // Logging

@@ -65,6 +65,7 @@ describe('Storage constructor', () => {
 
       expect(storageInstance).toBeInstanceOf(Storage)
       expect(storageInstance).toHaveProperty('body', configs.body)
+      expect(storageInstance + '').toBe('[object Storage]')
 
       fs.unlinkSync(path.join(TMP_PATH, configs.name + '.json'))
     })

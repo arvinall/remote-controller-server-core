@@ -64,6 +64,7 @@ describe('makeEngine', () => {
     }))
     expect(engine.address.port).toBe(engineConfigs.port)
     expect(typeof engine.address.address === 'string' || engine.address.address === null).toBe(true)
+    expect(engine + '').toBe('[object Engine]')
   })
 
   afterAll(() => {

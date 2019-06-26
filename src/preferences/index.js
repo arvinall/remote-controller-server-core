@@ -5,6 +5,7 @@
 
 import EventEmitter from 'events'
 import Preference from './preference'
+import * as helpers from '../helpers'
 
 /**
  * makePreferences creates preferences module
@@ -276,6 +277,9 @@ export default function makePreferences (configs) {
       return this.#preferencesList.hasOwnProperty(preferenceName)
     }
   }
+
+  // Set string tag
+  helpers.decorator.setStringTag()(Preferences)
 
   const preferences = new Preferences()
 

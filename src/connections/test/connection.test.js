@@ -199,13 +199,14 @@ describe('Connection constructor', () => {
 
   describe('Success', () => {
     test('Initial without error', async () => {
-      expect.assertions(1)
+      expect.assertions(2)
 
       const configs = { socket: (await getSomeSockets())[0] }
 
       const connection = new Connection(configs)
 
       expect(connection).toBeInstanceOf(Connection)
+      expect(connection + '').toBe('[object Connection]')
     })
 
     describe('Must sends authentications ask status messages when connected', () => {

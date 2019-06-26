@@ -50,6 +50,7 @@ describe('Passport constructor', () => {
         hash: expect.any(Buffer)
       }))
       expect(passport.hash.compare(preEncrypted.hash)).toBe(0)
+      expect(passport + '').toBe('[object Passport]')
     }
   })
 })

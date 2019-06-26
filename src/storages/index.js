@@ -6,6 +6,7 @@
 import Storage from './storage'
 import EventEmitter from 'events'
 import { logSymbol } from '../logger'
+import * as helpers from '../helpers'
 
 /**
  * makeStorages creates storages module
@@ -270,6 +271,9 @@ export default function makeStorages (configs = Object.create(null)) {
       }
     }
   }
+
+  // Set string tag
+  helpers.decorator.setStringTag()(Storages)
 
   const storages = new Storages()
 

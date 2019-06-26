@@ -4,6 +4,8 @@
  * @module passport
  */
 
+import * as helpers from '../helpers'
+
 const GLOBAL_ERRORS = {
   passportInputRequired: new TypeError('passportInput parameter is required')
 }
@@ -107,5 +109,8 @@ export default class Passport {
     return this.#salt
   }
 }
+
+// Set string tag
+helpers.decorator.setStringTag()(Passport)
 
 export { pattern as passwordPattern } from './password'

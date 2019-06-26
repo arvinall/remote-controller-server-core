@@ -10,6 +10,7 @@ import WebSocket from 'ws'
 import Passport from '../passport'
 import idGenerator from '../idGenerator'
 import stream from 'stream'
+import * as helpers from '../helpers'
 import { logSymbol } from '../logger'
 
 const CLIENT_AUTHENTICATION_FACTORS = [ 'passport' ]
@@ -600,6 +601,9 @@ export default class Connection extends AsyncEventEmitter {
     return streamChunksReader
   }
 }
+
+// Set string tag
+helpers.decorator.setStringTag()(Connection)
 
 /**
  * Convert uint8Array to pure array then uint8ArrayLike

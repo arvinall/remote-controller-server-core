@@ -116,6 +116,7 @@ describe('Preference constructor', () => {
 
       expect(initializedPreference).toBeInstanceOf(Preference)
       expect(initializedPreference).toHaveProperty('body', initializedPreference.body)
+      expect(initializedPreference + '').toBe('[object Preference]')
     })
 
     test('Read without error', () => {
