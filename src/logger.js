@@ -17,18 +17,28 @@ const INDENT = 2 // spaces
  */
 export default class Logger extends EventEmitter {
   /**
-   * @type string
+   * @type {string[]}
    */
-  #infoPath
+  #types = [
+    'info',
+    'warn',
+    'error'
+  ]
   /**
-   * @type string
+   * @type {{warn: string, error: string, info: string}}
    */
-  #errorPath
+  #paths = {
+    info: undefined,
+    warn: undefined,
+    error: undefined
+  }
+
   /**
    * @summary Append log to log files
    * @description
    * Available type:
    * * `info`
+   * * `warn`
    * * `error`
    *
    * @param {string} type Target log file
@@ -37,16 +47,23 @@ export default class Logger extends EventEmitter {
    * @return {Promise<(void|Error)>}
    */
   #append = async (type, data) => {
-    const path = ({
-      info: this.#infoPath,
-      error: this.#errorPath
-    })[type]
+    const path = this.#paths[type]
 
     if (typeof path !== 'string') return
 
     return promisify(fs.appendFile)(path, JSON
       .stringify(data, null, INDENT) + ",\n") // eslint-disable-line quotes
   }
+
+  /**
+   * Emit events with "Logged" suffix
+   *
+   * @param {string} type
+   * @param {...*} data
+   *
+   * @return {module:logger~Logger}
+   */
+  #emitLogged = (type, ...data) => this.emit(type + 'Logged', ...data)
 
   /**
    * @param {string} [directory]
@@ -59,11 +76,9 @@ export default class Logger extends EventEmitter {
 
     try {
       if (fs.statSync(directory).isDirectory()) {
-        // Info
-        this.#infoPath = path.join(directory, 'info.log')
-
-        // Error
-        this.#errorPath = path.join(directory, 'error.log')
+        for (const type of this.#types) {
+          this.#paths[type] = path.join(directory, type + '.log')
+        }
       }
     } catch (e) {}
   }
@@ -74,6 +89,8 @@ export default class Logger extends EventEmitter {
    * @param {string} [scope]
    * @param {...*} [data]
    *
+   * @emits module:logger~Logger#event:infoLogged
+   *
    * @return {object}
    *
    * @see module:logger.createInfoObject
@@ -81,9 +98,57 @@ export default class Logger extends EventEmitter {
   info (scope, ...data) {
     const infoObject = createInfoObject(scope, ...data)
 
-    if (infoObject !== undefined) this.#append('info', infoObject)
+    if (infoObject === undefined) return
+
+    const parameters = [ 'info', infoObject ]
+
+    this.#append(...parameters)
+      /**
+       * Logger infoLogged event
+       *
+       * @event module:logger~Logger#event:infoLogged
+       *
+       * @type {object}
+       *
+       * @see module:logger.createInfoObject
+       */
+      .then(() => this.#emitLogged(...parameters))
 
     return infoObject
+  }
+
+  /**
+   * Log warnings
+   *
+   * @param {string} [scope]
+   * @param {...*} [data]
+   *
+   * @emits module:logger~Logger#event:warnLogged
+   *
+   * @return {object}
+   *
+   * @see module:logger.createErrorObject
+   */
+  warn (scope, ...data) {
+    const warnObject = createErrorObject(scope, ...data)
+
+    if (warnObject === undefined) return
+
+    const parameters = [ 'warn', warnObject ]
+
+    this.#append(...parameters)
+    /**
+     * Logger warnLogged event
+     *
+     * @event module:logger~Logger#event:warnLogged
+     *
+     * @type {object}
+     *
+     * @see module:logger.createErrorObject
+     */
+      .then(() => this.#emitLogged(...parameters))
+
+    return warnObject
   }
 
   /**
@@ -92,16 +157,32 @@ export default class Logger extends EventEmitter {
    * @param {string} [scope]
    * @param {...*} [data]
    *
+   * @emits module:logger~Logger#event:errorLogged
+   *
    * @return {object}
    *
    * @see module:logger.createErrorObject
    */
   error (scope, ...data) {
-    const infoObject = createErrorObject(scope, ...data)
+    const errorObject = createErrorObject(scope, ...data)
 
-    if (infoObject !== undefined) this.#append('error', infoObject)
+    if (errorObject === undefined) return
 
-    return infoObject
+    const parameters = [ 'error', errorObject ]
+
+    this.#append(...parameters)
+      /**
+       * Logger errorLogged event
+       *
+       * @event module:logger~Logger#event:errorLogged
+       *
+       * @type {object}
+       *
+       * @see module:logger.createErrorObject
+       */
+      .then(() => this.#emitLogged(...parameters))
+
+    return errorObject
   }
 }
 
@@ -130,6 +211,11 @@ export function createInfoObject (scope, ...data) {
 
   if (!data.length) return
 
+  Object.assign(infoObject, {
+    scope: typeof scope === 'string' ? scope : undefined,
+    date: Date(Date.now())
+  })
+
   const mergedObjects = []
 
   for (const dataIndex in data) {
@@ -150,11 +236,6 @@ export function createInfoObject (scope, ...data) {
   }
 
   infoObject.messages = data.length ? data : undefined
-
-  Object.assign(infoObject, {
-    scope: typeof scope === 'string' ? scope : undefined,
-    date: Date(Date.now())
-  })
 
   return infoObject
 }
