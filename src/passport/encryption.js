@@ -1,9 +1,20 @@
+/* global global */
 
 /**
  * @module passport/encryption
  */
 
+import * as helpers from '../helpers'
 import crypto from 'crypto'
+
+// Error classes
+const logObject = {
+  scope: 'encryption',
+  event: undefined,
+  module: undefined
+}
+const Error = helpers.object.makeLoggableClass(global.Error, logObject)
+const TypeError = helpers.object.makeLoggableClass(global.TypeError, logObject)
 
 /**
  * encryption is a password encryptor
@@ -15,7 +26,10 @@ import crypto from 'crypto'
  */
 export default (password, salt) => {
   if (typeof password !== 'string') throw new TypeError('password parameter is required and must be string')
-  else if (password.length < 2) throw new Error('password parameter must have at least two characters')
+  else if (password.length < 2) {
+    throw new Error('password parameter must have at least two characters')
+      .setLogObject({ length: password.length })
+  }
 
   const result = Object.create(null)
 

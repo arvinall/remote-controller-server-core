@@ -1,3 +1,4 @@
+/* global global */
 
 /**
  * @module storages/storage
@@ -11,6 +12,17 @@ import { logSymbol } from '../logger'
 import * as helpers from '../helpers'
 
 const ENCODING = 'utf8'
+
+// Error classes
+const logObject = {
+  scope: 'storage',
+  class: 'Storage',
+  event: undefined,
+  module: undefined
+}
+const Error = helpers.object.makeLoggableClass(global.Error, logObject)
+const TypeError = helpers.object.makeLoggableClass(global.TypeError, logObject)
+
 const GLOBAL_ERRORS = {
   accessibility: new Error('Storage is not accessible')
 }
@@ -83,7 +95,7 @@ export default class Storage extends EventEmitter {
       try {
         fs.accessSync(this.#address, fs.constants.F_OK | fs.constants.W_OK)
       } catch (error) {
-        throw GLOBAL_ERRORS.accessibility
+        throw GLOBAL_ERRORS.accessibility.setLogObject({ method: '#remove' })
       }
 
       fs.unlinkSync(this.#address)
@@ -97,7 +109,8 @@ export default class Storage extends EventEmitter {
       .then(() => {
         return promisify(fs.unlink)(this.#address)
           .then(clearProperties, error => Promise.reject(error))
-      }, () => Promise.reject(GLOBAL_ERRORS.accessibility))
+      }, () => Promise
+        .reject(GLOBAL_ERRORS.accessibility.setLogObject({ method: '#remove' })))
   }
 
   /**
@@ -154,7 +167,7 @@ export default class Storage extends EventEmitter {
       try {
         fs.accessSync(this.#address, fs.constants.F_OK | fs.constants.W_OK)
       } catch (error) {
-        throw GLOBAL_ERRORS.accessibility
+        throw GLOBAL_ERRORS.accessibility.setLogObject({ method: '#update' })
       }
 
       fs.writeFileSync(this.#address, JSON.stringify(body), {
@@ -173,7 +186,8 @@ export default class Storage extends EventEmitter {
           encoding: ENCODING,
           flag: 'w'
         }).then(setProperties, error => Promise.reject(error))
-      }, () => Promise.reject(GLOBAL_ERRORS.accessibility))
+      }, () => Promise
+        .reject(GLOBAL_ERRORS.accessibility.setLogObject({ method: '#update' })))
   }
 
   /**
@@ -189,6 +203,9 @@ export default class Storage extends EventEmitter {
    * @throws Will throw an error if the body property not provided and storage is not accessible
    */
   constructor (configs) {
+    const Error = helpers.object.makeLoggableClass(global.Error, logObject)
+      .assignLogObject({ method: 'constructor' })
+
     if (typeof configs !== 'object') throw new TypeError('configs parameter is required and must be object')
 
     // Set default configs

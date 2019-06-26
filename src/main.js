@@ -1,4 +1,4 @@
-/* global console, process, setImmediate */
+/* global global, console, process, setImmediate */
 
 /**
  * @module remote-controller-server-core
@@ -81,12 +81,21 @@
  * @see {@link https://github.com/websockets/ws/blob/master/doc/ws.md#class-websocketserver|Class: WebSocket.Server}
  */
 
+import * as helpers from './helpers'
 import path from 'path'
 import Logger from './logger'
 import makeStorages from './storages'
 import makePreferences from './preferences'
 import makeEngine from './engine'
 import makeConnections from './connections'
+
+// Error classes
+const logObject = {
+  scope: 'makeCore',
+  module: 'core',
+  event: undefined
+}
+const TypeError = helpers.object.makeLoggableClass(global.TypeError, logObject)
 
 const handleUncaughtExceptions = !process.listenerCount('uncaughtException')
 const storagesList = Object.create(null)
@@ -141,7 +150,7 @@ export default function makeCore (configs = Object.create(null)) {
     try {
       storagesList[configs.storagePath] = makeStorages.call(core, { path: configs.storagePath })
     } catch (error) {
-      core.logger.error('core', error, { module: 'storages' })
+      core.logger.error('core', { module: 'storages' }, error)
 
       error._dontLog = true
 
@@ -170,7 +179,7 @@ export default function makeCore (configs = Object.create(null)) {
      */
     core.preferences = makePreferences.call(core, { name: configs.preferenceStorageName })
   } catch (error) {
-    core.logger.error('core', error, { module: 'preferences' })
+    core.logger.error('core', { module: 'preferences' }, error)
 
     error._dontLog = true
 
@@ -188,7 +197,7 @@ export default function makeCore (configs = Object.create(null)) {
      */
     core.connections = makeConnections.call(core)
   } catch (error) {
-    core.logger.error('core', error, { module: 'connections' })
+    core.logger.error('core', { module: 'connections' }, error)
 
     error._dontLog = true
 
@@ -206,7 +215,7 @@ export default function makeCore (configs = Object.create(null)) {
      */
     core.engine = makeEngine.call(core, { port: configs.httpServerPort })
   } catch (error) {
-    core.logger.error('core', error, { module: 'engine' })
+    core.logger.error('core', { module: 'engine' }, error)
 
     error._dontLog = true
 

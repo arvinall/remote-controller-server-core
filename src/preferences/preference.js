@@ -1,3 +1,4 @@
+/* global global */
 
 /**
  * @module preferences/preference
@@ -7,6 +8,16 @@ import EventEmitter from 'events'
 import Storage from '../storages/storage'
 import * as helpers from '../helpers'
 import { logSymbol } from '../logger'
+
+// Error classes
+const logObject = {
+  scope: 'preference',
+  class: 'Preference',
+  event: undefined,
+  module: undefined
+}
+const Error = helpers.object.makeLoggableClass(global.Error, logObject)
+const TypeError = helpers.object.makeLoggableClass(global.TypeError, logObject)
 
 const GLOBAL_ERRORS = {
   accessibility: new Error('Preference is not accessible')
@@ -86,7 +97,9 @@ export default class Preference extends EventEmitter {
     }
 
     if (configs.sync) {
-      if (this.#storage === undefined) throw GLOBAL_ERRORS.accessibility
+      if (this.#storage === undefined) {
+        throw GLOBAL_ERRORS.accessibility.setLogObject({ method: '#update' })
+      }
 
       this.#storage.updateSync(updateBody)
 
@@ -95,7 +108,9 @@ export default class Preference extends EventEmitter {
       return
     }
 
-    if (this.#storage === undefined) return Promise.reject(GLOBAL_ERRORS.accessibility)
+    if (this.#storage === undefined) {
+      return Promise.reject(GLOBAL_ERRORS.accessibility.setLogObject({ method: '#update' }))
+    }
 
     return this.#storage.update(updateBody)
       .then(fireEvent, error => Promise.reject(error))
@@ -153,7 +168,9 @@ export default class Preference extends EventEmitter {
     }, configs)
 
     if (configs.sync) {
-      if (this.#storage === undefined) throw GLOBAL_ERRORS.accessibility
+      if (this.#storage === undefined) {
+        throw GLOBAL_ERRORS.accessibility.setLogObject({ method: '#remove' })
+      }
 
       this.#storage.updateSync(deletePreference)
 
@@ -162,7 +179,9 @@ export default class Preference extends EventEmitter {
       return
     }
 
-    if (this.#storage === undefined) return Promise.reject(GLOBAL_ERRORS.accessibility)
+    if (this.#storage === undefined) {
+      return Promise.reject(GLOBAL_ERRORS.accessibility.setLogObject({ method: '#remove' }))
+    }
 
     return this.#storage.update(deletePreference)
       .then(clearProperties, error => Promise.reject(error))
@@ -181,6 +200,9 @@ export default class Preference extends EventEmitter {
    * @throws Will throw an error if the body property not provided and storage is not accessible
    */
   constructor (configs) {
+    const Error = helpers.object.makeLoggableClass(global.Error, logObject)
+      .assignLogObject({ method: 'constructor' })
+
     if (typeof configs !== 'object') throw new TypeError('configs parameter is required and must be object')
     else if (typeof configs.name !== 'string') throw new TypeError('configs.name is required and must be string')
     else if (configs.storage === undefined ||

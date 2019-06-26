@@ -1,4 +1,4 @@
-/* global console */
+/* global global, console */
 
 /**
  * @module connections
@@ -11,6 +11,15 @@ import Connection from './connection'
 import Passport from '../passport'
 import * as helpers from '../helpers'
 import { logSymbol } from '../logger'
+
+// Error classes
+const logObject = {
+  scope: 'makeConnections',
+  module: 'connections',
+  event: undefined
+}
+const Error = helpers.object.makeLoggableClass(global.Error, logObject)
+const TypeError = helpers.object.makeLoggableClass(global.TypeError, logObject)
 
 const GLOBAL_ERRORS = {
   authenticationFactorsRequirement: new Error('One authentication factor require at least')
@@ -90,7 +99,9 @@ export default function makeConnections () {
         if (typeof value === 'boolean' ||
           value === null) {
           if (value === false &&
-            !this.passport) throw GLOBAL_ERRORS.authenticationFactorsRequirement
+            !this.passport) {
+            throw GLOBAL_ERRORS.authenticationFactorsRequirement.setLogObject({ setter: 'confirmation' })
+          }
 
           preference.updateSync(body => {
             if (value !== null) body.authenticationFactors.confirmation = value
@@ -118,7 +129,9 @@ export default function makeConnections () {
         if (typeof value === 'boolean' ||
           value === null) {
           if (value === false &&
-            !this.confirmation) throw GLOBAL_ERRORS.authenticationFactorsRequirement
+            !this.confirmation) {
+            throw GLOBAL_ERRORS.authenticationFactorsRequirement.setLogObject({ setter: 'passport' })
+          }
 
           preference.updateSync(body => {
             if (value !== null) body.authenticationFactors.passport = value
@@ -223,6 +236,9 @@ export default function makeConnections () {
      * @return {module:connections/connection}
      */
     add (socket, request) {
+      const Error = helpers.object.makeLoggableClass(global.Error, logObject)
+        .assignLogObject({ method: 'add' })
+
       if (!(socket instanceof WebSocket) &&
         !(socket instanceof Connection)) throw new TypeError('socket parameter is required and must be ws.WebSocket/Connection')
       else if (socket instanceof WebSocket &&

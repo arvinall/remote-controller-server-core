@@ -1,3 +1,4 @@
+/* global global */
 
 /**
  * @module engine
@@ -21,6 +22,15 @@ import * as helpers from '../helpers'
  * @return {module:engine~Engine}
  */
 export default function makeEngine (configs = Object.create(null)) {
+  // Error classes
+  const logObject = {
+    scope: 'makeEngine',
+    event: undefined,
+    module: undefined
+  }
+  const Error = helpers.object.makeLoggableClass(global.Error, logObject)
+  const TypeError = helpers.object.makeLoggableClass(global.TypeError, logObject)
+
   if (typeof configs !== 'object') throw new TypeError('configs parameter must be object')
 
   // Set default configs
@@ -41,6 +51,11 @@ export default function makeEngine (configs = Object.create(null)) {
     path: configs.path,
     perMessageDeflate: true
   })
+
+  logObject.module = 'engine'
+
+  Error.setLogObject(logObject)
+  TypeError.setLogObject(logObject)
 
   /**
    * Engine module control web server and it's websocket
@@ -104,6 +119,9 @@ export default function makeEngine (configs = Object.create(null)) {
      *  * Reject an error if there is no network
      */
     start (port = configs.port) {
+      const Error = helpers.object.makeLoggableClass(global.Error, logObject)
+        .assignLogObject({ method: 'start', ...this[logSymbol] })
+
       if (typeof port !== 'number') throw new TypeError('port parameter must be number')
 
       return (async () => {
@@ -134,6 +152,9 @@ export default function makeEngine (configs = Object.create(null)) {
      *  * Reject an error if engine stopped before
      */
     async stop () {
+      const Error = helpers.object.makeLoggableClass(global.Error, logObject)
+        .assignLogObject({ method: 'stop', ...this[logSymbol] })
+
       if (!this.isActive) throw new Error('Engine already stopped')
 
       /**

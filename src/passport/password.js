@@ -1,9 +1,20 @@
+/* global global */
 
 /**
  * @module passport/password
  */
 
+import * as helpers from '../helpers'
 import encrypt from './encryption'
+
+// Error classes
+const logObject = {
+  scope: 'password',
+  event: undefined,
+  module: undefined
+}
+const Error = helpers.object.makeLoggableClass(global.Error, logObject)
+const TypeError = helpers.object.makeLoggableClass(global.TypeError, logObject)
 
 export const pattern = /(?=^.{8,}$)((?=.*\d)|(?=.*\W+))(?![.\n])(?=.*[A-Z])(?=.*[a-z]).*$/
 

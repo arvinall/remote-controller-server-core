@@ -1,3 +1,4 @@
+/* global global */
 
 /**
  * @module preferences
@@ -18,6 +19,15 @@ import * as helpers from '../helpers'
  * @return {module:preferences~Preferences}
  */
 export default function makePreferences (configs) {
+  // Error classes
+  const logObject = {
+    scope: 'makePreferences',
+    event: undefined,
+    module: undefined
+  }
+  const Error = helpers.object.makeLoggableClass(global.Error, logObject)
+  const TypeError = helpers.object.makeLoggableClass(global.TypeError, logObject)
+
   if (typeof configs !== 'object') throw new TypeError('configs parameter is required and must be object')
 
   // Set default configs
@@ -29,6 +39,12 @@ export default function makePreferences (configs) {
   else if (this.storages.has(configs.name)) throw new Error(`${configs.name} is already in use`)
 
   const logger = this.logger
+
+  logObject.module = 'preferences'
+
+  Error.setLogObject(logObject)
+  TypeError.setLogObject(logObject)
+
   const PREFERENCES_GLOBAL_ERRORS = {
     accessibility: new Error(`Preference is not accessible`),
     existence: name => new Error(`${name} is not exist in list`)
@@ -135,8 +151,10 @@ export default function makePreferences (configs) {
         delete this.#preferencesList[name]
       }
       const ERRORS = {
-        accessibility: PREFERENCES_GLOBAL_ERRORS.accessibility,
+        accessibility: PREFERENCES_GLOBAL_ERRORS.accessibility
+          .setLogObject({ method: '#remove' }),
         existence: PREFERENCES_GLOBAL_ERRORS.existence(name)
+          .setLogObject({ method: '#remove' })
       }
 
       preference = this.#preferencesList[name]
@@ -207,6 +225,9 @@ export default function makePreferences (configs) {
      * @return {module:preferences/preference}
      */
     add (preference, body = Object.create(null)) {
+      const Error = helpers.object.makeLoggableClass(global.Error, logObject)
+        .assignLogObject({ method: 'add' })
+
       if (!(preference instanceof Preference) &&
         typeof preference !== 'string') throw new TypeError('preference parameter is required and must be Preference/string')
       else if (typeof body !== 'object') throw new TypeError('body parameter must be object')

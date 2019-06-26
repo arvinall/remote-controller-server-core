@@ -1,3 +1,4 @@
+/* global global */
 
 /**
  * @module storages
@@ -17,6 +18,15 @@ import * as helpers from '../helpers'
  * @return {module:storages~Storages}
  */
 export default function makeStorages (configs = Object.create(null)) {
+  // Error classes
+  const logObject = {
+    scope: 'makeStorages',
+    event: undefined,
+    module: undefined
+  }
+  const Error = helpers.object.makeLoggableClass(global.Error, logObject)
+  const TypeError = helpers.object.makeLoggableClass(global.TypeError, logObject)
+
   // Set default configs
   configs = Object.assign({
     path: process.cwd()
@@ -25,6 +35,12 @@ export default function makeStorages (configs = Object.create(null)) {
   if (typeof configs.path !== 'string') throw new TypeError('configs.path must be string')
 
   const logger = this.logger
+
+  logObject.module = 'storages'
+
+  Error.setLogObject(logObject)
+  TypeError.setLogObject(logObject)
+
   const STORAGES_GLOBAL_ERRORS = {
     accessibility: new Error('Storage is not accessible'),
     existence: name => new Error(`${name} is not exist in list`)
@@ -120,8 +136,8 @@ export default function makeStorages (configs = Object.create(null)) {
       storage = this.#storagesList[name]
 
       if (configs.sync) {
-        if (typeof name !== 'string') throw ERRORS.accessibility
-        if (storage === undefined) throw ERRORS.existence
+        if (typeof name !== 'string') throw ERRORS.accessibility.setLogObject({ method: '#remove' })
+        if (storage === undefined) throw ERRORS.existence.setLogObject({ method: '#remove' })
 
         storage.removeSync()
         deleteStorage()
@@ -129,8 +145,14 @@ export default function makeStorages (configs = Object.create(null)) {
         return
       }
 
-      if (typeof name !== 'string') return Promise.reject(ERRORS.accessibility)
-      if (storage === undefined) return Promise.reject(ERRORS.existence)
+      if (typeof name !== 'string') {
+        return Promise
+          .reject(ERRORS.accessibility.setLogObject({ method: '#remove' }))
+      }
+      if (storage === undefined) {
+        return Promise
+          .reject(ERRORS.existence.setLogObject({ method: '#remove' }))
+      }
 
       return storage.remove()
         .then(deleteStorage, error => Promise.reject(error))
@@ -184,6 +206,9 @@ export default function makeStorages (configs = Object.create(null)) {
      * @return {module:storages/storage}
      */
     add (storage, body = Object.create(null)) {
+      const Error = helpers.object.makeLoggableClass(global.Error, logObject)
+        .assignLogObject({ method: 'add', ...this[logSymbol] })
+
       if (!(storage instanceof Storage) &&
         typeof storage !== 'string') throw new TypeError('storage parameter is required and must be Storage/string')
       else if (typeof body !== 'object') throw new TypeError('body parameter must be object')

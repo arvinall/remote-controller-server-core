@@ -1,10 +1,19 @@
-/* global Buffer */
+/* global global, Buffer */
 
 /**
  * @module passport
  */
 
 import * as helpers from '../helpers'
+
+// Error classes
+const logObject = {
+  scope: 'passport',
+  class: 'Passport',
+  event: undefined,
+  module: undefined
+}
+const TypeError = helpers.object.makeLoggableClass(global.TypeError, logObject)
 
 const GLOBAL_ERRORS = {
   passportInputRequired: new TypeError('passportInput parameter is required')
@@ -35,10 +44,14 @@ export default class Passport {
    * @param {{salt: Buffer, hash: Buffer}} [passport]
    */
   constructor (type, passportInput, passport) {
+    const Error = helpers.object.makeLoggableClass(global.Error, logObject)
+      .assignLogObject({ method: 'constructor' })
+
     if (typeof type !== 'string') throw new TypeError('type parameter is required and must be string')
     else if (!passports.hasOwnProperty(type)) throw new Error('type parameter must be one of the passport types')
-    else if (passportInput === undefined) throw GLOBAL_ERRORS.passportInputRequired
-    else if (passportInput === null &&
+    else if (passportInput === undefined) {
+      throw GLOBAL_ERRORS.passportInputRequired.setLogObject({ method: 'constructor' })
+    } else if (passportInput === null &&
       (typeof passport !== 'object' ||
         !(passport.hash instanceof Buffer) ||
         !(passport.hash instanceof Buffer))) {
@@ -61,7 +74,9 @@ export default class Passport {
    * @return {boolean}
    */
   isEqual (passportInput) {
-    if (passportInput === undefined || passportInput === null) throw GLOBAL_ERRORS.passportInputRequired
+    if (passportInput === undefined || passportInput === null) {
+      throw GLOBAL_ERRORS.passportInputRequired.setLogObject({ method: 'isEqual' })
+    }
 
     const passport = passportInput.hash instanceof Buffer
       ? passportInput
