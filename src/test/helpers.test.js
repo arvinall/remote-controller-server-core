@@ -21,3 +21,33 @@ describe('object namespace', () => {
     })
   })
 })
+
+describe('decorator namespace', () => {
+  describe('setStringTag method', () => {
+    test('Must return function', () => {
+      expect(helpers.decorator.setStringTag()).toBeInstanceOf(Function)
+    })
+
+    test('Must set [Symbol.toStringTag] property on object\'s prototype with specific name', () => {
+      class Klass {}
+
+      helpers.decorator.setStringTag('Test')(Klass)
+
+      expect(new Klass() + '').toBe('[object Test]')
+    })
+
+    test('Must set [Symbol.toStringTag] property on object\'s prototype with its name property when name parameter is not set', () => {
+      class Klass {}
+
+      helpers.decorator.setStringTag()(Klass)
+
+      expect(new Klass() + '').toBe('[object Klass]')
+    })
+
+    test('Must set [Symbol.toStringTag] property on object\'s prototype with its constructor name property when name parameter is not set and there is no name property', () => {
+      const Klass = helpers.decorator.setStringTag()(class {})
+
+      expect(new Klass() + '').toBe('[object Function]')
+    })
+  })
+})
