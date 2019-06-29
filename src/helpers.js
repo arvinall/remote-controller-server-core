@@ -127,7 +127,7 @@ export const decorator = {
     return target => Object
       .defineProperty(target.prototype, Symbol.toStringTag, {
         get () {
-          return name || target.name
+          return name || target.name || Object.getPrototypeOf(target).constructor.name
         }
       })
   }
