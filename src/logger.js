@@ -186,6 +186,13 @@ export default class Logger extends EventEmitter {
   }
 }
 
+// Set string tag
+Object.defineProperty(Logger.prototype, Symbol.toStringTag, {
+  get () {
+    return Logger.name
+  }
+})
+
 /**
  * @summary Create an object based inputs for logging information
  * @description
