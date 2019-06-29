@@ -124,11 +124,14 @@ export const decorator = {
    * @return {function(object): object}
    */
   setStringTag (name) {
-    return target => Object
-      .defineProperty(target.prototype, Symbol.toStringTag, {
+    return target => {
+      Object.defineProperty(target.prototype, Symbol.toStringTag, {
         get () {
           return name || target.name || Object.getPrototypeOf(target).constructor.name
         }
       })
+
+      return target
+    }
   }
 }
