@@ -96,6 +96,8 @@ export default class Logger extends EventEmitter {
    * @see module:logger.createInfoObject
    */
   info (scope, ...data) {
+    if (typeof this.#paths.info !== 'string') return
+
     const infoObject = createInfoObject(scope, ...data)
 
     if (infoObject === undefined) return
@@ -130,6 +132,8 @@ export default class Logger extends EventEmitter {
    * @see module:logger.createErrorObject
    */
   warn (scope, ...data) {
+    if (typeof this.#paths.warn !== 'string') return
+
     const warnObject = createErrorObject(scope, ...data)
 
     if (warnObject === undefined) return
@@ -164,6 +168,8 @@ export default class Logger extends EventEmitter {
    * @see module:logger.createErrorObject
    */
   error (scope, ...data) {
+    if (typeof this.#paths.error !== 'string') return
+
     const errorObject = createErrorObject(scope, ...data)
 
     if (errorObject === undefined) return
@@ -220,29 +226,33 @@ export function createInfoObject (scope, ...data) {
 
   Object.assign(infoObject, {
     scope: typeof scope === 'string' ? scope : undefined,
-    date: Date(Date.now())
+    date: new Date()
   })
 
   const mergedObjects = []
 
+  // Merge objects
   for (const dataIndex in data) {
-    if ((data[dataIndex] && data[dataIndex][logSymbol]) !== undefined) {
-      data[dataIndex] = data[dataIndex][logSymbol]
-    }
+    if (data[dataIndex]) {
+      if (data[dataIndex][logSymbol] !== undefined) {
+        data[dataIndex] = data[dataIndex][logSymbol]
+      }
 
-    if (typeof data[dataIndex] === 'object' &&
-      !(data[dataIndex] instanceof Array)) {
-      mergedObjects.unshift(dataIndex)
+      if (typeof data[dataIndex] === 'object' &&
+        !(data[dataIndex] instanceof Array)) {
+        mergedObjects.unshift(dataIndex)
 
-      Object.assign(infoObject, data[dataIndex])
+        Object.assign(infoObject, data[dataIndex])
+      }
     }
   }
 
+  // Remove merged objects from "data"
   for (const objectIndex of mergedObjects) {
     data.splice(objectIndex, 1)
   }
 
-  infoObject.messages = data.length ? data : undefined
+  if (data.length) infoObject.messages = data
 
   return infoObject
 }
