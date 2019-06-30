@@ -263,7 +263,7 @@ export function createInfoObject (scope, ...data) {
  * Same as {@link module:logger.createInfoObject} with some additional behaviors <br><br>
  * Errors pushes to "_errors" array for future usage <br>
  * Errors serialize to normal objects <br>
- * If Number of errors equal to 1, then it sets to "error" key, else errors pushes to "errors" key
+ * Serialized errors push to `errors` key
  *
  * @param {string} [scope]
  * @param {...*} [data]
@@ -320,8 +320,7 @@ export function createErrorObject (scope, ...data) {
     }
   }
 
-  if (safeErrors.length === 1) errorObject.error = safeErrors[0]
-  else if (safeErrors.length > 1) errorObject.errors = safeErrors
+  if (safeErrors.length) errorObject.errors = safeErrors
 
   return errorObject
 }
