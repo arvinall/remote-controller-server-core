@@ -1,4 +1,4 @@
-/* global test, expect, describe */
+/* global test, expect, describe, global */
 
 import {
   logSymbol,
@@ -242,5 +242,55 @@ describe('createErrorObject exported function', () => {
       date: expect.any(Date),
       [SCOPE[logSymbol].test]: SCOPE[logSymbol].test
     })
+  })
+
+  test('Must insert Error instances to _errors array key', () => {
+    const errors = [
+      new Error('test'),
+      new TypeError('test')
+    ]
+
+    const errorObject = createErrorObject(errors[0], errors[1])
+
+    expect(errorObject._errors).toEqual([ ...errors ])
+  })
+
+  test('Must set/assign Error instances [logSymbol] property to returned object or messages property', () => {
+    const Error = class Error extends global.Error { [logSymbol] = { test1: 'Error' } }
+    const TypeError = class TypeError extends global.TypeError { [logSymbol] = { test2: 'TypeError' } }
+    const errors = [
+      new Error('test'),
+      new TypeError('test')
+    ]
+
+    const errorObject = createErrorObject(errors[0], errors[1])
+
+    expect(errorObject).toEqual(expect.objectContaining({
+      ...errors[0][logSymbol],
+      ...errors[1][logSymbol]
+    }))
+  })
+
+  test('Must insert Error instances properties (prototype and itself) to errors array key', () => {
+    const errors = [
+      new Error('test'),
+      new TypeError('test')
+    ]
+    const safeErrors = []
+
+    const errorObject = createErrorObject(errors[0], errors[1])
+
+    for (const error of errors) {
+      const safeError = safeErrors[safeErrors.push(Object.create(null)) - 1]
+
+      for (const key of Object.getOwnPropertyNames(Object.getPrototypeOf(error))) {
+        safeError[key] = error[key]
+      }
+      for (const key of Object.getOwnPropertyNames(error)) {
+        safeError[key] = error[key]
+      }
+    }
+
+    expect(errorObject.errors).toEqual(safeErrors)
   })
 })
