@@ -294,16 +294,19 @@ export function createErrorObject (scope, ...data) {
     if (error[logSymbol] !== undefined) data.push(error[logSymbol])
   }
 
-  if (!data.length) data.push(Object.create(null))
+  if (errors.length &&
+    !data.length) data.push(Object.create(null))
 
   const errorObject = createInfoObject(scope, ...data)
 
   if (errorObject === undefined) return
 
-  Object.defineProperty(errorObject, '_errors', {
-    value: errors.length ? errors : undefined,
-    enumerable: false
-  })
+  if (errors.length) {
+    Object.defineProperty(errorObject, '_errors', {
+      value: errors,
+      enumerable: false
+    })
+  }
 
   const safeErrors = []
 
