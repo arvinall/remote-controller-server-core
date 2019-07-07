@@ -1,10 +1,12 @@
-/* global test, expect, describe, global */
+/* global test, expect, describe, global, afterAll, TMP_PATH */
 
-import {
+import Logger, {
   logSymbol,
   createInfoObject,
   createErrorObject
 } from '../logger'
+import fs from 'fs'
+import path from 'path'
 
 test('logSymbol must be a symbol with "log" description', () => {
   expect(typeof logSymbol).toBe('symbol')
@@ -292,5 +294,96 @@ describe('createErrorObject exported function', () => {
     }
 
     expect(errorObject.errors).toEqual(safeErrors)
+  })
+})
+/* eslint-disable no-unused-vars */ // Temporary
+describe('Logger exported class', () => {
+  const DIRECTORY = path.join(TMP_PATH, 'logger')
+
+  let logger
+
+  function readLogFrom (type) {
+    let log = fs.readFileSync(path.join(DIRECTORY, type + '.log'), { encoding: 'utf8' })
+      .trim()
+      .slice(0, -1)
+
+    log = JSON.parse('[' + log + ']')
+
+    return log
+  }
+
+  describe('Constructor', () => {
+    test('Initial without error', () => {
+      const logger = new Logger()
+
+      expect(logger).toBeInstanceOf(Logger)
+      expect(logger + '').toBe('[object Logger]')
+    })
+
+    afterAll(() => {
+      try {
+        fs.accessSync(DIRECTORY, fs.constants.F_OK | fs.constants.W_OK)
+      } catch (error) {
+        fs.mkdirSync(DIRECTORY)
+      }
+
+      logger = new Logger(DIRECTORY)
+    })
+  })
+
+  describe('Info method', () => {
+    const readLog = readLogFrom.bind(null, 'info')
+
+    test('Must return undefined when directory parameter is not define', () => {
+      const logger = new Logger()
+
+      expect(logger.info('info', 'test')).toBeUndefined()
+    })
+
+    afterAll(() => {
+      try {
+        fs.unlinkSync(path.join(DIRECTORY, 'info.log'))
+      } catch (error) {}
+    })
+  })
+
+  describe('Warn method', () => {
+    const readLog = readLogFrom.bind(null, 'warn')
+
+    test('Must return undefined when directory parameter is not define', () => {
+      const logger = new Logger()
+
+      expect(logger.warn('warn', 'test')).toBeUndefined()
+    })
+
+    afterAll(() => {
+      try {
+        fs.unlinkSync(path.join(DIRECTORY, 'warn.log'))
+      } catch (error) {}
+    })
+  })
+
+  describe('Error method', () => {
+    const readLog = readLogFrom.bind(null, 'error')
+
+    test('Must return undefined when directory parameter is not define', () => {
+      const logger = new Logger()
+
+      expect(logger.error('error', 'test')).toBeUndefined()
+    })
+
+    afterAll(() => {
+      try {
+        fs.unlinkSync(path.join(DIRECTORY, 'error.log'))
+      } catch (error) {}
+    })
+  })
+
+  afterAll(() => {
+    try {
+      if (fs.statSync(DIRECTORY).isDirectory()) {
+        fs.rmdirSync(DIRECTORY)
+      }
+    } catch (error) {}
   })
 })
