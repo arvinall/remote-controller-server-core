@@ -226,7 +226,7 @@ export function createInfoObject (scope, ...data) {
 
   Object.assign(infoObject, {
     scope: typeof scope === 'string' ? scope : undefined,
-    date: new Date()
+    date: Date()
   })
 
   const mergedObjects = []
