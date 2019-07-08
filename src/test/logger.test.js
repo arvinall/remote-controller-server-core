@@ -25,7 +25,7 @@ describe('createInfoObject exported function', () => {
     const infoObject = createInfoObject({})
 
     expect(infoObject).toEqual({
-      date: expect.any(Date)
+      date: expect.any(String)
     })
   })
 
@@ -35,7 +35,7 @@ describe('createInfoObject exported function', () => {
     const infoObject = createInfoObject(SCOPE)
 
     expect(infoObject).toEqual({
-      date: expect.any(Date),
+      date: expect.any(String),
       messages: [ SCOPE ]
     })
   })
@@ -47,7 +47,7 @@ describe('createInfoObject exported function', () => {
 
     expect(infoObject).toEqual({
       scope: SCOPE,
-      date: expect.any(Date)
+      date: expect.any(String)
     })
   })
 
@@ -57,7 +57,7 @@ describe('createInfoObject exported function', () => {
 
     expect(infoObject).toEqual({
       scope: SCOPE,
-      date: expect.any(Date),
+      date: expect.any(String),
       test: 0,
       test1: 2
     })
@@ -68,7 +68,7 @@ describe('createInfoObject exported function', () => {
     const infoObject = createInfoObject(SCOPE, { test1: 2 }, { test: 1 }, { test1: 3 })
 
     expect(infoObject).toEqual({
-      date: expect.any(Date),
+      date: expect.any(String),
       test2: 0,
       test: 1,
       test1: 3
@@ -83,7 +83,7 @@ describe('createInfoObject exported function', () => {
 
     expect(infoObject).toEqual({
       scope: SCOPE,
-      date: expect.any(Date),
+      date: expect.any(String),
       messages: [
         SCOPE,
         [ 'te', 'st' ],
@@ -101,7 +101,7 @@ describe('createInfoObject exported function', () => {
     const infoObject = createInfoObject(SCOPE, SCOPE[0])
 
     expect(infoObject).toEqual({
-      date: expect.any(Date),
+      date: expect.any(String),
       messages: [
         SCOPE,
         SCOPE[0]
@@ -115,7 +115,7 @@ describe('createInfoObject exported function', () => {
     let infoObject = createInfoObject(SCOPE)
 
     expect(infoObject).toEqual({
-      date: expect.any(Date),
+      date: expect.any(String),
       messages: [ SCOPE[logSymbol] ]
     })
 
@@ -124,7 +124,7 @@ describe('createInfoObject exported function', () => {
     infoObject = createInfoObject(SCOPE)
 
     expect(infoObject).toEqual({
-      date: expect.any(Date),
+      date: expect.any(String),
       [SCOPE[logSymbol].test]: SCOPE[logSymbol].test
     })
   })
@@ -142,7 +142,7 @@ describe('createErrorObject exported function', () => {
     const errorObject = createErrorObject({})
 
     expect(errorObject).toEqual({
-      date: expect.any(Date)
+      date: expect.any(String)
     })
   })
 
@@ -152,7 +152,7 @@ describe('createErrorObject exported function', () => {
     const errorObject = createErrorObject(SCOPE)
 
     expect(errorObject).toEqual({
-      date: expect.any(Date),
+      date: expect.any(String),
       messages: [ SCOPE ]
     })
   })
@@ -164,7 +164,7 @@ describe('createErrorObject exported function', () => {
 
     expect(errorObject).toEqual({
       scope: SCOPE,
-      date: expect.any(Date)
+      date: expect.any(String)
     })
   })
 
@@ -174,7 +174,7 @@ describe('createErrorObject exported function', () => {
 
     expect(errorObject).toEqual({
       scope: SCOPE,
-      date: expect.any(Date),
+      date: expect.any(String),
       test: 0,
       test1: 2
     })
@@ -185,7 +185,7 @@ describe('createErrorObject exported function', () => {
     const errorObject = createErrorObject(SCOPE, { test1: 2 }, { test: 1 }, { test1: 3 })
 
     expect(errorObject).toEqual({
-      date: expect.any(Date),
+      date: expect.any(String),
       test2: 0,
       test: 1,
       test1: 3
@@ -200,7 +200,7 @@ describe('createErrorObject exported function', () => {
 
     expect(errorObject).toEqual({
       scope: SCOPE,
-      date: expect.any(Date),
+      date: expect.any(String),
       messages: [
         SCOPE,
         [ 'te', 'st' ],
@@ -218,7 +218,7 @@ describe('createErrorObject exported function', () => {
     const errorObject = createErrorObject(SCOPE, SCOPE[0])
 
     expect(errorObject).toEqual({
-      date: expect.any(Date),
+      date: expect.any(String),
       messages: [
         SCOPE,
         SCOPE[0]
@@ -232,7 +232,7 @@ describe('createErrorObject exported function', () => {
     let errorObject = createErrorObject(SCOPE)
 
     expect(errorObject).toEqual({
-      date: expect.any(Date),
+      date: expect.any(String),
       messages: [ SCOPE[logSymbol] ]
     })
 
@@ -241,7 +241,7 @@ describe('createErrorObject exported function', () => {
     errorObject = createErrorObject(SCOPE)
 
     expect(errorObject).toEqual({
-      date: expect.any(Date),
+      date: expect.any(String),
       [SCOPE[logSymbol].test]: SCOPE[logSymbol].test
     })
   })
