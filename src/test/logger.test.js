@@ -3,7 +3,8 @@
 import Logger, {
   logSymbol,
   createInfoObject,
-  createErrorObject
+  createErrorObject,
+  makeClassLoggable
 } from '../logger'
 import fs from 'fs'
 import path from 'path'
@@ -549,5 +550,16 @@ describe('Logger exported class', () => {
         fs.rmdirSync(DIRECTORY)
       }
     } catch (error) {}
+  })
+})
+
+describe('makeClassLoggable exported function', () => {
+  test('Must return function that it\'s name prefixed by Loggable ' +
+    'and it\'s prototype setted to constructor parameter', () => {
+    const NonLoggableClass = class Test {}
+    const LoggableClass = makeClassLoggable(NonLoggableClass)
+
+    expect(LoggableClass.name).toBe('LoggableTest')
+    expect(Object.getPrototypeOf(LoggableClass)).toBe(NonLoggableClass)
   })
 })
