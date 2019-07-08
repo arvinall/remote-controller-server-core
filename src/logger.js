@@ -7,6 +7,7 @@ import EventEmitter from 'events'
 import fs from 'fs'
 import path from 'path'
 import { promisify } from 'util'
+import * as helpers from './helpers'
 
 const INDENT = 2 // spaces
 
@@ -208,11 +209,14 @@ export default class Logger extends EventEmitter {
 }
 
 // Set string tag
-Object.defineProperty(Logger.prototype, Symbol.toStringTag, {
-  get () {
-    return Logger.name
-  }
-})
+helpers.decorator.setStringTag()(Logger)
+
+/**
+ * Use this symbol as key on any object for custom logging
+ *
+ * @type {symbol}
+ */
+export const logSymbol = Symbol('log')
 
 /**
  * @summary Create an object based inputs for logging information
@@ -344,8 +348,94 @@ export function createErrorObject (scope, ...data) {
 }
 
 /**
- * Use this symbol as key on any object for custom logging
+ * Make custom class for logging
  *
- * @type {symbol}
+ * @param {Function} constructor
+ * @param {object} [logObject={}] Initial object
+ *
+ * @return {Function}
+ *
+ * @see module:logger.makeClassLoggable~Loggable
  */
-export const logSymbol = Symbol('log')
+export function makeClassLoggable (constructor, logObject = Object.create(null)) {
+  logObject = JSON.parse(JSON.stringify(logObject))
+
+  /**
+   * Custom class for logging
+   */
+  class Loggable extends constructor {
+    /**
+     * @type {object}
+     */
+    #logObject = Object.create(null)
+
+    get [logSymbol] () {
+      return {
+        ...logObject,
+        ...this.#logObject
+      }
+    }
+
+    /**
+     * Set log object
+     *
+     * @param {object} [logObject]
+     *
+     * @return {module:logger.makeClassLoggable~Loggable}
+     */
+    setLogObject (logObject) {
+      if (typeof logObject === 'object' &&
+        logObject !== null) this.#logObject = JSON.parse(JSON.stringify(logObject))
+
+      return this
+    }
+
+    /**
+     * Assign object to log object
+     *
+     * @param {object} [logObject]
+     *
+     * @return {module:logger.makeClassLoggable~Loggable}
+     */
+    assignLogObject (logObject) {
+      if (typeof logObject === 'object' &&
+        logObject !== null) Object.assign(this.#logObject, logObject)
+
+      return this
+    }
+
+    /**
+     * Set initial log object
+     *
+     * @param {object} [_logObject]
+     *
+     * @return {Function}
+     */
+    static setLogObject (_logObject) {
+      if (typeof _logObject === 'object' &&
+        _logObject !== null) logObject = JSON.parse(JSON.stringify(_logObject))
+
+      return this
+    }
+
+    /**
+     * Assign object to initial log object
+     *
+     * @param {object} [_logObject]
+     *
+     * @return {Function}
+     */
+    static assignLogObject (_logObject) {
+      if (typeof _logObject === 'object' &&
+        _logObject !== null) Object.assign(logObject, _logObject)
+
+      return this
+    }
+  }
+
+  Object.defineProperty(Loggable, 'name', {
+    value: 'Loggable' + constructor.name
+  })
+
+  return Loggable
+}

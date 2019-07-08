@@ -8,7 +8,10 @@ import { promisify } from 'util'
 import fs from 'fs'
 import path from 'path'
 import EventEmitter from 'events'
-import { logSymbol } from '../logger'
+import {
+  logSymbol,
+  makeClassLoggable
+} from '../logger'
 import * as helpers from '../helpers'
 
 const ENCODING = 'utf8'
@@ -20,8 +23,8 @@ const logObject = {
   event: undefined,
   module: undefined
 }
-const Error = helpers.object.makeLoggableClass(global.Error, logObject)
-const TypeError = helpers.object.makeLoggableClass(global.TypeError, logObject)
+const Error = makeClassLoggable(global.Error, logObject)
+const TypeError = makeClassLoggable(global.TypeError, logObject)
 
 const GLOBAL_ERRORS = {
   accessibility: new Error('Storage is not accessible')
@@ -203,7 +206,7 @@ export default class Storage extends EventEmitter {
    * @throws Will throw an error if the body property not provided and storage is not accessible
    */
   constructor (configs) {
-    const Error = helpers.object.makeLoggableClass(global.Error, logObject)
+    const Error = makeClassLoggable(global.Error, logObject)
       .assignLogObject({ method: 'constructor' })
 
     if (typeof configs !== 'object') throw new TypeError('configs parameter is required and must be object')

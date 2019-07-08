@@ -81,9 +81,8 @@
  * @see {@link https://github.com/websockets/ws/blob/master/doc/ws.md#class-websocketserver|Class: WebSocket.Server}
  */
 
-import * as helpers from './helpers'
 import path from 'path'
-import Logger from './logger'
+import Logger, { makeClassLoggable } from './logger'
 import makeStorages from './storages'
 import makePreferences from './preferences'
 import makeEngine from './engine'
@@ -95,7 +94,7 @@ const logObject = {
   module: 'core',
   event: undefined
 }
-const TypeError = helpers.object.makeLoggableClass(global.TypeError, logObject)
+const TypeError = makeClassLoggable(global.TypeError, logObject)
 
 const handleUncaughtExceptions = !process.listenerCount('uncaughtException')
 const storagesList = Object.create(null)

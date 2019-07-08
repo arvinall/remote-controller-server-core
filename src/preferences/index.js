@@ -7,6 +7,7 @@
 import EventEmitter from 'events'
 import Preference from './preference'
 import * as helpers from '../helpers'
+import { makeClassLoggable } from '../logger'
 
 /**
  * makePreferences creates preferences module
@@ -25,8 +26,8 @@ export default function makePreferences (configs) {
     event: undefined,
     module: undefined
   }
-  const Error = helpers.object.makeLoggableClass(global.Error, logObject)
-  const TypeError = helpers.object.makeLoggableClass(global.TypeError, logObject)
+  const Error = makeClassLoggable(global.Error, logObject)
+  const TypeError = makeClassLoggable(global.TypeError, logObject)
 
   if (typeof configs !== 'object') throw new TypeError('configs parameter is required and must be object')
 
@@ -225,7 +226,7 @@ export default function makePreferences (configs) {
      * @return {module:preferences/preference}
      */
     add (preference, body = Object.create(null)) {
-      const Error = helpers.object.makeLoggableClass(global.Error, logObject)
+      const Error = makeClassLoggable(global.Error, logObject)
         .assignLogObject({ method: 'add' })
 
       if (!(preference instanceof Preference) &&

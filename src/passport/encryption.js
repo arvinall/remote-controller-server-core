@@ -4,7 +4,7 @@
  * @module passport/encryption
  */
 
-import * as helpers from '../helpers'
+import { makeClassLoggable } from '../logger'
 import crypto from 'crypto'
 
 // Error classes
@@ -13,8 +13,8 @@ const logObject = {
   event: undefined,
   module: undefined
 }
-const Error = helpers.object.makeLoggableClass(global.Error, logObject)
-const TypeError = helpers.object.makeLoggableClass(global.TypeError, logObject)
+const Error = makeClassLoggable(global.Error, logObject)
+const TypeError = makeClassLoggable(global.TypeError, logObject)
 
 /**
  * encryption is a password encryptor

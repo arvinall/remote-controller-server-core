@@ -6,7 +6,10 @@
 
 import Storage from './storage'
 import EventEmitter from 'events'
-import { logSymbol } from '../logger'
+import {
+  logSymbol,
+  makeClassLoggable
+} from '../logger'
 import * as helpers from '../helpers'
 
 /**
@@ -24,8 +27,8 @@ export default function makeStorages (configs = Object.create(null)) {
     event: undefined,
     module: undefined
   }
-  const Error = helpers.object.makeLoggableClass(global.Error, logObject)
-  const TypeError = helpers.object.makeLoggableClass(global.TypeError, logObject)
+  const Error = makeClassLoggable(global.Error, logObject)
+  const TypeError = makeClassLoggable(global.TypeError, logObject)
 
   // Set default configs
   configs = Object.assign({
@@ -206,7 +209,7 @@ export default function makeStorages (configs = Object.create(null)) {
      * @return {module:storages/storage}
      */
     add (storage, body = Object.create(null)) {
-      const Error = helpers.object.makeLoggableClass(global.Error, logObject)
+      const Error = makeClassLoggable(global.Error, logObject)
         .assignLogObject({ method: 'add', ...this[logSymbol] })
 
       if (!(storage instanceof Storage) &&

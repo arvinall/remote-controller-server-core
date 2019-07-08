@@ -9,7 +9,10 @@ import EventEmitter from 'events'
 import os from 'os'
 import http from 'http'
 import WebSocket from 'ws'
-import { logSymbol } from '../logger'
+import {
+  logSymbol,
+  makeClassLoggable
+} from '../logger'
 import * as helpers from '../helpers'
 
 /**
@@ -28,8 +31,8 @@ export default function makeEngine (configs = Object.create(null)) {
     event: undefined,
     module: undefined
   }
-  const Error = helpers.object.makeLoggableClass(global.Error, logObject)
-  const TypeError = helpers.object.makeLoggableClass(global.TypeError, logObject)
+  const Error = makeClassLoggable(global.Error, logObject)
+  const TypeError = makeClassLoggable(global.TypeError, logObject)
 
   if (typeof configs !== 'object') throw new TypeError('configs parameter must be object')
 
@@ -119,7 +122,7 @@ export default function makeEngine (configs = Object.create(null)) {
      *  * Reject an error if there is no network
      */
     start (port = configs.port) {
-      const Error = helpers.object.makeLoggableClass(global.Error, logObject)
+      const Error = makeClassLoggable(global.Error, logObject)
         .assignLogObject({ method: 'start', ...this[logSymbol] })
 
       if (typeof port !== 'number') throw new TypeError('port parameter must be number')
@@ -152,7 +155,7 @@ export default function makeEngine (configs = Object.create(null)) {
      *  * Reject an error if engine stopped before
      */
     async stop () {
-      const Error = helpers.object.makeLoggableClass(global.Error, logObject)
+      const Error = makeClassLoggable(global.Error, logObject)
         .assignLogObject({ method: 'stop', ...this[logSymbol] })
 
       if (!this.isActive) throw new Error('Engine already stopped')

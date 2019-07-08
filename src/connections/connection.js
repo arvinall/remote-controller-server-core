@@ -11,7 +11,10 @@ import Passport from '../passport'
 import idGenerator from '../idGenerator'
 import stream from 'stream'
 import * as helpers from '../helpers'
-import { logSymbol } from '../logger'
+import {
+  logSymbol,
+  makeClassLoggable
+} from '../logger'
 
 // Error classes
 const logObject = {
@@ -20,8 +23,8 @@ const logObject = {
   event: undefined,
   module: undefined
 }
-const Error = helpers.object.makeLoggableClass(global.Error, logObject)
-const TypeError = helpers.object.makeLoggableClass(global.TypeError, logObject)
+const Error = makeClassLoggable(global.Error, logObject)
+const TypeError = makeClassLoggable(global.TypeError, logObject)
 
 const CLIENT_AUTHENTICATION_FACTORS = [ 'passport' ]
 const generateId = idGenerator()
@@ -329,7 +332,7 @@ export default class Connection extends AsyncEventEmitter {
    *  * Reject an error if Connection is not connected
    */
   send (name, ...body) {
-    const Error = helpers.object.makeLoggableClass(global.Error, logObject)
+    const Error = makeClassLoggable(global.Error, logObject)
       .assignLogObject({ method: 'send', ...this[logSymbol] })
 
     if (typeof name !== 'string') throw new TypeError('name parameter is required and must be string')

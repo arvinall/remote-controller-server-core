@@ -7,7 +7,10 @@
 import EventEmitter from 'events'
 import Storage from '../storages/storage'
 import * as helpers from '../helpers'
-import { logSymbol } from '../logger'
+import {
+  logSymbol,
+  makeClassLoggable
+} from '../logger'
 
 // Error classes
 const logObject = {
@@ -16,8 +19,8 @@ const logObject = {
   event: undefined,
   module: undefined
 }
-const Error = helpers.object.makeLoggableClass(global.Error, logObject)
-const TypeError = helpers.object.makeLoggableClass(global.TypeError, logObject)
+const Error = makeClassLoggable(global.Error, logObject)
+const TypeError = makeClassLoggable(global.TypeError, logObject)
 
 const GLOBAL_ERRORS = {
   accessibility: new Error('Preference is not accessible')
@@ -200,7 +203,7 @@ export default class Preference extends EventEmitter {
    * @throws Will throw an error if the body property not provided and storage is not accessible
    */
   constructor (configs) {
-    const Error = helpers.object.makeLoggableClass(global.Error, logObject)
+    const Error = makeClassLoggable(global.Error, logObject)
       .assignLogObject({ method: 'constructor' })
 
     if (typeof configs !== 'object') throw new TypeError('configs parameter is required and must be object')

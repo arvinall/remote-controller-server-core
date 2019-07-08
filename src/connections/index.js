@@ -10,7 +10,10 @@ import WebSocket from 'ws'
 import Connection from './connection'
 import Passport from '../passport'
 import * as helpers from '../helpers'
-import { logSymbol } from '../logger'
+import {
+  logSymbol,
+  makeClassLoggable
+} from '../logger'
 
 // Error classes
 const logObject = {
@@ -18,8 +21,8 @@ const logObject = {
   module: 'connections',
   event: undefined
 }
-const Error = helpers.object.makeLoggableClass(global.Error, logObject)
-const TypeError = helpers.object.makeLoggableClass(global.TypeError, logObject)
+const Error = makeClassLoggable(global.Error, logObject)
+const TypeError = makeClassLoggable(global.TypeError, logObject)
 
 const GLOBAL_ERRORS = {
   authenticationFactorsRequirement: new Error('One authentication factor require at least')
@@ -236,7 +239,7 @@ export default function makeConnections () {
      * @return {module:connections/connection}
      */
     add (socket, request) {
-      const Error = helpers.object.makeLoggableClass(global.Error, logObject)
+      const Error = makeClassLoggable(global.Error, logObject)
         .assignLogObject({ method: 'add' })
 
       if (!(socket instanceof WebSocket) &&

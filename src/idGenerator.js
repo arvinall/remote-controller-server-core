@@ -3,6 +3,14 @@
  * @module idGenerator
  */
 
+import { makeClassLoggable } from './logger'
+
+const TypeError = makeClassLoggable(global.TypeError, {
+  module: 'idGenerator',
+  scope: undefined,
+  event: undefined
+})
+
 /**
  * ID character's range [0 to 9 then a to z]
  *

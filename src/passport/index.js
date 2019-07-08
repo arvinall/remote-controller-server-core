@@ -5,6 +5,7 @@
  */
 
 import * as helpers from '../helpers'
+import { makeClassLoggable } from '../logger'
 
 // Error classes
 const logObject = {
@@ -13,7 +14,7 @@ const logObject = {
   event: undefined,
   module: undefined
 }
-const TypeError = helpers.object.makeLoggableClass(global.TypeError, logObject)
+const TypeError = makeClassLoggable(global.TypeError, logObject)
 
 const GLOBAL_ERRORS = {
   passportInputRequired: new TypeError('passportInput parameter is required')
@@ -44,7 +45,7 @@ export default class Passport {
    * @param {{salt: Buffer, hash: Buffer}} [passport]
    */
   constructor (type, passportInput, passport) {
-    const Error = helpers.object.makeLoggableClass(global.Error, logObject)
+    const Error = makeClassLoggable(global.Error, logObject)
       .assignLogObject({ method: 'constructor' })
 
     if (typeof type !== 'string') throw new TypeError('type parameter is required and must be string')
