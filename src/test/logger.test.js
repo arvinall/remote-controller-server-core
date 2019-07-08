@@ -499,7 +499,51 @@ describe('Logger exported class', () => {
     })
   })
 
+  describe('Events', () => {
+    test('Must emit infoLogged when info log append to it\'s file', done => {
+      expect.assertions(1)
+
+      const infoObject = logger.info('infoLogged')
+
+      logger.once('infoLogged', logObject => {
+        expect(logObject).toBe(infoObject)
+
+        done()
+      })
+    })
+
+    test('Must emit warnLogged when warn log append to it\'s file', done => {
+      expect.assertions(1)
+
+      const warnObject = logger.warn('warnLogged')
+
+      logger.once('warnLogged', logObject => {
+        expect(logObject).toBe(warnObject)
+
+        done()
+      })
+    })
+
+    test('Must emit errorLogged when error log append to it\'s file', done => {
+      expect.assertions(1)
+
+      const errorObject = logger.error('errorLogged')
+
+      logger.once('errorLogged', logObject => {
+        expect(logObject).toBe(errorObject)
+
+        done()
+      })
+    })
+  })
+
   afterAll(() => {
+    for (const type of [ 'info', 'warn', 'error' ]) {
+      try {
+        fs.unlinkSync(path.join(DIRECTORY, type + '.log'))
+      } catch (error) {}
+    }
+
     try {
       if (fs.statSync(DIRECTORY).isDirectory()) {
         fs.rmdirSync(DIRECTORY)
