@@ -91,7 +91,7 @@ export default class Logger extends EventEmitter {
    *
    * @emits module:logger~Logger#event:infoLogged
    *
-   * @return {object}
+   * @return {{_promise: Promise}}
    *
    * @see module:logger.createInfoObject
    */
@@ -104,17 +104,22 @@ export default class Logger extends EventEmitter {
 
     const parameters = [ 'info', infoObject ]
 
-    this.#append(...parameters)
-      /**
-       * Logger infoLogged event
-       *
-       * @event module:logger~Logger#event:infoLogged
-       *
-       * @type {object}
-       *
-       * @see module:logger.createInfoObject
-       */
-      .then(() => this.#emitLogged(...parameters))
+    Object.defineProperty(infoObject, '_promise', {
+      value: this.#append(...parameters)
+        .then(() => {
+          /**
+           * Logger infoLogged event
+           *
+           * @event module:logger~Logger#event:infoLogged
+           *
+           * @type {object}
+           *
+           * @see module:logger.createInfoObject
+           */
+          this.#emitLogged(...parameters)
+        }),
+      enumerable: false
+    })
 
     return infoObject
   }
@@ -127,7 +132,7 @@ export default class Logger extends EventEmitter {
    *
    * @emits module:logger~Logger#event:warnLogged
    *
-   * @return {object}
+   * @return {{_promise: Promise}}
    *
    * @see module:logger.createErrorObject
    */
@@ -140,17 +145,22 @@ export default class Logger extends EventEmitter {
 
     const parameters = [ 'warn', warnObject ]
 
-    this.#append(...parameters)
-    /**
-     * Logger warnLogged event
-     *
-     * @event module:logger~Logger#event:warnLogged
-     *
-     * @type {object}
-     *
-     * @see module:logger.createErrorObject
-     */
-      .then(() => this.#emitLogged(...parameters))
+    Object.defineProperty(warnObject, '_promise', {
+      value: this.#append(...parameters)
+        .then(() => {
+          /**
+           * Logger warnLogged event
+           *
+           * @event module:logger~Logger#event:warnLogged
+           *
+           * @type {object}
+           *
+           * @see module:logger.createErrorObject
+           */
+          this.#emitLogged(...parameters)
+        }),
+      enumerable: false
+    })
 
     return warnObject
   }
@@ -163,7 +173,7 @@ export default class Logger extends EventEmitter {
    *
    * @emits module:logger~Logger#event:errorLogged
    *
-   * @return {object}
+   * @return {{_promise: Promise}}
    *
    * @see module:logger.createErrorObject
    */
@@ -176,17 +186,22 @@ export default class Logger extends EventEmitter {
 
     const parameters = [ 'error', errorObject ]
 
-    this.#append(...parameters)
-      /**
-       * Logger errorLogged event
-       *
-       * @event module:logger~Logger#event:errorLogged
-       *
-       * @type {object}
-       *
-       * @see module:logger.createErrorObject
-       */
-      .then(() => this.#emitLogged(...parameters))
+    Object.defineProperty(errorObject, '_promise', {
+      value: this.#append(...parameters)
+        .then(() => {
+          /**
+           * Logger errorLogged event
+           *
+           * @event module:logger~Logger#event:errorLogged
+           *
+           * @type {object}
+           *
+           * @see module:logger.createErrorObject
+           */
+          this.#emitLogged(...parameters)
+        }),
+      enumerable: false
+    })
 
     return errorObject
   }
