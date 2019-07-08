@@ -1,4 +1,4 @@
-/* global test, expect, describe, global, afterAll, TMP_PATH */
+/* global test, expect, describe, global, afterAll, TMP_PATH, afterEach */
 
 import Logger, {
   logSymbol,
@@ -296,7 +296,7 @@ describe('createErrorObject exported function', () => {
     expect(errorObject.errors).toEqual(safeErrors)
   })
 })
-/* eslint-disable no-unused-vars */ // Temporary
+
 describe('Logger exported class', () => {
   const DIRECTORY = path.join(TMP_PATH, 'logger')
 
@@ -340,7 +340,47 @@ describe('Logger exported class', () => {
       expect(logger.info('info', 'test')).toBeUndefined()
     })
 
-    afterAll(() => {
+    test('Must make info.log file and write to it', async () => {
+      expect.assertions(1)
+
+      const MESSAGE = 'Initial info log'
+
+      await logger.info(MESSAGE)._promise
+
+      expect(readLog()).toEqual([
+        {
+          date: expect.any(String),
+          messages: [ MESSAGE ]
+        }
+      ])
+    })
+
+    test('Must append logs to info.log file', async () => {
+      expect.assertions(3)
+
+      const messages = [
+        'initial log',
+        'append 1',
+        'append 2'
+      ]
+
+      for (const message of messages) {
+        await logger.info(message)._promise
+      }
+
+      const logs = readLog()
+
+      for (const log of logs) {
+        const index = logs.indexOf(log)
+
+        expect(log).toEqual({
+          date: expect.any(String),
+          messages: [ messages[index] ]
+        })
+      }
+    })
+
+    afterEach(() => {
       try {
         fs.unlinkSync(path.join(DIRECTORY, 'info.log'))
       } catch (error) {}
@@ -356,7 +396,47 @@ describe('Logger exported class', () => {
       expect(logger.warn('warn', 'test')).toBeUndefined()
     })
 
-    afterAll(() => {
+    test('Must make warn.log file and write to it', async () => {
+      expect.assertions(1)
+
+      const MESSAGE = 'Initial warn log'
+
+      await logger.warn(MESSAGE)._promise
+
+      expect(readLog()).toEqual([
+        {
+          date: expect.any(String),
+          messages: [ MESSAGE ]
+        }
+      ])
+    })
+
+    test('Must append logs to warn.log file', async () => {
+      expect.assertions(3)
+
+      const messages = [
+        'initial log',
+        'append 1',
+        'append 2'
+      ]
+
+      for (const message of messages) {
+        await logger.warn(message)._promise
+      }
+
+      const logs = readLog()
+
+      for (const log of logs) {
+        const index = logs.indexOf(log)
+
+        expect(log).toEqual({
+          date: expect.any(String),
+          messages: [ messages[index] ]
+        })
+      }
+    })
+
+    afterEach(() => {
       try {
         fs.unlinkSync(path.join(DIRECTORY, 'warn.log'))
       } catch (error) {}
@@ -372,7 +452,47 @@ describe('Logger exported class', () => {
       expect(logger.error('error', 'test')).toBeUndefined()
     })
 
-    afterAll(() => {
+    test('Must make error.log file and write to it', async () => {
+      expect.assertions(1)
+
+      const MESSAGE = 'Initial error log'
+
+      await logger.error(MESSAGE)._promise
+
+      expect(readLog()).toEqual([
+        {
+          date: expect.any(String),
+          messages: [ MESSAGE ]
+        }
+      ])
+    })
+
+    test('Must append logs to error.log file', async () => {
+      expect.assertions(3)
+
+      const messages = [
+        'initial log',
+        'append 1',
+        'append 2'
+      ]
+
+      for (const message of messages) {
+        await logger.error(message)._promise
+      }
+
+      const logs = readLog()
+
+      for (const log of logs) {
+        const index = logs.indexOf(log)
+
+        expect(log).toEqual({
+          date: expect.any(String),
+          messages: [ messages[index] ]
+        })
+      }
+    })
+
+    afterEach(() => {
       try {
         fs.unlinkSync(path.join(DIRECTORY, 'error.log'))
       } catch (error) {}
