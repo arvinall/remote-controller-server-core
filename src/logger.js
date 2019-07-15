@@ -385,7 +385,7 @@ export function makeClassLoggable (constructor, logObject = Object.create(null))
      */
     setLogObject (logObject) {
       if (typeof logObject === 'object' &&
-        logObject !== null) this.#logObject = JSON.parse(JSON.stringify(logObject))
+        logObject !== null) this.#logObject = Object.assign({}, logObject)
 
       return this
     }
@@ -413,7 +413,7 @@ export function makeClassLoggable (constructor, logObject = Object.create(null))
      */
     static setLogObject (_logObject) {
       if (typeof _logObject === 'object' &&
-        _logObject !== null) logObject = JSON.parse(JSON.stringify(_logObject))
+        _logObject !== null) logObject = Object.assign({}, _logObject)
 
       return this
     }
