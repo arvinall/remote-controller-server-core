@@ -554,12 +554,22 @@ describe('Logger exported class', () => {
 })
 
 describe('makeClassLoggable exported function', () => {
-  test('Must return function that it\'s name prefixed by Loggable ' +
-    'and it\'s prototype setted to constructor parameter', () => {
-    const NonLoggableClass = class Test {}
-    const LoggableClass = makeClassLoggable(NonLoggableClass)
+  describe('Function', () => {
+    test('Must return function that it\'s name prefixed by Loggable ' +
+      'and it\'s prototype setted to constructor parameter', () => {
+      const NonLoggableTest = class Test {}
+      const LoggableTest = makeClassLoggable(NonLoggableTest)
 
-    expect(LoggableClass.name).toBe('LoggableTest')
-    expect(Object.getPrototypeOf(LoggableClass)).toBe(NonLoggableClass)
+      expect(LoggableTest.name).toBe('LoggableTest')
+      expect(Object.getPrototypeOf(LoggableTest)).toBe(NonLoggableTest)
+    })
+
+    test('Must set log object to logObject parameter', () => {
+      const logObject = { test: 'test' }
+      const LoggableTest = makeClassLoggable(class Test {}, logObject)
+      const loggableTest = new LoggableTest()
+
+      expect(loggableTest[logSymbol]).toEqual(logObject)
+    })
   })
 })
