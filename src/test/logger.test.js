@@ -1,4 +1,4 @@
-/* global test, expect, describe, global, afterAll, TMP_PATH, afterEach */
+/* global test, expect, describe, global, afterAll, TMP_PATH, afterEach, beforeAll */
 
 import Logger, {
   logSymbol,
@@ -554,6 +554,9 @@ describe('Logger exported class', () => {
 })
 
 describe('makeClassLoggable exported function', () => {
+  let LoggableTest
+  let loggableTest
+
   describe('Function', () => {
     test('Must return function that it\'s name prefixed by Loggable ' +
       'and it\'s prototype setted to constructor parameter', () => {
@@ -570,6 +573,119 @@ describe('makeClassLoggable exported function', () => {
       const loggableTest = new LoggableTest()
 
       expect(loggableTest[logSymbol]).toEqual(logObject)
+    })
+
+    afterAll(() => {
+      LoggableTest = makeClassLoggable(class Test {})
+      loggableTest = new LoggableTest()
+    })
+  })
+
+  describe('Loggable class', () => {
+    describe('setLogObject static method', () => {
+      test('Must return Loggable class to chaining', () => {
+        expect(LoggableTest.setLogObject()).toBe(LoggableTest)
+      })
+
+      test('Must not set log object when _logObject parameter is not object', () => {
+        LoggableTest.setLogObject('wrong')
+
+        expect(loggableTest[logSymbol]).toEqual({})
+      })
+
+      test('Must set log object to _logObject parameter', () => {
+        const logObject = { class: 'test' }
+
+        LoggableTest.setLogObject(logObject)
+
+        expect(loggableTest[logSymbol]).toEqual(logObject)
+      })
+
+      afterAll(() => LoggableTest.setLogObject({}))
+    })
+
+    describe('assignLogObject static method', () => {
+      test('Must return Loggable class to chaining', () => {
+        expect(LoggableTest.assignLogObject()).toBe(LoggableTest)
+      })
+
+      test('Must not assign log object when _logObject parameter is not object', () => {
+        LoggableTest.assignLogObject('wrong')
+
+        expect(loggableTest[logSymbol]).toEqual({})
+      })
+
+      test('Must assign _logObject parameter to log object', () => {
+        const logObject1 = { class1: 'test' }
+        const logObject2 = { class2: 'test' }
+
+        LoggableTest.setLogObject(logObject1)
+        LoggableTest.assignLogObject(logObject2)
+
+        expect(loggableTest[logSymbol]).toEqual({ ...logObject1, ...logObject2 })
+      })
+
+      afterAll(() => LoggableTest.setLogObject({}))
+    })
+
+    describe('setLogObject method', () => {
+      const classLogObject = { class: 'test' }
+
+      beforeAll(() => LoggableTest.setLogObject(classLogObject))
+
+      test('Must return it\'s instance to chaining', () => {
+        expect(loggableTest.setLogObject()).toBe(loggableTest)
+      })
+
+      test('Must not set log object when logObject parameter is not object', () => {
+        loggableTest.setLogObject('wrong')
+
+        expect(loggableTest[logSymbol]).toEqual(classLogObject)
+      })
+
+      test('Must set log object to logObject parameter', () => {
+        const logObject = { instance: 'test' }
+
+        loggableTest.setLogObject(logObject)
+
+        expect(loggableTest[logSymbol]).toEqual({ ...classLogObject, ...logObject })
+      })
+
+      afterAll(() => {
+        LoggableTest.setLogObject({})
+        loggableTest.setLogObject({})
+      })
+    })
+
+    describe('assignLogObject method', () => {
+      const classLogObject = { class: 'test' }
+
+      beforeAll(() => LoggableTest.setLogObject(classLogObject))
+
+      test('Must return it\'s instance to chaining', () => {
+        expect(loggableTest.assignLogObject()).toBe(loggableTest)
+      })
+
+      test('Must not assign log object when logObject parameter is not object', () => {
+        loggableTest.assignLogObject('wrong')
+
+        expect(loggableTest[logSymbol]).toEqual(classLogObject)
+      })
+
+      test('Must assign logObject parameter to log object', () => {
+        const logObject1 = { instance1: 'test' }
+        const logObject2 = { instance2: 'test' }
+
+        loggableTest.setLogObject(logObject1)
+        loggableTest.assignLogObject(logObject2)
+
+        expect(loggableTest[logSymbol]).toEqual({ ...classLogObject, ...logObject1, ...logObject2 })
+      })
+
+      afterAll(() => {
+        LoggableTest.setLogObject({})
+        loggableTest.setLogObject({})
+      })
     })
   })
 })
