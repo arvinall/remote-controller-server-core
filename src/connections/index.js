@@ -149,6 +149,10 @@ export default function makeConnections () {
      * @type {module:passport}
      */
     #passport
+    /**
+     * @type {boolean}
+     */
+    #binary = false
 
     /**
      * Authentication factors requirement
@@ -410,7 +414,7 @@ export default function makeConnections () {
     }
 
     /**
-     * @summary Send broadcast message to clients (connected and authenticated connections)
+     * Send broadcast message to clients (connected and authenticated connections)
      *
      * @param {string} name Message's name
      * @param {...*} [body] Message's content
@@ -421,11 +425,38 @@ export default function makeConnections () {
     send (name, ...body) {
       if (typeof name !== 'string') throw new TypeError('name parameter is required and must be string')
 
+      const binary = this.#binary
+
       return (async () => {
         for (const connection of this.get()) {
-          if (connection.isAuthenticate) await connection.send(name, ...body)
+          if (connection.isAuthenticate) {
+            if (!binary) await connection.send(name, ...body)
+            else await connection.sendBinary(name, ...body)
+          }
         }
       })()
+    }
+
+    /**
+     * @summary Send broadcast message in binary type to clients (connected and authenticated connections)
+     * @description same as {@link module:connections~Connections#send}
+     *
+     * @param {string} name Message's name
+     * @param {...*} [body] Message's content
+     * @param {function} [callback] This function listens to event with the same name just once
+     *
+     * @return {Promise<(void|Error)>}
+     *
+     * @see module:connections~Connections#send
+     */
+    sendBinary (name, ...body) {
+      this.#binary = true
+
+      const result = this.send(name, ...body)
+
+      this.#binary = false
+
+      return result
     }
 
     get [logSymbol] () {

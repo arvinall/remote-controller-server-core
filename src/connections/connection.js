@@ -87,6 +87,10 @@ export default class Connection extends AsyncEventEmitter {
     passport: [false /* , false */], // eslint-disable-line standard/array-bracket-even-spacing
     confirmation: [true /* , false */] // eslint-disable-line standard/array-bracket-even-spacing
   }
+  /**
+   * @type {boolean}
+   */
+  #binary = false
 
   /**
    * @emits module:connections/connection#event:authentication
@@ -356,11 +360,36 @@ export default class Connection extends AsyncEventEmitter {
 
       message = JSON.stringify(message)
 
+      if (this.#binary) message = Buffer.from(message)
+
       return (new Promise(resolve => this.#socket.send(message, undefined, resolve)))
         .then(() => {
           if (typeof callback === 'function') this.once(name, callback)
         })
     })()
+  }
+
+  /**
+   * @summary Send message in binary type to client
+   * @description Same as {@link module:connections/connection#send}
+   *
+   * @param {string} name Message's name
+   * @param {...*} [body] Message's content
+   * @param {function} [callback] This function listens to event with the same name just once
+   *
+   * @async
+   * @return {Promise<(void|Error)>}
+   *
+   * @see module:connections/connection#send
+   */
+  sendBinary (name, ...body) {
+    this.#binary = true
+
+    const result = this.send(name, ...body)
+
+    this.#binary = false
+
+    return result
   }
 
   /**
