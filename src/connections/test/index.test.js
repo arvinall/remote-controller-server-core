@@ -591,17 +591,21 @@ describe('connections send method', () => {
     test('Must send message via name', async done => {
       const numberOfConnections = 3
 
-      expect.assertions(numberOfConnections)
+      expect.assertions(numberOfConnections * 2)
 
-      const sockets = await getSomeSockets(3)
+      const sockets = await getSomeSockets(numberOfConnections)
 
       let counter = 0
 
       for (const socket of sockets) {
         core.connections.add(socket, socket.request).confirm()
 
-        getSomeMessages(numberOfConnections + 1, socket.__webSocket__)
-          .then(([ ,,, [ name ] ]) => {
+        getSomeMessages(4, socket.__webSocket__)
+          .then(([ ,,, {
+            0: name,
+            _constructor
+          } ]) => {
+            expect(_constructor).toBe(String.name)
             expect(name).toBe('test')
 
             counter++
@@ -618,7 +622,7 @@ describe('connections send method', () => {
 
       expect.assertions(numberOfConnections * 3)
 
-      const sockets = await getSomeSockets(3)
+      const sockets = await getSomeSockets(numberOfConnections)
 
       let counter = 0
 
@@ -627,7 +631,7 @@ describe('connections send method', () => {
       for (const socket of sockets) {
         core.connections.add(socket, socket.request).confirm()
 
-        getSomeMessages(numberOfConnections + 1, socket.__webSocket__)
+        getSomeMessages(4, socket.__webSocket__)
           .then(([ ,,, [ name, data ] ]) => {
             expect(name).toBe('test')
             expect(data[0]).toBe(body[0])
@@ -647,14 +651,14 @@ describe('connections send method', () => {
 
       expect.assertions(numberOfConnections * 2)
 
-      const sockets = await getSomeSockets(3)
+      const sockets = await getSomeSockets(numberOfConnections)
 
       let counter = 0
 
       for (const socket of sockets) {
         core.connections.add(socket, socket.request).confirm()
 
-        getSomeMessages(numberOfConnections + 1, socket.__webSocket__)
+        getSomeMessages(4, socket.__webSocket__)
           .then(([ ,,, [ name ] ]) => {
             expect(name).toBe('test')
 
@@ -677,7 +681,7 @@ describe('connections send method', () => {
 
       expect.assertions((numberOfConnections * 2) * 3)
 
-      const sockets = await getSomeSockets(3)
+      const sockets = await getSomeSockets(numberOfConnections)
 
       let counter = 0
 
@@ -686,7 +690,7 @@ describe('connections send method', () => {
       for (const socket of sockets) {
         core.connections.add(socket, socket.request).confirm()
 
-        getSomeMessages(numberOfConnections + 1, socket.__webSocket__)
+        getSomeMessages(4, socket.__webSocket__)
           .then(([ ,,, [ name, data ] ]) => {
             expect(name).toBe('test')
             expect(data[0]).toBe(body[0])
