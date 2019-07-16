@@ -1,4 +1,4 @@
-/* global test, expect, describe, beforeEach, beforeAll, afterAll, afterEach, jest, TMP_PATH, setImmediate */
+/* global test, expect, describe, beforeEach, beforeAll, afterAll, afterEach, jest, TMP_PATH, setImmediate, Buffer */
 
 import stream from 'stream'
 import fs from 'fs'
@@ -1086,6 +1086,29 @@ describe('Connection send method', () => {
       webSocket.send(JSON.stringify([ name, reversedBody ]))
     })
   })
+})
+
+test('Connection sendBinary method must send message in binary type without error', async () => {
+  expect.assertions(3)
+
+  const name = 'test'
+  const body = [ 'binary', Buffer.from('test') ]
+
+  await connection.sendBinary(name, ...body)
+
+  const {
+    0: messageName,
+    1: messageBody,
+    _constructor
+  } = (await getSomeMessages())[0]
+
+  expect(_constructor).toBe(Buffer.name)
+  expect(messageName).toBe(name)
+
+  messageBody[1] = uint8ArrayLikeToBuffer(messageBody[1]).toString()
+  body[1] = body[1].toString()
+
+  expect(messageBody).toEqual(body)
 })
 
 describe('Connection disconnect method', () => {
