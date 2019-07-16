@@ -714,6 +714,36 @@ describe('connections send method', () => {
   })
 })
 
+test('connections sendBinary method must send message in binary type without error', async done => {
+  const numberOfConnections = 3
+  const name = 'test'
+
+  expect.assertions(numberOfConnections * 2)
+
+  const sockets = await getSomeSockets(numberOfConnections)
+
+  let counter = 0
+
+  for (const socket of sockets) {
+    core.connections.add(socket, socket.request).confirm()
+
+    getSomeMessages(4, socket.__webSocket__)
+      .then(([ ,,, {
+        0: messageName,
+        _constructor
+      } ]) => {
+        expect(_constructor).toBe(Buffer.name)
+        expect(messageName).toBe(name)
+
+        counter++
+
+        if (counter >= numberOfConnections) done()
+      })
+  }
+
+  await core.connections.sendBinary(name)
+})
+
 describe('connections events', () => {
   test('Must emit added event when new connection added', async () => {
     expect.assertions(2)
