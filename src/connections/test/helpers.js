@@ -31,7 +31,14 @@ export async function getSomeMessages (size = 1) {
     const result = []
 
     this.on('message', function getData (data) {
-      result.push(JSON.parse(data))
+      const constructor = data.constructor.name
+
+      data = result[result.push(JSON.parse(data)) - 1]
+
+      Object.defineProperty(data, '_constructor', {
+        enumerable: false,
+        value: constructor
+      })
 
       if (result.length >= size) {
         this.off('message', getData)
