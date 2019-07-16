@@ -989,19 +989,23 @@ describe('Connection send method', () => {
       await getSomeMessages(2)
     })
 
-    test('Send message without error', async () => {
-      expect.assertions(1)
+    test('Must send message without error', async () => {
+      expect.assertions(2)
 
       const name = 'test'
 
       await connection.send(name)
 
-      const [ messageName ] = (await getSomeMessages())[0]
+      const {
+        0: messageName,
+        _constructor
+      } = (await getSomeMessages())[0]
 
+      expect(_constructor).toBe(String.name)
       expect(messageName).toBe(name)
     })
 
-    test('Send message with body', async () => {
+    test('Must send message with body', async () => {
       expect.assertions(4)
 
       const name = 'test'
@@ -1034,7 +1038,7 @@ describe('Connection send method', () => {
       expect(messageBody).toEqual(body)
     })
 
-    test('Send message with callback and no body', async done => {
+    test('Must send message with callback and no body', async done => {
       expect.assertions(1)
 
       const name = 'test'
@@ -1050,7 +1054,7 @@ describe('Connection send method', () => {
       webSocket.send(JSON.stringify([ name, [] ]))
     })
 
-    test('Send message with callback and body', async done => {
+    test('Must send message with callback and body', async done => {
       expect.assertions(3)
 
       const name = 'test'
