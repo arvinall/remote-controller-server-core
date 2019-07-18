@@ -87,6 +87,7 @@ import makeStorages from './storages'
 import makePreferences from './preferences'
 import makeEngine from './engine'
 import makeConnections from './connections'
+import makePlugins from './plugins'
 
 // Error classes
 const logObject = {
@@ -107,6 +108,7 @@ const storagesList = Object.create(null)
  * @param {string} [configs.preferenceStorageName='preferences'] Preferences storage name
  * @param {number} [configs.httpServerPort=7777] Default http server port
  * @param {string} [configs.loggerPath=path.join(configs.storagePath, '../logs')] Logger directory path
+ * @param {string} [configs.pluginPath=path.join(configs.storagePath, '../plugins')] Plugins directory path
  *
  * @return {module:remote-controller-server-core~core}
  */
@@ -121,13 +123,15 @@ export default function makeCore (configs = Object.create(null)) {
   }, configs)
 
   configs = Object.assign({
-    loggerPath: path.join(configs.storagePath, '../logs')
+    loggerPath: path.join(configs.storagePath, '../logs'),
+    pluginPath: path.join(configs.storagePath, '../plugins')
   }, configs)
 
   if (typeof configs.storagePath !== 'string') throw new TypeError('configs.storagePath must be string')
   else if (typeof configs.preferenceStorageName !== 'string') throw new TypeError('configs.preferencesStorageName must be string')
   else if (typeof configs.httpServerPort !== 'number') throw new TypeError('configs.httpServerPort must be number')
   if (typeof configs.loggerPath !== 'string') throw new TypeError('configs.loggerPath must be string')
+  if (typeof configs.pluginPath !== 'string') throw new TypeError('configs.pluginPath must be string')
 
   /**
    * @namespace module:remote-controller-server-core~core
@@ -252,6 +256,25 @@ export default function makeCore (configs = Object.create(null)) {
     throw error
   }
 
+  // plugins
+  try {
+    /**
+     * Plugins manager module
+     *
+     * @name plugins
+     * @memberOf module:remote-controller-server-core~core
+     *
+     * @type {module:plugins~Plugins}
+     */
+    core.plugins = makePlugins.call(core, { path: configs.pluginPath })
+  } catch (error) {
+    core.logger.error('core', { module: 'plugins' }, error)
+
+    error._dontLog = true
+
+    throw error
+  }
+
   return Object.freeze(core)
 }
 
@@ -290,3 +313,4 @@ export * as connections from './connections'
 export * as asyncEventEmitter from './asyncEventEmitter'
 export * as helpers from './helpers'
 export * as logger from './logger'
+export * as plugins from './plugins'

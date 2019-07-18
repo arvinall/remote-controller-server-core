@@ -5,9 +5,10 @@ module.exports = {
       'src',
       'src/storages',
       'src/preferences',
+      'src/passport',
       'src/engine',
       'src/connections',
-      'src/passport'
+      'src/plugins'
     ],
     exclude: [
       'node_modules'
