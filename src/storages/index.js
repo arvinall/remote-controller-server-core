@@ -11,6 +11,8 @@ import {
   makeClassLoggable
 } from '../logger'
 import * as helpers from '../helpers'
+import fs from 'fs'
+import path from 'path'
 
 /**
  * makeStorages creates storages module
@@ -32,10 +34,16 @@ export default function makeStorages (configs = Object.create(null)) {
 
   // Set default configs
   configs = Object.assign({
-    path: process.cwd()
+    path: path.join(process.cwd(), 'storage')
   }, configs)
 
   if (typeof configs.path !== 'string') throw new TypeError('configs.path must be string')
+
+  try {
+    fs.mkdirSync(configs.path, { recursive: true })
+  } catch (error) {
+    if (error.code !== 'EEXIST') throw error
+  }
 
   const logger = this.logger
 

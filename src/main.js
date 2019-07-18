@@ -103,10 +103,10 @@ const storagesList = Object.create(null)
  * makeCore creates core namespace
  *
  * @param {object} [configs={}]
- * @param {string} [configs.storagePath=process.cwd()] Storages path address
+ * @param {string} [configs.storagePath=path.join(process.cwd(), 'storage')] Storages path address
  * @param {string} [configs.preferenceStorageName='preferences'] Preferences storage name
  * @param {number} [configs.httpServerPort=7777] Default http server port
- * @param {string} [configs.loggerPath=configs.storagePath] Logger directory path
+ * @param {string} [configs.loggerPath=path.join(configs.storagePath, '../logs')] Logger directory path
  *
  * @return {module:remote-controller-server-core~core}
  */
@@ -115,13 +115,13 @@ export default function makeCore (configs = Object.create(null)) {
 
   // Set default configs
   configs = Object.assign({
-    storagePath: process.cwd(),
+    storagePath: path.join(process.cwd(), 'storage'),
     preferenceStorageName: 'preferences',
     httpServerPort: 7777
   }, configs)
 
   configs = Object.assign({
-    loggerPath: configs.storagePath
+    loggerPath: path.join(configs.storagePath, '../logs')
   }, configs)
 
   if (typeof configs.storagePath !== 'string') throw new TypeError('configs.storagePath must be string')
@@ -195,6 +195,7 @@ export default function makeCore (configs = Object.create(null)) {
    */
   core.storages = storagesList[configs.storagePath]
 
+  // preferences
   try {
     /**
      * Preference manager module
@@ -213,6 +214,7 @@ export default function makeCore (configs = Object.create(null)) {
     throw error
   }
 
+  // connections
   try {
     /**
      * Connection manager module
@@ -231,6 +233,7 @@ export default function makeCore (configs = Object.create(null)) {
     throw error
   }
 
+  // engine
   try {
     /**
      * Core engine

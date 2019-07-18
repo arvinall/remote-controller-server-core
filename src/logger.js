@@ -73,6 +73,10 @@ export default class Logger extends EventEmitter {
     if (directory !== undefined &&
       directory !== null) directory = String(directory)
 
+    try {
+      fs.mkdirSync(directory, { recursive: true })
+    } catch (error) {}
+
     super()
 
     try {
