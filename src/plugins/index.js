@@ -14,7 +14,7 @@ import Plugin from './plugin'
 /**
  * makePlugins creates plugins module
  *
- * @return {module:plugins}
+ * @return {module:plugins~Plugins}
  */
 export default function makePlugins (configs = Object.create(null)) {
   // Error classes
@@ -122,7 +122,7 @@ export default function makePlugins (configs = Object.create(null)) {
   }
 
   // Set string tag
-  helpers.decorator.setStringTag()
+  helpers.decorator.setStringTag()(Plugins)
 
   return new Plugins()
 }
