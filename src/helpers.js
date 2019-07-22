@@ -14,6 +14,27 @@ export const object = {
    */
   iterateOverValues () {
     return Object.values(this)[Symbol.iterator]()
+  },
+
+  /**
+   * Check context is an inheritance of Target parameter
+   *
+   * @param {Function} Target
+   *
+   * @return {boolean}
+   */
+  inheritOf (Target) {
+    let prototype = Object.getPrototypeOf(this)
+
+    return (function inheritOf () { // eslint-disable-line no-extra-parens
+      if (prototype === null) return false
+      else if (prototype === Target ||
+        prototype.constructor === Target) return true
+
+      prototype = Object.getPrototypeOf(prototype)
+
+      return inheritOf()
+    }).call(this)
   }
 }
 

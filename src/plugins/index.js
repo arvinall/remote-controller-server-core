@@ -93,7 +93,7 @@ export default function makePlugins (configs = Object.create(null)) {
 
       if (!result ||
         !result.Plugin ||
-        Object.getPrototypeOf(result.Plugin) !== Plugin) {
+        !helpers.object.inheritOf.call(result.Plugin, Plugin)) {
         throw new TypeError('Returned value has no any \'' + Plugin.name + '\' key that extends \'' + Plugin.name + '\' class, ' + pluginPackage.package.name)
           .setLogObject(pluginPackage.package)
       }
