@@ -346,7 +346,7 @@ export default function makeConnections () {
     /**
      * @summary Get specific connection or all connected list
      * @description
-     * Object that returned when call this method without id parameter is iterable (over values) <br>
+     * When call this method without id parameter, returned object is iterable (over values) <br>
      * `Object.values({@link module:connections~Connections#get|connections.get()})[Symbol.iterator]`
      * is same as
      * `{@link module:connections~Connections#get|connections.get()}[Symbol.iterator]`
