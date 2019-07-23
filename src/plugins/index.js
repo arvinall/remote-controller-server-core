@@ -4,6 +4,15 @@
  * @module plugins
  */
 
+/**
+ * An object that hold plugin package data
+ *
+ * @typedef {object} module:plugins.PluginPackage
+ * @property {module:plugins/plugin} Plugin Exported Plugin class
+ * @property {string} name
+ * @property {object} package Same as package.json config file
+ */
+
 import EventEmitter from 'events'
 import * as helpers from '../helpers'
 import { makeClassLoggable } from '../logger'
@@ -73,8 +82,10 @@ export default function makePlugins (configs = Object.create(null)) {
      * @throws Will throw an error if plugin package's name hasn't "-plugin" suffix
      * @throws Will throw an typeError if plugin package's default exported value doesn't function
      * @throws Will throw an typeError if plugin package's default exported return value doesn't contain a class that implements the {@link module:plugins/plugin} as Plugin key
+     *
+     * @return module:plugins.PluginPackage
      */
-    #add = (pluginPath) => {
+    #add = pluginPath => {
       const pluginPackage = {}
 
       // Read package.json config file
@@ -110,6 +121,8 @@ export default function makePlugins (configs = Object.create(null)) {
       pluginPackage.name = packageNameToPluginName(pluginPackage.package.name)
 
       this.#pluginsList[pluginPackage.name] = pluginPackage
+
+      return pluginPackage
     }
 
     /**
@@ -133,7 +146,7 @@ export default function makePlugins (configs = Object.create(null)) {
      * @param {string} pluginName
      *
      * @async
-     * @return {Promise<(void|Error)>}
+     * @return {Promise<(module:plugins.PluginPackage|Error)>}
      * * Rejection
      *  * Will throw an error if plugin package's name hasn't "-plugin" suffix
      *  * Will throw an typeError if plugin package's default exported value doesn't function
