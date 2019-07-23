@@ -52,6 +52,7 @@
   },
   "dependencies": {
     "@babel/runtime": "^7.4.4",
+    "rimraf": "^2.6.3",
     "ws": "^6.2.1"
   },
   "optionalDependencies": {

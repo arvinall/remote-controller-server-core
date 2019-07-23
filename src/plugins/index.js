@@ -19,6 +19,8 @@ import { makeClassLoggable } from '../logger'
 import path from 'path'
 import fs from 'fs'
 import Plugin from './plugin'
+import { promisify } from 'util'
+import rimraf from 'rimraf'
 
 /**
  * makePlugins creates plugins module
@@ -126,6 +128,31 @@ export default function makePlugins (configs = Object.create(null)) {
     }
 
     /**
+     * Remove plugin from list and ram and remove plugin package from disk
+     *
+     * @param {string} pluginPath
+     *
+     * @return {Promise<(void|Error)>}
+     */
+    #remove = async pluginPath => {
+      if (pluginPath.endsWith('/')) pluginPath = pluginPath.slice(0, pluginPath.length)
+
+      let pluginName = pluginPath.split('/')
+
+      pluginName = packageNameToPluginName(pluginName[pluginName.length - 1])
+
+      // Remove cache from disk
+      await promisify(rimraf)(pluginPath)
+
+      // Remove module from ram
+      delete global.require.cache[global.require.resolve(pluginPath)]
+      // Remove package from ram
+      delete global.require.cache[global.require.resolve(path.join(pluginPath, 'package.json'))]
+      // Remove cache from list
+      delete this.#pluginsList[pluginName]
+    }
+
+    /**
      * Load installed plugins
      */
     constructor () {
@@ -157,6 +184,55 @@ export default function makePlugins (configs = Object.create(null)) {
 
       return (async () => {
         return this.#add(_pluginNameToPath(pluginName))
+      })()
+    }
+
+    /**
+     * @summary Get specific plugin package or all plugins list
+     * @description
+     * When call this method without pluginName parameter, returned object is iterable (over values) <br>
+     * `Object.values({@link module:plugins~Plugins#get|plugins.get()})[Symbol.iterator]`
+     * is same as
+     * `{@link module:plugins~Plugins#get|plugins.get()}[Symbol.iterator]`
+     *
+     * @param  {string} [pluginName]
+     *
+     * @return {(module:plugins.PluginPackage|object<string, module:plugins.PluginPackage>)}
+     */
+    get (pluginName) {
+      if (pluginName !== undefined &&
+        typeof pluginName !== 'string') throw new TypeError('pluginName parameter must be string')
+
+      if (pluginName) return this.#pluginsList[pluginName]
+
+      const pluginsListPrototype = {
+        length: 0,
+        [Symbol.iterator]: helpers.object.iterateOverValues
+      }
+      const pluginsList = Object.create(pluginsListPrototype)
+
+      for (const [ key, value ] of Object.entries(this.#pluginsList)) {
+        pluginsList[key] = value
+
+        pluginsListPrototype.length++
+      }
+
+      return pluginsList
+    }
+
+    /**
+     * Remove plugin from list and ram and remove plugin package from disk and user account
+     *
+     * @param {string} pluginName
+     *
+     * @async
+     * @return {Promise<(void|Error)>}
+     */
+    remove (pluginName) {
+      if (typeof pluginName !== 'string') throw new TypeError('pluginName parameter is required and must be string')
+
+      return (async () => {
+        await this.#remove(_pluginNameToPath(pluginName))
       })()
     }
   }
