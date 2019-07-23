@@ -123,6 +123,26 @@ export default function makePlugins (configs = Object.create(null)) {
         }
       }
     }
+
+    /**
+     * Download, Read, setup and add plugin to the list
+     *
+     * @param {string} pluginName
+     *
+     * @async
+     * @return {Promise<(void|Error)>}
+     * * Rejection
+     *  * Will throw an error if plugin package's name hasn't "-plugin" suffix
+     *  * Will throw an typeError if plugin package's default exported value doesn't function
+     *  * Will throw an typeError if plugin package's default exported return value doesn't contain a class that implements the {@link module:plugins/plugin} as Plugin key
+     */
+    add (pluginName) {
+      if (typeof pluginName !== 'string') throw new TypeError('pluginName parameter is required and must be string')
+
+      return (async () => {
+        this.#add(path.join(configs.path, pluginName + '-' + Plugin.name.toLowerCase()))
+      })()
+    }
   }
 
   // Set string tag
