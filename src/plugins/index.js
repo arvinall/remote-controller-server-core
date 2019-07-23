@@ -41,6 +41,9 @@ export default function makePlugins (configs = Object.create(null)) {
     if (error.code !== 'EEXIST') throw error
   }
 
+  const _packageNameToPath = packageNameToPath.bind(null, configs.path)
+  const _pluginNameToPath = pluginNameToPath.bind(null, configs.path)
+
   logObject.module = 'plugins'
 
   Error.setLogObject(logObject)
@@ -77,7 +80,7 @@ export default function makePlugins (configs = Object.create(null)) {
       // Read package.json config file
       pluginPackage.package = global.require(path.join(pluginPath, 'package.json'))
 
-      if (!pluginPackage.package.name.endsWith('-' + Plugin.name.toLowerCase())) {
+      if (!isPluginPackage(pluginPackage.package.name)) {
         throw new Error('Plugin package name must ends with \'-' + Plugin.name.toLowerCase() + '\', ' + pluginPackage.package.name)
           .setLogObject(pluginPackage.package)
       }
@@ -104,7 +107,7 @@ export default function makePlugins (configs = Object.create(null)) {
 
       pluginPackage.Plugin = result.Plugin
 
-      pluginPackage.name = pluginPackage.package.name.split('-' + Plugin.name.toLowerCase())[0]
+      pluginPackage.name = packageNameToPluginName(pluginPackage.package.name)
 
       this.#pluginsList[pluginPackage.name] = pluginPackage
     }
@@ -118,8 +121,8 @@ export default function makePlugins (configs = Object.create(null)) {
       // Load installed plugins
       for (const file of fs.readdirSync(configs.path, { withFileTypes: true })) {
         if (file.isDirectory() &&
-          file.name.endsWith('-' + Plugin.name.toLowerCase())) {
-          this.#add(path.join(configs.path, file.name))
+          isPluginPackage(file.name)) {
+          this.#add(_packageNameToPath(file.name))
         }
       }
     }
@@ -140,7 +143,7 @@ export default function makePlugins (configs = Object.create(null)) {
       if (typeof pluginName !== 'string') throw new TypeError('pluginName parameter is required and must be string')
 
       return (async () => {
-        this.#add(path.join(configs.path, pluginName + '-' + Plugin.name.toLowerCase()))
+        return this.#add(_pluginNameToPath(pluginName))
       })()
     }
   }
@@ -149,6 +152,55 @@ export default function makePlugins (configs = Object.create(null)) {
   helpers.decorator.setStringTag()(Plugins)
 
   return new Plugins()
+}
+
+export const packageNameSuffix = '-' + Plugin.name.toLowerCase()
+
+/**
+ * @param {string} packageName
+ *
+ * @return {boolean}
+ */
+export function isPluginPackage (packageName) {
+  return packageName.endsWith(packageNameSuffix)
+}
+
+/**
+ * @param {string} packageName
+ *
+ * @return {string}
+ */
+export function packageNameToPluginName (packageName) {
+  return packageName.split(packageNameSuffix)[0]
+}
+
+/**
+ * @param {string} pluginName
+ *
+ * @return {string}
+ */
+export function pluginNameToPackageName (pluginName) {
+  return pluginName + '-' + Plugin.name.toLowerCase()
+}
+
+/**
+ * @param {string} _path
+ * @param {string} packageName
+ *
+ * @return {string}
+ */
+export function packageNameToPath (_path, packageName) {
+  return path.join(_path, packageName)
+}
+
+/**
+ * @param {string} path
+ * @param {string} pluginName
+ *
+ * @return {string}
+ */
+export function pluginNameToPath (path, pluginName) {
+  return packageNameToPath(path, pluginNameToPackageName(pluginName))
 }
 
 export Plugin from './plugin'
