@@ -66,6 +66,10 @@ export default function makePlugins (configs = Object.create(null)) {
      * Read, setup and add plugin to the list
      *
      * @param {string} pluginPath
+     *
+     * @throws Will throw an error if plugin package's name hasn't "-plugin" suffix
+     * @throws Will throw an typeError if plugin package's default exported value doesn't function
+     * @throws Will throw an typeError if plugin package's default exported return value doesn't contain a class that implements the {@link module:plugins/plugin} as Plugin key
      */
     #add = (pluginPath) => {
       const pluginPackage = {}
@@ -100,7 +104,7 @@ export default function makePlugins (configs = Object.create(null)) {
 
       pluginPackage.Plugin = result.Plugin
 
-      pluginPackage.name = result.Plugin.name.split(Plugin.name)[0].toLowerCase()
+      pluginPackage.name = pluginPackage.package.name.split('-' + Plugin.name.toLowerCase())[0]
 
       this.#pluginsList[pluginPackage.name] = pluginPackage
     }
