@@ -20,6 +20,23 @@ describe('object namespace', () => {
       }
     })
   })
+
+  describe('inheritOf method', () => {
+    test('Must return false when context doesnt extends Target parameter', () => {
+      const Target = class Target {}
+      const Context = class Context {}
+
+      expect(helpers.object.inheritOf.call(Context, Target)).toBe(false)
+    })
+
+    test('Must return true when context extends Target parameter', () => {
+      const Target = class Target {}
+      const Context = class Context extends Target {}
+
+      expect(helpers.object.inheritOf.call(Context, Target)).toBe(true)
+      expect(helpers.object.inheritOf.call(Context, Object)).toBe(true)
+    })
+  })
 })
 
 describe('decorator namespace', () => {
