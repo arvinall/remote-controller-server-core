@@ -28,6 +28,11 @@ export default class Plugin extends EventEmitter {
         }
       })
     }
+
+    this.once('plugging', this.plugging.bind(this))
+    this.once('plugged', this.plugged.bind(this))
+    this.once('unplugging', this.unplugging.bind(this))
+    this.once('unplugged', this.unplugged.bind(this))
   }
 
   /**
