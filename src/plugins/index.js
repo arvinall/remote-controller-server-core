@@ -251,6 +251,28 @@ export default function makePlugins (configs = Object.create(null)) {
         this.#remove(pluginPath)
       })()
     }
+
+    /**
+     * Reload (read, setup, cache) plugin
+     *
+     * @param {(module:plugins.PluginPackage|string)} pluginPackage
+     *
+     * @return {module:plugins.PluginPackage}
+     */
+    reload (pluginPackage) {
+      if (!pluginPackage ||
+        (typeof pluginPackage !== 'string' &&
+          typeof pluginPackage.name !== 'string')) throw new TypeError('pluginPackage parameter is required and must be PluginPackage/string')
+
+      const pluginName = pluginPackage.name || pluginPackage
+      const pluginPath = _pluginNameToPath(pluginName)
+
+      // Remove cache from ram
+      this.#remove(pluginPath)
+
+      // Read and setup plugin again
+      return this.#add(pluginPath)
+    }
   }
 
   // Set string tag
