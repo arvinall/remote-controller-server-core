@@ -5,6 +5,7 @@
 
 import EventEmitter from 'events'
 import * as helpers from '../helpers'
+import { logSymbol } from '../logger'
 
 /**
  * Interface for plugins
@@ -18,9 +19,13 @@ export default class Plugin extends EventEmitter {
    * @param [configs]
    */
   constructor (configs = Object.create(null)) {
+    if (typeof configs !== 'object') throw new TypeError('configs parameter must be object')
+
     super()
 
     for (const key in configs) {
+      if (!configs.hasOwnProperty(key)) continue
+
       Object.defineProperty(this, key, {
         enumerable: false,
         get () {
@@ -29,10 +34,12 @@ export default class Plugin extends EventEmitter {
       })
     }
 
-    this.once('plugging', this.plugging.bind(this))
-    this.once('plugged', this.plugged.bind(this))
-    this.once('unplugging', this.unplugging.bind(this))
-    this.once('unplugged', this.unplugged.bind(this))
+    const states = [ 'plugging', 'plugged', 'unplugging', 'unplugged' ]
+
+    for (const state of states) {
+      // Call state methods event base
+      this.once(state, this[state].bind(this))
+    }
   }
 
   /**
@@ -62,6 +69,13 @@ export default class Plugin extends EventEmitter {
    * @return {(Promise<*>|*)}
    */
   unplugged () {}
+
+  get [logSymbol] () {
+    return {
+      activityId: this.activityId,
+      activityConnection: this.activityConnection[logSymbol]
+    }
+  }
 }
 
 // Set string tag
