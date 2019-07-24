@@ -11,6 +11,7 @@
  * @property {module:plugins/plugin} Plugin Exported Plugin class
  * @property {string} name
  * @property {object} package Same as package.json config file
+ * @property {module:plugins/pluginPreferences} pluginPreferences
  */
 
 import EventEmitter from 'events'
@@ -21,6 +22,7 @@ import fs from 'fs'
 import Plugin from './plugin'
 import { promisify } from 'util'
 import rimraf from 'rimraf'
+import PluginPreferences from './pluginPreferences'
 
 /**
  * makePlugins creates plugins module
@@ -54,6 +56,7 @@ export default function makePlugins (configs = Object.create(null)) {
 
   const _packageNameToPath = packageNameToPath.bind(null, configs.path)
   const _pluginNameToPath = pluginNameToPath.bind(null, configs.path)
+  const preferences = this.preferences
 
   logObject.module = 'plugins'
 
@@ -110,8 +113,16 @@ export default function makePlugins (configs = Object.create(null)) {
           .setLogObject(pluginPackage.package)
       }
 
+      pluginPackage.pluginPreferences = new PluginPreferences({
+        name: pluginPackage.package.name,
+        preferences
+      })
+
       // Setup
-      const result = setup({ Plugin })
+      const result = setup({
+        Plugin,
+        pluginPreferences: pluginPackage.pluginPreferences
+      })
 
       if (!result ||
         !result.Plugin ||
@@ -331,3 +342,4 @@ export function pluginNameToPath (path, pluginName) {
 }
 
 export Plugin from './plugin'
+export PluginPreferences from './pluginPreferences'
