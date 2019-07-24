@@ -88,6 +88,8 @@ export default function makePlugins (configs = Object.create(null)) {
      * @return module:plugins.PluginPackage
      */
     #add = pluginPath => {
+      if (typeof pluginPath !== 'string') throw new TypeError('pluginPath parameter is required and must be string')
+
       const pluginPackage = {}
 
       // Read package.json config file
@@ -180,7 +182,11 @@ export default function makePlugins (configs = Object.create(null)) {
      *  * Will throw an typeError if plugin package's default exported return value doesn't contain a class that implements the {@link module:plugins/plugin} as Plugin key
      */
     add (pluginName) {
+      const Error = makeClassLoggable(global.Error, logObject)
+        .assignLogObject({ method: 'add' })
+
       if (typeof pluginName !== 'string') throw new TypeError('pluginName parameter is required and must be string')
+      else if (this.get(pluginName)) throw new Error(`${pluginName} is already exist`)
 
       return (async () => {
         return this.#add(_pluginNameToPath(pluginName))
@@ -223,13 +229,24 @@ export default function makePlugins (configs = Object.create(null)) {
     /**
      * Remove plugin from list and ram and remove plugin package from disk and user account
      *
-     * @param {string} pluginName
+     * @param {(module:plugins.PluginPackage|string)} pluginPackage
      *
      * @async
      * @return {Promise<(void|Error)>}
      */
-    remove (pluginName) {
-      if (typeof pluginName !== 'string') throw new TypeError('pluginName parameter is required and must be string')
+    remove (pluginPackage) {
+      const Error = makeClassLoggable(global.Error, logObject)
+        .assignLogObject({ method: 'remove' })
+
+      if (!pluginPackage ||
+        (typeof pluginPackage !== 'string' &&
+          typeof pluginPackage.name !== 'string')) throw new TypeError('pluginPackage parameter is required and must be PluginPackage/string')
+
+      const pluginName = pluginPackage.name || pluginPackage
+
+      if (!this.get(pluginName)) throw new Error(`${pluginName} is not exist in list`)
+
+      const pluginPath = _pluginNameToPath(pluginName)
 
       return (async () => {
         await this.#remove(_pluginNameToPath(pluginName))
