@@ -32,7 +32,7 @@ export default class AsyncEventEmitter extends EventEmitter {
    *
    * @see {@link https://nodejs.org/api/events.html#events_emitter_emit_eventname_args|EventEmitter#emit}
    */
-  syncEmit (...parameters) {
+  emitSync (...parameters) {
     return EventEmitter.prototype.emit.call(this, ...parameters)
   }
 }
