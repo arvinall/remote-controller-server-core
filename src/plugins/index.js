@@ -130,27 +130,22 @@ export default function makePlugins (configs = Object.create(null)) {
     }
 
     /**
-     * Remove plugin from list and ram and remove plugin package from disk
+     * Remove plugin from list and ram
      *
      * @param {string} pluginPath
-     *
-     * @return {Promise<(void|Error)>}
      */
-    #remove = async pluginPath => {
-      if (pluginPath.endsWith('/')) pluginPath = pluginPath.slice(0, pluginPath.length)
+    #remove = pluginPath => {
+      if (typeof pluginPath !== 'string') throw new TypeError('pluginPath parameter is required and must be string')
 
       let pluginName = pluginPath.split('/')
 
       pluginName = packageNameToPluginName(pluginName[pluginName.length - 1])
 
-      // Remove cache from disk
-      await promisify(rimraf)(pluginPath)
-
       // Remove module from ram
       delete global.require.cache[global.require.resolve(pluginPath)]
       // Remove package from ram
       delete global.require.cache[global.require.resolve(path.join(pluginPath, 'package.json'))]
-      // Remove cache from list
+      // Remove pluginPackage from list
       delete this.#pluginsList[pluginName]
     }
 
@@ -249,7 +244,11 @@ export default function makePlugins (configs = Object.create(null)) {
       const pluginPath = _pluginNameToPath(pluginName)
 
       return (async () => {
-        await this.#remove(_pluginNameToPath(pluginName))
+        // Remove cache from disk
+        await promisify(rimraf)(pluginPath)
+
+        // Remove cache from ram
+        this.#remove(pluginPath)
       })()
     }
   }
