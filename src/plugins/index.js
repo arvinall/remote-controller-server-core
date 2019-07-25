@@ -134,6 +134,9 @@ export default function makePlugins (configs = Object.create(null)) {
           .setLogObject(pluginPackage.package)
       }
 
+      // Set string tag
+      helpers.decorator.setStringTag()(result.Plugin)
+
       pluginPackage.Plugin = result.Plugin
 
       pluginPackage.name = packageNameToPluginName(pluginPackage.package.name)
