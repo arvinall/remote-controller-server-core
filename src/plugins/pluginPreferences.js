@@ -1,3 +1,4 @@
+/* global global */
 
 /**
  * @module plugins/pluginPreferences
