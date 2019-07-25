@@ -16,7 +16,10 @@
 
 import EventEmitter from 'events'
 import * as helpers from '../helpers'
-import { makeClassLoggable } from '../logger'
+import {
+  makeClassLoggable,
+  logSymbol
+} from '../logger'
 import path from 'path'
 import fs from 'fs'
 import Plugin from './plugin'
@@ -283,6 +286,23 @@ export default function makePlugins (configs = Object.create(null)) {
 
       // Read and setup plugin again
       return this.#add(pluginPath)
+    }
+
+    /**
+     * Return plugins's path
+     *
+     * @return {string}
+     */
+    get path () {
+      return configs.path
+    }
+
+    get [logSymbol] () {
+      return {
+        plugins: {
+          path: configs.path
+        }
+      }
     }
   }
 
