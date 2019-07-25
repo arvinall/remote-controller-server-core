@@ -126,9 +126,7 @@ export default function makeStorages (configs = Object.create(null)) {
     #remove = (storage, configs = Object.create(null)) => {
       if (storage === undefined ||
         (typeof storage !== 'string' &&
-          !(storage instanceof Storage))) {
-        throw new TypeError('storage parameter is required and must be string/Storage')
-      }
+          !(storage instanceof Storage))) throw new TypeError('storage parameter is required and must be string/Storage')
 
       // Set default configs
       configs = Object.assign({

@@ -1,4 +1,4 @@
-/* global global, process */
+/* global global, process, console */
 
 /**
  * @module plugins
@@ -12,6 +12,8 @@
  * @property {string} name
  * @property {object} package Same as package.json config file
  * @property {module:plugins/pluginPreferences} pluginPreferences
+ * @property {module:plugins/pluginStorages} pluginStorages
+ * @property {module:plugins/pluginLogger} pluginLogger
  */
 
 import EventEmitter from 'events'
@@ -26,6 +28,8 @@ import Plugin from './plugin'
 import { promisify } from 'util'
 import rimraf from 'rimraf'
 import PluginPreferences from './pluginPreferences'
+import PluginStorages from './pluginStorages'
+import PluginLogger from './pluginLogger'
 
 /**
  * makePlugins creates plugins module
@@ -60,6 +64,8 @@ export default function makePlugins (configs = Object.create(null)) {
   const _packageNameToPath = packageNameToPath.bind(null, configs.path)
   const _pluginNameToPath = pluginNameToPath.bind(null, configs.path)
   const preferences = this.preferences
+  const storages = this.storages
+  const logger = this.logger
 
   logObject.module = 'plugins'
 
@@ -106,6 +112,8 @@ export default function makePlugins (configs = Object.create(null)) {
           .setLogObject(pluginPackage.package)
       }
 
+      pluginPackage.name = packageNameToPluginName(pluginPackage.package.name)
+
       // Load module
       let setup = global.require(pluginPath)
 
@@ -116,15 +124,25 @@ export default function makePlugins (configs = Object.create(null)) {
           .setLogObject(pluginPackage.package)
       }
 
+      // Setup
       pluginPackage.pluginPreferences = new PluginPreferences({
         name: pluginPackage.package.name,
         preferences
       })
+      pluginPackage.pluginStorages = new PluginStorages({
+        name: pluginPackage.package.name,
+        storages
+      })
+      pluginPackage.pluginLogger = new PluginLogger({
+        name: pluginPackage.name,
+        logger
+      })
 
-      // Setup
       const result = setup({
         Plugin,
-        pluginPreferences: pluginPackage.pluginPreferences
+        pluginPreferences: pluginPackage.pluginPreferences,
+        pluginStorages: pluginPackage.pluginStorages,
+        pluginLogger: pluginPackage.pluginLogger
       })
 
       if (!result ||
@@ -139,8 +157,7 @@ export default function makePlugins (configs = Object.create(null)) {
 
       pluginPackage.Plugin = result.Plugin
 
-      pluginPackage.name = packageNameToPluginName(pluginPackage.package.name)
-
+      // Add to list
       this.#pluginsList[pluginPackage.name] = pluginPackage
 
       return pluginPackage
@@ -375,3 +392,5 @@ export function pluginNameToPath (path, pluginName) {
 
 export Plugin from './plugin'
 export PluginPreferences from './pluginPreferences'
+export * as pluginStorages from './pluginStorages'
+export PluginLogger from './pluginLogger'
