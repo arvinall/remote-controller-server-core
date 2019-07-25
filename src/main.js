@@ -138,6 +138,14 @@ export default function makeCore (configs = Object.create(null)) {
    */
   const core = Object.create(null)
 
+  /**
+   * Logger module
+   *
+   * @name logger
+   * @memberOf module:remote-controller-server-core~core
+   *
+   * @type {module:logger}
+   */
   core.logger = new Logger(configs.loggerPath)
 
   /*
@@ -177,6 +185,7 @@ export default function makeCore (configs = Object.create(null)) {
       event: 'warning'
     }, warning))
 
+  // storages
   if (storagesList[configs.storagePath] === undefined) {
     try {
       storagesList[configs.storagePath] = makeStorages.call(core, { path: configs.storagePath })
