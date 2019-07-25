@@ -173,7 +173,16 @@ export default function makePlugins (configs = Object.create(null)) {
       for (const file of fs.readdirSync(configs.path, { withFileTypes: true })) {
         if (file.isDirectory() &&
           isPluginPackage(file.name)) {
-          this.#add(_packageNameToPath(file.name))
+          try {
+            this.#add(_packageNameToPath(file.name))
+          } catch (error) {
+            logger.error(logObject, {
+              pluginName: packageNameToPluginName(file.name),
+              path: this.path
+            }, error)
+
+            console.error(error)
+          }
         }
       }
     }
