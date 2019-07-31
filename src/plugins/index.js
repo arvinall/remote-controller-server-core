@@ -158,6 +158,23 @@ export default function makePlugins (configs = Object.create(null)) {
 
       pluginPackage.Plugin = result.Plugin
 
+      Object.defineProperty(pluginPackage, logSymbol, {
+        get () {
+          return {
+            pluginPackage: {
+              name: pluginPackage.name,
+              plugin: pluginPackage.Plugin.name,
+              package: {
+                name: pluginPackage.package.name,
+                version: pluginPackage.package.version,
+                description: pluginPackage.package.description,
+                main: pluginPackage.package.main
+              }
+            }
+          }
+        }
+      })
+
       // Add to list
       this.#pluginsList[pluginPackage.name] = pluginPackage
 
@@ -381,7 +398,33 @@ export default function makePlugins (configs = Object.create(null)) {
   // Set string tag
   helpers.decorator.setStringTag()(Plugins)
 
-  return new Plugins()
+  const plugins = new Plugins()
+
+    // Logging
+  ;(() => {
+    plugins.on('added', pluginPackage => logger
+      .info('makePlugins', {
+        module: 'plugins',
+        event: 'added'
+      }, pluginPackage))
+
+    plugins.on('removed', pluginPackage => logger
+      .info('makePlugins', {
+        module: 'plugins',
+        event: 'removed'
+      }, pluginPackage))
+
+    plugins.on('reloaded', (oldPluginPackage, newPluginPackage) => logger
+      .info('makePlugins', {
+        module: 'plugins',
+        event: 'reloaded'
+      }, {
+        oldPluginPackage: oldPluginPackage[logSymbol].pluginPackage,
+        newPluginPackage: newPluginPackage[logSymbol].pluginPackage
+      }))
+  })()
+
+  return plugins
 }
 
 export const packageNameSuffix = '-' + Plugin.name.toLowerCase()
