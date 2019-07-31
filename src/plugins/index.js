@@ -8,6 +8,7 @@
  * An object that hold plugin package data
  *
  * @typedef {object} module:plugins.PluginPackage
+ *
  * @property {module:plugins/plugin} Plugin Exported Plugin class
  * @property {string} name
  * @property {object} package Same as package.json config file
@@ -212,6 +213,8 @@ export default function makePlugins (configs = Object.create(null)) {
      *
      * @param {string} pluginName
      *
+     * @emits module:plugins~Plugins#event:added
+     *
      * @async
      * @return {Promise<(module:plugins.PluginPackage|Error)>}
      * * Rejection
@@ -227,7 +230,18 @@ export default function makePlugins (configs = Object.create(null)) {
       else if (this.get(pluginName)) throw new Error(`${pluginName} is already exist`)
 
       return (async () => {
-        return this.#add(_pluginNameToPath(pluginName))
+        const pluginPackage = this.#add(_pluginNameToPath(pluginName))
+
+        /**
+         * New plugin added event
+         *
+         * @event module:plugins~Plugins#event:added
+         *
+         * @type {module:plugins.PluginPackage}
+         */
+        this.emit('added', pluginPackage)
+
+        return pluginPackage
       })()
     }
 
@@ -269,6 +283,8 @@ export default function makePlugins (configs = Object.create(null)) {
      *
      * @param {(module:plugins.PluginPackage|string)} pluginPackage
      *
+     * @emits module:plugins~Plugins#event:removed
+     *
      * @async
      * @return {Promise<(void|Error)>}
      */
@@ -282,7 +298,9 @@ export default function makePlugins (configs = Object.create(null)) {
 
       const pluginName = pluginPackage.name || pluginPackage
 
-      if (!this.get(pluginName)) throw new Error(`${pluginName} is not exist in list`)
+      pluginPackage = this.get(pluginName)
+
+      if (!pluginPackage) throw new Error(`${pluginName} is not exist in list`)
 
       const pluginPath = _pluginNameToPath(pluginName)
 
@@ -292,6 +310,15 @@ export default function makePlugins (configs = Object.create(null)) {
 
         // Remove cache from ram
         this.#remove(pluginPath)
+
+        /**
+         * New plugin removed event
+         *
+         * @event module:plugins~Plugins#event:removed
+         *
+         * @type {module:plugins.PluginPackage}
+         */
+        this.emit('removed', pluginPackage)
       })()
     }
 
@@ -299,6 +326,8 @@ export default function makePlugins (configs = Object.create(null)) {
      * Reload (read, setup, cache) plugin
      *
      * @param {(module:plugins.PluginPackage|string)} pluginPackage
+     *
+     * @emits module:plugins~Plugins#event:reloaded
      *
      * @return {module:plugins.PluginPackage}
      */
@@ -310,11 +339,25 @@ export default function makePlugins (configs = Object.create(null)) {
       const pluginName = pluginPackage.name || pluginPackage
       const pluginPath = _pluginNameToPath(pluginName)
 
+      pluginPackage = this.get(pluginName)
+
       // Remove cache from ram
       this.#remove(pluginPath)
 
       // Read and setup plugin again
-      return this.#add(pluginPath)
+      const newPluginPackage = this.#add(pluginPath)
+
+      /**
+       * @summary Plugin reloaded event
+       * @description Old PluginPackage pass as first parameter, and new PluginPackage pass as second parameter
+       *
+       * @event module:plugins~Plugins#event:reloaded
+       *
+       * @type {module:plugins.PluginPackage}
+       */
+      this.emit('reloaded', pluginPackage, newPluginPackage)
+
+      return newPluginPackage
     }
 
     /**
