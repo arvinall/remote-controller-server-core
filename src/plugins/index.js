@@ -380,7 +380,7 @@ export default function makePlugins (configs = Object.create(null)) {
     /**
      * Return plugins's path
      *
-     * @return {string}
+     * @type {string}
      */
     get path () {
       return configs.path

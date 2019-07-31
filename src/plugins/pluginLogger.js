@@ -4,7 +4,10 @@
  */
 
 import * as helpers from '../helpers'
-import Logger from '../logger'
+import Logger, {
+  logSymbol,
+  makeClassLoggable
+} from '../logger'
 
 /**
  * Create a wrapper around logger module to use in plugins
@@ -86,6 +89,24 @@ export default class PluginLogger {
     data.push(this.#logObject)
 
     return this.#logger.error(scope, ...data)
+  }
+
+  /**
+   * @type {symbol}
+   *
+   * @see module:logger.logSymbol
+   */
+  static get logSymbol () {
+    return logSymbol
+  }
+
+  /**
+   * @type {function}
+   *
+   * @see module:logger.makeClassLoggable
+   */
+  static get makeClassLoggable () {
+    return makeClassLoggable
   }
 }
 
