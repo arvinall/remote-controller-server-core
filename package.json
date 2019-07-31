@@ -11,7 +11,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/arvinall/remote-controller-server-core.git"
+    "url": "git+https://framagit.org/remote-controller/remote-controller-server-core.git"
   },
   "keywords": [
     "remote-controller",
@@ -21,9 +21,9 @@
   "author": "Arvinall <arvinall021@gmail.com>",
   "license": "SEE LICENSE IN LICENSE.md",
   "bugs": {
-    "url": "https://github.com/arvinall/remote-controller-server-core/issues"
+    "url": "https://framagit.org/remote-controller/remote-controller-server-core/issues"
   },
-  "homepage": "https://github.com/arvinall/remote-controller-server-core#readme",
+  "homepage": "https://framagit.org/remote-controller/remote-controller-server-core#readme",
   "devDependencies": {
     "@babel/core": "^7.4.4",
     "@babel/plugin-proposal-class-properties": "^7.4.4",
