@@ -15,7 +15,7 @@ HELPERS.push(function setupIidGenerator () {
 
   if (lastId === 'undefined') lastId = undefined
 
-  const generateId = idGenerator([keyCodesList[1]], lastId)
+  const generateId = idGenerator([ keyCodesList[1] ], lastId)
 
   Object.defineProperty(global, 'generateId', {
     value: () => {
@@ -23,7 +23,7 @@ HELPERS.push(function setupIidGenerator () {
 
       fs.writeFileSync(lastIdHolderName, ID)
 
-      return ID + String(Date.now()).slice(-2) + Math.floor(Math.random() * 100)
+      return ID + String(Date.now()).slice(-2) + String(Math.floor(Math.random() * 100))
     },
     writable: false,
     configurable: false
