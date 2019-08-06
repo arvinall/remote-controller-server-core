@@ -97,6 +97,17 @@ describe('add Method', () => {
 
     storage.removeSync()
   })
+
+  test('Must return Storage with correct body', () => {
+    const name = generateId()
+    const body = { pluginStorages: 'add with body' }
+    const storage = pluginStorages.add(name, body)
+
+    expect(storage).toBeInstanceOf(Storage)
+    expect(storage.body).toEqual(body)
+
+    storage.removeSync()
+  })
 })
 
 describe('get Method', () => {
