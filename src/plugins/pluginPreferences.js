@@ -69,8 +69,6 @@ export default class PluginPreferences {
    * @see module:preferences~Preferences#add
    */
   add (body = Object.create(null)) {
-    if (typeof body !== 'object') throw new TypeError('body parameter must be object')
-
     return this.#preferences.add(this.#name, body)
   }
 

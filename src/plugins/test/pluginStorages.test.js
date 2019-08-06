@@ -88,25 +88,27 @@ describe('add Method', () => {
     expect(() => pluginStorages.add(132)).toThrow(ERROR)
   })
 
-  test('Must return Storage with correct name', () => {
-    const name = generateId()
-    const storage = pluginStorages.add(name)
+  describe('Success', () => {
+    test('Must return Storage with correct name', () => {
+      const name = generateId()
+      const storage = pluginStorages.add(name)
 
-    expect(storage).toBeInstanceOf(Storage)
-    expect(storage.name).toBe(prefix + name)
+      expect(storage).toBeInstanceOf(Storage)
+      expect(storage.name).toBe(prefix + name)
 
-    storage.removeSync()
-  })
+      storage.removeSync()
+    })
 
-  test('Must return Storage with correct body', () => {
-    const name = generateId()
-    const body = { pluginStorages: 'add with body' }
-    const storage = pluginStorages.add(name, body)
+    test('Must return Storage with correct body', () => {
+      const name = generateId()
+      const body = { pluginStorages: 'add with body' }
+      const storage = pluginStorages.add(name, body)
 
-    expect(storage).toBeInstanceOf(Storage)
-    expect(storage.body).toEqual(body)
+      expect(storage).toBeInstanceOf(Storage)
+      expect(storage.body).toEqual(body)
 
-    storage.removeSync()
+      storage.removeSync()
+    })
   })
 })
 
@@ -136,19 +138,21 @@ describe('remove Method', () => {
     expect(() => pluginStorages.remove({})).toThrow(ERROR)
   })
 
-  test('Must remove storage correctly via name', async () => {
-    const name = generateId()
-    const storage = pluginStorages.add(name)
+  describe('Success', () => {
+    test('Must remove storage correctly via name', async () => {
+      const name = generateId()
+      const storage = pluginStorages.add(name)
 
-    expect(await pluginStorages.remove(name)).toBeUndefined()
-    expect(storage.name).toBeUndefined()
-  })
+      expect(await pluginStorages.remove(name)).toBeUndefined()
+      expect(storage.name).toBeUndefined()
+    })
 
-  test('Must remove storage correctly via storage instance', async () => {
-    const storage = pluginStorages.add(generateId())
+    test('Must remove storage correctly via storage instance', async () => {
+      const storage = pluginStorages.add(generateId())
 
-    expect(await pluginStorages.remove(storage)).toBeUndefined()
-    expect(storage.name).toBeUndefined()
+      expect(await pluginStorages.remove(storage)).toBeUndefined()
+      expect(storage.name).toBeUndefined()
+    })
   })
 })
 
@@ -160,19 +164,21 @@ describe('removeSync Method', () => {
     expect(() => pluginStorages.removeSync({})).toThrow(ERROR)
   })
 
-  test('Must remove storage correctly via name', () => {
-    const name = generateId()
-    const storage = pluginStorages.add(name)
+  describe('Success', () => {
+    test('Must remove storage correctly via name', () => {
+      const name = generateId()
+      const storage = pluginStorages.add(name)
 
-    expect(pluginStorages.removeSync(name)).toBeUndefined()
-    expect(storage.name).toBeUndefined()
-  })
+      expect(pluginStorages.removeSync(name)).toBeUndefined()
+      expect(storage.name).toBeUndefined()
+    })
 
-  test('Must remove storage correctly via storage instance', () => {
-    const storage = pluginStorages.add(generateId())
+    test('Must remove storage correctly via storage instance', () => {
+      const storage = pluginStorages.add(generateId())
 
-    expect(pluginStorages.removeSync(storage)).toBeUndefined()
-    expect(storage.name).toBeUndefined()
+      expect(pluginStorages.removeSync(storage)).toBeUndefined()
+      expect(storage.name).toBeUndefined()
+    })
   })
 })
 
