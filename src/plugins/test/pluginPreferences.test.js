@@ -141,9 +141,11 @@ describe('has Method', () => {
     })
 
     test('Must return true when Preference is exist', () => {
-      preferences.remove(pluginPreferences.add())
+      const preference = pluginPreferences.add()
 
       expect(pluginPreferences.has()).toBe(true)
+
+      preferences.removeSync(preference)
     })
   })
 })
