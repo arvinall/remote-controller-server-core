@@ -8,7 +8,8 @@ const TMP_PATH = path.join(__dirname, 'tmp')
 const idHolderName = path.join(TMP_PATH, 'lastId.tmp')
 const logFilesName = [
   path.join(TMP_PATH, 'info.log'),
-  path.join(TMP_PATH, 'error.log')
+  path.join(TMP_PATH, 'error.log'),
+  path.join(TMP_PATH, 'warn.log')
 ]
 
 export default async function teardown () {
