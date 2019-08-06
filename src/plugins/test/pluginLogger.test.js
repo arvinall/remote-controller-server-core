@@ -1,7 +1,10 @@
 /* global test, expect, describe, afterAll, TMP_PATH, generateId */
 
 import PluginLogger from '../pluginLogger'
-import Logger from '../../logger'
+import Logger, {
+  logSymbol,
+  makeClassLoggable
+} from '../../logger'
 
 let logger
 let pluginName
@@ -84,3 +87,9 @@ describe.each([ [ 'info' ], [ 'warn' ], [ 'error' ] ])(
     })
   }
 )
+
+test('logSymbol Static method', () => expect(PluginLogger.logSymbol)
+  .toBe(logSymbol))
+
+test('makeClassLoggable Static method', () => expect(PluginLogger.makeClassLoggable)
+  .toBe(makeClassLoggable))
