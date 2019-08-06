@@ -6,10 +6,11 @@ import PluginStorages, {
 import Logger from '../../logger'
 import makeStorages from '../../storages'
 import Storage from '../../storages/storage'
+import EventEmitter from 'events'
 
 // Reset Object class to ES spec instead jest customized class
 Object.defineProperty(global, 'Object', {
-  value: Object.getPrototypeOf(Object.getPrototypeOf(PluginStorages.constructor)).constructor
+  value: Object.getPrototypeOf(Object.getPrototypeOf(EventEmitter.constructor)).constructor
 })
 
 const core = {}
