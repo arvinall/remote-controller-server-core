@@ -59,15 +59,40 @@ export default function makePlugins (configs = Object.create(null)) {
 
   if (typeof configs.path !== 'string') throw new TypeError('configs.path must be string')
 
+  const preferences = this.preferences
+  const preference = (defaults => {
+    const NAME = 'plugins'
+    let preference
+
+    try {
+      preference = preferences.add(NAME, defaults)
+    } catch (error) {
+      if (error.message === `${NAME} is already exist`) {
+        try {
+          preference = preferences.get(NAME)
+        } catch (error) {
+          throw error
+        }
+      } else throw error
+    }
+
+    Object.defineProperty(preference, 'defaults', { value: defaults })
+
+    return preference
+  })(Object.freeze({
+    path: configs.path
+  }))
+
+  configs.path = preference.body.path
+
   try {
     fs.mkdirSync(configs.path, { recursive: true })
   } catch (error) {
     if (error.code !== 'EEXIST') throw error
   }
 
-  const _packageNameToPath = packageNameToPath.bind(null, configs.path)
-  const _pluginNameToPath = pluginNameToPath.bind(null, configs.path)
-  const preferences = this.preferences
+  const _packageNameToPath = (...parameters) => packageNameToPath(configs.path, ...parameters)
+  const _pluginNameToPath = (...parameters) => pluginNameToPath(configs.path, ...parameters)
   const storages = this.storages
   const logger = this.logger
 
@@ -381,12 +406,35 @@ export default function makePlugins (configs = Object.create(null)) {
     }
 
     /**
-     * Return plugins's path
+     * @summary Plugins directory path
+     * @description To reset to default value set it to `null` <br>
+     * Default: path property in configs parameter of {@link module:plugins|makePlugins}
      *
      * @type {string}
      */
     get path () {
       return configs.path
+    }
+
+    set path (value) {
+      if (typeof value === 'string' ||
+        value === null) {
+        preference.updateSync(body => {
+          if (value !== null) {
+            body.path = value
+          } else body.path = preference.defaults.path
+
+          return body
+        })
+
+        try {
+          fs.mkdirSync(preference.body.path, { recursive: true })
+        } catch (error) {
+          if (error.code !== 'EEXIST') throw error
+        }
+
+        configs.path = preference.body.path
+      }
     }
 
     get [logSymbol] () {
