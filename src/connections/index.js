@@ -52,7 +52,7 @@ export default function makeConnections () {
       } else throw error
     }
 
-    preference.defaults = defaults
+    Object.defineProperty(preference, 'defaults', { value: defaults })
 
     return preference
   })(Object.freeze({
