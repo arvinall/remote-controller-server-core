@@ -76,7 +76,9 @@ export default function makePlugins (configs = Object.create(null)) {
       } else throw error
     }
 
-    Object.defineProperty(preference, 'defaults', { value: defaults })
+    try {
+      Object.defineProperty(preference, 'defaults', { value: defaults })
+    } catch (error) {}
 
     return preference
   })(Object.freeze({
