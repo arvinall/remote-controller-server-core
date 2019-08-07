@@ -53,8 +53,8 @@ beforeEach(() => jest.setTimeout(envConfigs.timeout))
 
 describe('makeConnections', () => {
   describe('Success', () => {
-    test('Must initialize storage with default values', () => {
-      ;(() => makeConnections.call(core))()
+    test('Must initialize preference with default values', () => {
+      makeConnections.call(core)
 
       const preference = core.preferences.get('connections')
 
