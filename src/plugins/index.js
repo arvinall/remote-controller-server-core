@@ -408,6 +408,17 @@ export default function makePlugins (configs = Object.create(null)) {
     }
 
     /**
+     * Check Plugin is already exist
+     *
+     * @param {string} pluginName Plugin's name to check
+     *
+     * @return {boolean}
+     */
+    has (pluginName) {
+      return this.#pluginsList.hasOwnProperty(pluginName)
+    }
+
+    /**
      * @summary Plugins directory path
      * @description To reset to default value set it to `null` <br>
      * Default: path property in configs parameter of {@link module:plugins|makePlugins}
