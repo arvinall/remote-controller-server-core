@@ -35,6 +35,9 @@ import PluginLogger from './pluginLogger'
 /**
  * makePlugins creates plugins module
  *
+ * @param {object} [configs={}]
+ * @param {string} [configs.path="path.join(process.cwd(), 'plugins')"] Default plugins directory address
+ *
  * @return {module:plugins~Plugins}
  */
 export default function makePlugins (configs = Object.create(null)) {
