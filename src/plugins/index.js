@@ -453,7 +453,7 @@ export function packageNameToPluginName (packageName) {
  * @return {string}
  */
 export function pluginNameToPackageName (pluginName) {
-  return pluginName + '-' + Plugin.name.toLowerCase()
+  return pluginName + packageNameSuffix
 }
 
 /**
