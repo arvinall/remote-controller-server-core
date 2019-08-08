@@ -89,6 +89,9 @@ export function makeJSTemplate (pluginName) {
           [`${pluginName}Plugin`]: class extends Plugin {}
         }
 
+        // eslint-disable-next-line no-unused-expressions
+        '<CUSTOM>'
+
         return { Plugin: result[`${pluginName}Plugin`] }
       }
     }

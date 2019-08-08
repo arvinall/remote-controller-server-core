@@ -1,4 +1,4 @@
-/* global describe, test, expect, generateId, afterAll, TMP_PATH */
+/* global describe, test, expect, generateId, afterAll, TMP_PATH, global */
 
 import Plugin from '../plugin'
 import makePlugins, {
@@ -6,7 +6,7 @@ import makePlugins, {
   isPluginPackage,
   packageNameToPluginName,
   pluginNameToPackageName,
-  packageNameToPath,
+  packageNameToPath as _packageNameToPath,
   pluginNameToPath
 } from '../index'
 import path from 'path'
@@ -16,9 +16,30 @@ import makeStorages from '../../storages'
 import fs from 'fs'
 import { promisify } from 'util'
 import rimraf from 'rimraf'
+import {
+  makePluginPackage as _makePluginPackage,
+  makePackageJsonTemplate,
+  makeJSTemplate,
+  kebabCaseToCamelCase
+} from './helpers'
+import EventEmitter from 'events'
+import * as helpers from '../../helpers'
 
+// Reset Object class to ES spec instead jest customized class
+Object.defineProperty(global, 'Object', {
+  value: Object.getPrototypeOf(Object.getPrototypeOf(EventEmitter.constructor)).constructor
+})
+
+// Reset global require function
+Object.defineProperty(global, 'require', {
+  value: require
+})
+
+const makePluginPackage = _makePluginPackage.bind(null, TMP_PATH)
+const packageNameToPath = _packageNameToPath.bind(null, TMP_PATH)
 const core = Object.create(null)
 const preferencesStorageName = generateId()
+const temporaryPluginPaths = []
 
 describe('packageNameSuffix exported property', () => {
   test('Must be string that contains "-' + Plugin.name.toLowerCase() + '"', () => {
@@ -63,7 +84,7 @@ describe('packageNameToPath exported method', () => {
     const PATH = '/home/test'
     const PACKAGE_NAME = 'test' + packageNameSuffix
 
-    expect(packageNameToPath(PATH, PACKAGE_NAME)).toBe(path.join(PATH, PACKAGE_NAME))
+    expect(_packageNameToPath(PATH, PACKAGE_NAME)).toBe(path.join(PATH, PACKAGE_NAME))
   })
 })
 
@@ -151,4 +172,42 @@ describe('makePlugins', () => {
   })
 })
 
-afterAll(async () => core.storages.remove(preferencesStorageName))
+describe('constructor', () => {
+  const globalPluginProperty = '__PLUGIN__'
+  const getGlobalPlugin = () => global[globalPluginProperty]
+
+  test('Must add pre-installed plugins without error', () => {
+    for (let counter = 1; counter <= 3; counter++) {
+      const packageJson = makePackageJsonTemplate()
+      const pluginName = packageNameToPluginName(packageJson.name)
+      const indexJS = makeJSTemplate(pluginName)
+      const indexJSCache = indexJS.toString()
+
+      // Set Plugin class to global object
+      indexJS.toString = () => indexJSCache
+        .replace("'<CUSTOM>'", 'global[\'' + globalPluginProperty + '\'] = result[`${pluginName}Plugin`]') // eslint-disable-line no-template-curly-in-string
+
+      makePluginPackage(packageJson.name, {
+        'package.json': packageJson,
+        'index.js': indexJS
+      })
+
+      makePlugins.call(core, { path: TMP_PATH })
+
+      const _Plugin = getGlobalPlugin()
+
+      expect(_Plugin.name).toBe(kebabCaseToCamelCase(packageJson.name))
+      expect(helpers.object.inheritOf.call(_Plugin, Plugin)).toBe(true)
+
+      temporaryPluginPaths.push(packageJson.name)
+    }
+  })
+})
+
+afterAll(async () => {
+  await core.storages.remove(preferencesStorageName)
+
+  for (const packageName of temporaryPluginPaths) {
+    await promisify(rimraf)(packageNameToPath(packageName))
+  }
+})
