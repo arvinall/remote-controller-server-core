@@ -383,78 +383,105 @@ describe('add Method', () => {
     expect(core.plugins.add.bind(core.plugins, [ 'wrong' ])).toThrow(ERROR)
   })
 
-  describe('Rejections', () => {
-    test('Must reject an error if plugin package\'s name hasn\'t "' + packageNameSuffix + '" suffix', async () => {
-      expect.assertions(1)
+  test('Must reject an error if plugin package\'s name hasn\'t "' + packageNameSuffix + '" suffix', async () => {
+    expect.assertions(1)
 
-      const pluginName = generateId().toLowerCase()
-      const packageJson = makePackageJsonTemplate({
-        name: pluginName
-      })
-      const packageName = pluginNameToPackageName(pluginName)
+    const pluginName = generateId().toLowerCase()
+    const packageJson = makePackageJsonTemplate({
+      name: pluginName
+    })
+    const packageName = pluginNameToPackageName(pluginName)
 
-      makePluginPackage(packageName, { 'package.json': packageJson })
+    makePluginPackage(packageName, { 'package.json': packageJson })
 
-      const ERROR = 'Plugin package name must ends with \'-' + Plugin.name.toLowerCase() + '\', ' + packageJson.name
+    const ERROR = 'Plugin package name must ends with \'-' + Plugin.name.toLowerCase() + '\', ' + packageJson.name
 
-      try {
-        await core.plugins.add(pluginName)
-      } catch (error) {
-        expect(error.message).toBe(ERROR)
-      }
+    try {
+      await core.plugins.add(pluginName)
+    } catch (error) {
+      expect(error.message).toBe(ERROR)
+    }
 
-      temporaryPluginPaths.push(packageName)
+    temporaryPluginPaths.push(packageName)
+  })
+
+  test('Must reject an error if plugin package\'s default exported value doesn\'t function', async () => {
+    expect.assertions(1)
+
+    const packageJson = makePackageJsonTemplate()
+    const pluginName = packageNameToPluginName(packageJson.name)
+
+    function indexJS () {
+      module.exports = 'wrong'
+    }
+
+    makePluginPackage(packageJson.name, {
+      'package.json': packageJson,
+      'index.js': indexJS
     })
 
-    test('Must reject an error if plugin package\'s default exported value doesn\'t function', async () => {
-      expect.assertions(1)
+    const ERROR = 'Default exported value is not function, ' + packageJson.name
 
-      const packageJson = makePackageJsonTemplate()
-      const pluginName = packageNameToPluginName(packageJson.name)
+    try {
+      await core.plugins.add(pluginName)
+    } catch (error) {
+      expect(error.message).toBe(ERROR)
+    }
 
-      function indexJS () {
-        module.exports = 'wrong'
-      }
+    temporaryPluginPaths.push(packageJson.name)
+  })
 
-      makePluginPackage(packageJson.name, {
-        'package.json': packageJson,
-        'index.js': indexJS
-      })
+  test('Must reject an error if plugin package\'s default exported return value doesn\'t contain a class that implements the Plugin as Plugin key', async () => {
+    expect.assertions(1)
 
-      const ERROR = 'Default exported value is not function, ' + packageJson.name
+    const packageJson = makePackageJsonTemplate()
+    const pluginName = packageNameToPluginName(packageJson.name)
+    const indexJS = makeJSTemplate(pluginName)
+    const indexJSCache = indexJS.toString()
 
-      try {
-        await core.plugins.add(pluginName)
-      } catch (error) {
-        expect(error.message).toBe(ERROR)
-      }
+    indexJS.toString = () => indexJSCache
+      .replace("'<CUSTOM>'", 'result[`${pluginName}Plugin`] = class {}') // eslint-disable-line no-template-curly-in-string
 
-      temporaryPluginPaths.push(packageJson.name)
+    makePluginPackage(packageJson.name, {
+      'package.json': packageJson,
+      'index.js': indexJS
     })
 
-    test('Must reject an error if plugin package\'s default exported return value doesn\'t contain a class that implements the Plugin as Plugin key', async () => {
-      expect.assertions(1)
+    const ERROR = 'Returned value has no any \'' + Plugin.name + '\' key that extends \'' + Plugin.name + '\' class, ' + packageJson.name
+
+    try {
+      await core.plugins.add(pluginName)
+    } catch (error) {
+      expect(error.message).toBe(ERROR)
+    }
+
+    temporaryPluginPaths.push(packageJson.name)
+  })
+
+  describe('Success', () => {
+    test('Must resolve PluginPackage', async () => {
+      expect.assertions(2)
 
       const packageJson = makePackageJsonTemplate()
       const pluginName = packageNameToPluginName(packageJson.name)
       const indexJS = makeJSTemplate(pluginName)
-      const indexJSCache = indexJS.toString()
-
-      indexJS.toString = () => indexJSCache
-        .replace("'<CUSTOM>'", 'result[`${pluginName}Plugin`] = class {}') // eslint-disable-line no-template-curly-in-string
 
       makePluginPackage(packageJson.name, {
         'package.json': packageJson,
         'index.js': indexJS
       })
 
-      const ERROR = 'Returned value has no any \'' + Plugin.name + '\' key that extends \'' + Plugin.name + '\' class, ' + packageJson.name
+      const pluginPackage = await core.plugins.add(pluginName)
 
-      try {
-        await core.plugins.add(pluginName)
-      } catch (error) {
-        expect(error.message).toBe(ERROR)
-      }
+      expect(pluginPackage).toEqual(expect.objectContaining({
+        name: pluginName,
+        package: packageJson,
+        pluginPreferences: expect.any(PluginPreferences),
+        pluginStorages: expect.any(PluginStorages),
+        pluginLogger: expect.any(PluginLogger)
+      }))
+
+      expect(helpers.object.inheritOf.call(pluginPackage.Plugin, Plugin)).toBe(true)
 
       temporaryPluginPaths.push(packageJson.name)
     })
