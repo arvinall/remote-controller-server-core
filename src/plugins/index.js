@@ -123,7 +123,7 @@ export default function makePlugins (configs = Object.create(null)) {
      *
      * @type {Object<string, module:plugins.PluginPackage>}
      */
-    #reloadedPluginPackagesCahce = {}
+    #reloadedPluginPackagesCache = {}
 
     /**
      * Read, setup and add plugin to the list
@@ -427,8 +427,8 @@ export default function makePlugins (configs = Object.create(null)) {
       const pluginName = pluginPackage.name || pluginPackage
       const pluginPath = _pluginNameToPath(pluginName)
 
-      this.#reloadedPluginPackagesCahce[pluginName] =
-        pluginPackage = this.#reloadedPluginPackagesCahce[pluginName] || this.get(pluginName)
+      this.#reloadedPluginPackagesCache[pluginName] =
+        pluginPackage = this.#reloadedPluginPackagesCache[pluginName] || this.get(pluginName)
 
       // Remove cache from ram
       this.#remove(pluginPath)
