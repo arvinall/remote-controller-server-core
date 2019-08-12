@@ -133,7 +133,24 @@ export default function makePlugins (configs = Object.create(null)) {
     #add = pluginPath => {
       if (typeof pluginPath !== 'string') throw new TypeError('pluginPath parameter is required and must be string')
 
-      const pluginPackage = {}
+      const pluginPackage = Object.create({
+        get [logSymbol] () {
+          const self = this
+
+          return {
+            pluginPackage: {
+              name: self.name,
+              plugin: self.Plugin.name,
+              package: {
+                name: self.package.name,
+                version: self.package.version,
+                description: self.package.description,
+                main: self.package.main
+              }
+            }
+          }
+        }
+      })
 
       // Read package.json config file
       pluginPackage.package = global.require(path.join(pluginPath, 'package.json'))
@@ -193,23 +210,6 @@ export default function makePlugins (configs = Object.create(null)) {
       helpers.decorator.setStringTag()(result.Plugin)
 
       pluginPackage.Plugin = result.Plugin
-
-      Object.defineProperty(pluginPackage, logSymbol, {
-        get () {
-          return {
-            pluginPackage: {
-              name: pluginPackage.name,
-              plugin: pluginPackage.Plugin.name,
-              package: {
-                name: pluginPackage.package.name,
-                version: pluginPackage.package.version,
-                description: pluginPackage.package.description,
-                main: pluginPackage.package.main
-              }
-            }
-          }
-        }
-      })
 
       // Add to list
       this.#pluginsList[pluginPackage.name] = pluginPackage
