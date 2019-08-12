@@ -76,6 +76,13 @@ export function makePackageJsonTemplate (override = Object.create(null)) {
   }, override)
 }
 
+/**
+ * Make simple plugin javascript file template
+ *
+ * @param pluginName
+ *
+ * @return {Function}
+ */
 export function makeJSTemplate (pluginName) {
   // Convert pluginName format to camelcase
   pluginName = kebabCaseToCamelCase(pluginName)
