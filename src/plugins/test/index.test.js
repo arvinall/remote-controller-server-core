@@ -1,4 +1,4 @@
-/* global describe, test, expect, generateId, afterAll, TMP_PATH, global, afterEach */
+/* global describe, test, expect, generateId, afterAll, TMP_PATH, global, afterEach, process */
 
 import Plugin from '../plugin'
 import makePlugins, {
@@ -44,7 +44,7 @@ const core = Object.create(null)
 const preferencesStorageName = generateId()
 const temporaryPluginPaths = []
 
-// let pluginsPreference
+let pluginsPreference
 
 describe('packageNameSuffix exported property', () => {
   test('Must be string that contains "-' + Plugin.name.toLowerCase() + '"', () => {
@@ -133,8 +133,6 @@ describe('makePlugins', () => {
       expect(preference.body).toEqual(expect.objectContaining({
         path: TMP_PATH
       }))
-
-      core.preferences.removeSync(preference)
     })
 
     test('Must make path directory recursive', async () => {
@@ -143,6 +141,10 @@ describe('makePlugins', () => {
         'makePlugins.' + generateId(),
         generateId()
       )
+
+      try {
+        await core.preferences.remove('plugins')
+      } catch (error) {}
 
       makePlugins.call(core, { path: _path })
 
@@ -155,8 +157,7 @@ describe('makePlugins', () => {
       expect(isPathDirectory).toBe(true)
 
       await promisify(rimraf)(path.join(_path, '..'))
-
-      core.preferences.removeSync('plugins')
+      await core.preferences.remove('plugins')
     })
 
     test('Must return connections module without error', () => {
@@ -171,8 +172,6 @@ describe('makePlugins', () => {
         path: TMP_PATH
       }))
       expect(plugins + '').toBe('[object Plugins]')
-
-      core.preferences.removeSync('plugins')
     })
   })
 })
@@ -327,7 +326,52 @@ describe('get Method', () => {
   afterAll(() => {
     core.plugins = makePlugins.call(core, { path: TMP_PATH })
 
-    // pluginsPreference = core.preferences.get('plugins')
+    pluginsPreference = core.preferences.get('plugins')
+  })
+})
+
+describe('Properties', () => {
+  describe('path', () => {
+    test('Default value must be ' + TMP_PATH, () => {
+      expect(core.plugins.path).toBe(TMP_PATH)
+    })
+
+    test('Must ignore non string/null value types', () => {
+      core.plugins.path = 123
+
+      expect(core.plugins.path).toBe(TMP_PATH)
+
+      core.plugins.path = undefined
+
+      expect(core.plugins.path).toBe(TMP_PATH)
+
+      core.plugins.path = false
+
+      expect(core.plugins.path).toBe(TMP_PATH)
+    })
+
+    test('Must write/read string values into/from preference', () => {
+      const CWD = process.cwd()
+
+      core.plugins.path = CWD
+
+      expect(pluginsPreference.body.path).toBe(CWD)
+
+      expect(core.plugins.path).toBe(CWD)
+
+      core.plugins.path = TMP_PATH
+    })
+
+    test('Must reset to its default value when setted to null', () => {
+      core.plugins.path = process.cwd()
+      core.plugins.path = null
+
+      expect(pluginsPreference.body.path)
+        .toBe(pluginsPreference.defaults.path)
+
+      expect(core.plugins.path)
+        .toBe(pluginsPreference.defaults.path)
+    })
   })
 })
 
