@@ -227,13 +227,18 @@ export default function makePlugins (configs = Object.create(null)) {
      * Remove plugin from list and ram
      *
      * @param {string} pluginPath
+     * @param {boolean} removeData Remove it's preference all storages
      */
-    #remove = pluginPath => {
+    #remove = (pluginPath, removeData = false) => {
       if (typeof pluginPath !== 'string') throw new TypeError('pluginPath parameter is required and must be string')
+      else if (typeof removeData !== 'boolean') throw new TypeError('removeData parameter must be boolean')
 
       let pluginName = pluginPath.split('/')
 
       pluginName = packageNameToPluginName(pluginName[pluginName.length - 1])
+
+      const packageName = pluginNameToPackageName(pluginName)
+      const pluginPackage = this.#pluginsList[pluginName]
 
       // Remove module from ram
       delete global.require.cache[global.require.resolve(pluginPath)]
@@ -241,6 +246,24 @@ export default function makePlugins (configs = Object.create(null)) {
       delete global.require.cache[global.require.resolve(path.join(pluginPath, 'package.json'))]
       // Remove pluginPackage from list
       delete this.#pluginsList[pluginName]
+
+      if (removeData) {
+        try {
+          pluginPackage.pluginPreferences.removeSync()
+        } catch (error) {}
+
+        for (const file of fs.readdirSync(pluginPackage.pluginStorages.path)) {
+          if (!file.startsWith(packageName + '.') || !file.endsWith('.json')) continue
+
+          const storageName = file
+            .split(packageName + '.')[1]
+            .split('.json')[0]
+
+          try {
+            pluginPackage.pluginStorages.removeSync(storageName)
+          } catch (error) {}
+        }
+      }
     }
 
     /**
@@ -343,19 +366,23 @@ export default function makePlugins (configs = Object.create(null)) {
      * Remove plugin from list and ram and remove plugin package from disk and user account
      *
      * @param {(module:plugins.PluginPackage|string)} pluginPackage
+     * @param {boolean} removeData Remove it's preference all storages
      *
      * @emits module:plugins~Plugins#event:removed
+     *
+     * @throws Will throw an error if target plugin is not exist in list
      *
      * @async
      * @return {Promise<(void|Error)>}
      */
-    remove (pluginPackage) {
+    remove (pluginPackage, removeData = false) {
       const Error = makeClassLoggable(global.Error, logObject)
         .assignLogObject({ method: 'remove' })
 
       if (!pluginPackage ||
         (typeof pluginPackage !== 'string' &&
           typeof pluginPackage.name !== 'string')) throw new TypeError('pluginPackage parameter is required and must be PluginPackage/string')
+      else if (typeof removeData !== 'boolean') throw new TypeError('removeData parameter must be boolean')
 
       const pluginName = pluginPackage.name || pluginPackage
 
@@ -370,7 +397,7 @@ export default function makePlugins (configs = Object.create(null)) {
         await promisify(rimraf)(pluginPath)
 
         // Remove cache from ram
-        this.#remove(pluginPath)
+        this.#remove(pluginPath, removeData)
 
         /**
          * New plugin removed event
