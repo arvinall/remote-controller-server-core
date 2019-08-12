@@ -1,4 +1,4 @@
-/* global describe, test, expect, generateId, afterAll, TMP_PATH, global */
+/* global describe, test, expect, generateId, afterAll, TMP_PATH, global, afterEach */
 
 import Plugin from '../plugin'
 import makePlugins, {
@@ -24,6 +24,9 @@ import {
 } from './helpers'
 import EventEmitter from 'events'
 import * as helpers from '../../helpers'
+import PluginStorages from '../pluginStorages'
+import PluginPreferences from '../pluginPreferences'
+import PluginLogger from '../pluginLogger'
 
 // Reset Object class to ES spec instead jest customized class
 Object.defineProperty(global, 'Object', {
@@ -40,6 +43,8 @@ const packageNameToPath = _packageNameToPath.bind(null, TMP_PATH)
 const core = Object.create(null)
 const preferencesStorageName = generateId()
 const temporaryPluginPaths = []
+
+// let pluginsPreference
 
 describe('packageNameSuffix exported property', () => {
   test('Must be string that contains "-' + Plugin.name.toLowerCase() + '"', () => {
@@ -201,6 +206,128 @@ describe('constructor', () => {
 
       temporaryPluginPaths.push(packageJson.name)
     }
+  })
+})
+
+describe('get Method', () => {
+  test('Must throw error when pluginName parameter is not string', () => {
+    const ERROR = 'pluginName parameter must be string'
+    const plugins = makePlugins.call(core, { path: TMP_PATH })
+
+    expect(plugins.get.bind(plugins, 123)).toThrow(ERROR)
+    expect(plugins.get.bind(plugins, [ 'wrong' ])).toThrow(ERROR)
+  })
+
+  describe('Success', () => {
+    afterEach(async () => {
+      for (const packageName of temporaryPluginPaths) {
+        await promisify(rimraf)(packageNameToPath(packageName))
+      }
+    })
+
+    test('Must return undefined when pluginName is not exist', async () => {
+      expect.assertions(1)
+
+      const plugins = makePlugins.call(core, { path: TMP_PATH })
+
+      expect(plugins.get('wrong')).toBeUndefined()
+    })
+
+    test('Must return pluginPackage by pluginName', async () => {
+      expect.assertions(1)
+
+      const globalPluginProperty = '__PLUGIN__'
+      const getGlobalPlugin = () => global[globalPluginProperty]
+      const packageJson = makePackageJsonTemplate()
+      const pluginName = packageNameToPluginName(packageJson.name)
+      const indexJS = makeJSTemplate(pluginName)
+      const indexJSCache = indexJS.toString()
+
+      // Set Plugin class to global object
+      indexJS.toString = () => indexJSCache
+        .replace("'<CUSTOM>'", 'global[\'' + globalPluginProperty + '\'] = result[`${pluginName}Plugin`]') // eslint-disable-line no-template-curly-in-string
+
+      makePluginPackage(packageJson.name, {
+        'package.json': packageJson,
+        'index.js': indexJS
+      })
+
+      const plugins = makePlugins.call(core, { path: TMP_PATH })
+      const _Plugin = getGlobalPlugin()
+
+      expect(plugins.get(pluginName)).toEqual({
+        Plugin: _Plugin,
+        name: pluginName,
+        package: packageJson,
+        pluginPreferences: expect.any(PluginPreferences),
+        pluginStorages: expect.any(PluginStorages),
+        pluginLogger: expect.any(PluginLogger)
+      })
+
+      temporaryPluginPaths.push(packageJson.name)
+    })
+
+    test('Must return an iterable object without any key and length prototype property', () => {
+      const plugins = makePlugins.call(core, { path: TMP_PATH })
+      const pluginsList = plugins.get()
+
+      expect(Object.keys(pluginsList).length).toBe(0)
+      expect(pluginsList.length).toBe(0)
+      expect(pluginsList[Symbol.iterator]).toBe(helpers.object.iterateOverValues)
+    })
+
+    test('Must return plugins', async () => {
+      const PLUGINS_LENGTH = 3
+
+      expect.assertions(PLUGINS_LENGTH + 2)
+
+      const globalPluginProperty = '__PLUGIN__'
+      const getGlobalPlugin = () => global[globalPluginProperty]
+
+      global[globalPluginProperty] = {}
+
+      for (let counter = 0; counter < PLUGINS_LENGTH; counter++) {
+        const packageJson = makePackageJsonTemplate()
+        const pluginName = packageNameToPluginName(packageJson.name)
+        const indexJS = makeJSTemplate(pluginName)
+        const indexJSCache = indexJS.toString()
+
+        getGlobalPlugin()[pluginName] = {
+          Plugin: undefined,
+          name: pluginName,
+          package: packageJson
+        }
+
+        // Set Plugin class to global object
+        indexJS.toString = () => indexJSCache
+          .replace("'<CUSTOM>'", 'global[\'' +
+            globalPluginProperty +
+            '\'][\'' + pluginName + '\'].Plugin = result[`${pluginName}Plugin`]') // eslint-disable-line no-template-curly-in-string
+
+        makePluginPackage(packageJson.name, {
+          'package.json': packageJson,
+          'index.js': indexJS
+        })
+
+        temporaryPluginPaths.push(packageJson.name)
+      }
+
+      const plugins = makePlugins.call(core, { path: TMP_PATH })
+      const pluginsList = plugins.get()
+
+      expect(pluginsList.length).toBe(PLUGINS_LENGTH)
+      expect(Object.keys(pluginsList).length).toBe(PLUGINS_LENGTH)
+
+      for (const pluginPackage of pluginsList) {
+        expect(pluginPackage).toEqual(expect.objectContaining(getGlobalPlugin()[pluginPackage.name]))
+      }
+    })
+  })
+
+  afterAll(() => {
+    core.plugins = makePlugins.call(core, { path: TMP_PATH })
+
+    // pluginsPreference = core.preferences.get('plugins')
   })
 })
 
