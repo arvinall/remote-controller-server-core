@@ -516,11 +516,18 @@ describe('add Method', () => {
 
 describe('remove Method', () => {
   describe('Errors', () => {
-    test('Must throw error when pluginPackage is not PluginPackage/string', () => {
+    test('Must throw error when pluginPackage parameter is not PluginPackage/string', () => {
       const ERROR = 'pluginPackage parameter is required and must be PluginPackage/string'
 
       expect(core.plugins.remove.bind(core.plugins)).toThrow(ERROR)
       expect(core.plugins.remove.bind(core.plugins, 123)).toThrow(ERROR)
+    })
+
+    test('Must throw error when removeData parameter is not boolean', () => {
+      const ERROR = 'removeData parameter must be boolean'
+
+      expect(core.plugins.remove.bind(core.plugins, 'wrong', 123)).toThrow(ERROR)
+      expect(core.plugins.remove.bind(core.plugins, 'wrong', [ 'wrong' ])).toThrow(ERROR)
     })
 
     test('Must throw error when target plugin is not exist in list', () => {
