@@ -460,7 +460,7 @@ describe('connections get method', () => {
       expect(core.connections.get(connection.id)).toBe(connection)
     })
 
-    test('Must return an object without any key and length prototype property and it must be iterable', () => {
+    test('Must return an iterable object without any key and length prototype property', () => {
       const connections = core.connections.get()
 
       expect(Object.keys(connections).length).toBe(0)
