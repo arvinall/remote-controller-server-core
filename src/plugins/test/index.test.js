@@ -514,6 +514,70 @@ describe('add Method', () => {
   })
 })
 
+describe('remove Method', () => {
+  describe('Errors', () => {
+    test('Must throw error when pluginPackage is not PluginPackage/string', () => {
+      const ERROR = 'pluginPackage parameter is required and must be PluginPackage/string'
+
+      expect(core.plugins.remove.bind(core.plugins)).toThrow(ERROR)
+      expect(core.plugins.remove.bind(core.plugins, 123)).toThrow(ERROR)
+    })
+
+    test('Must throw error when target plugin is not exist in list', () => {
+      const pluginName = 'wrong'
+      const ERROR = `${pluginName} is not exist in list`
+
+      expect(core.plugins.remove.bind(core.plugins, pluginName)).toThrow(ERROR)
+    })
+  })
+
+  describe('Success', () => {
+    test('Must remove plugin package directory from disk and list with string', async () => {
+      expect.assertions(3)
+
+      const packageJson = makePackageJsonTemplate()
+      const pluginName = packageNameToPluginName(packageJson.name)
+      const packagePath = packageNameToPath(packageJson.name)
+
+      makePluginPackage(packageJson.name, {
+        'package.json': packageJson,
+        'index.js': makeJSTemplate(pluginName)
+      })
+
+      await core.plugins.add(pluginName)
+
+      expect(await promisify(fs.access)(packagePath, fs.constants.F_OK)).toBeUndefined()
+
+      await core.plugins.remove(pluginName)
+
+      await expect(promisify(fs.access)(packagePath, fs.constants.F_OK)).rejects.toThrow()
+      expect(core.plugins.get(pluginName)).toBeUndefined()
+    })
+
+    test('Must remove plugin package directory from disk and list with PluginPackage', async () => {
+      expect.assertions(3)
+
+      const packageJson = makePackageJsonTemplate()
+      const pluginName = packageNameToPluginName(packageJson.name)
+      const packagePath = packageNameToPath(packageJson.name)
+
+      makePluginPackage(packageJson.name, {
+        'package.json': packageJson,
+        'index.js': makeJSTemplate(pluginName)
+      })
+
+      const pluginPackage = await core.plugins.add(pluginName)
+
+      expect(await promisify(fs.access)(packagePath, fs.constants.F_OK)).toBeUndefined()
+
+      await core.plugins.remove(pluginPackage)
+
+      await expect(promisify(fs.access)(packagePath, fs.constants.F_OK)).rejects.toThrow()
+      expect(core.plugins.get(pluginName)).toBeUndefined()
+    })
+  })
+})
+
 afterAll(async () => {
   await core.storages.remove(preferencesStorageName)
 
