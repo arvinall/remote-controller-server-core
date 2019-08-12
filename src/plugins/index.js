@@ -113,11 +113,17 @@ export default function makePlugins (configs = Object.create(null)) {
    */
   class Plugins extends EventEmitter {
     /**
-     * A list that hold plugins
+     * A list that holds plugins
      *
-     * @type {Object}
+     * @type {Object<string, module:plugins.PluginPackage>}
      */
     #pluginsList = {}
+    /**
+     * A list that holds reloaded plugins
+     *
+     * @type {Object<string, module:plugins.PluginPackage>}
+     */
+    #reloadedPluginPackagesCahce = {}
 
     /**
      * Read, setup and add plugin to the list
@@ -394,13 +400,20 @@ export default function makePlugins (configs = Object.create(null)) {
       const pluginName = pluginPackage.name || pluginPackage
       const pluginPath = _pluginNameToPath(pluginName)
 
-      pluginPackage = this.get(pluginName)
+      this.#reloadedPluginPackagesCahce[pluginName] =
+        pluginPackage = this.#reloadedPluginPackagesCahce[pluginName] || this.get(pluginName)
 
       // Remove cache from ram
       this.#remove(pluginPath)
 
       // Read and setup plugin again
       const newPluginPackage = this.#add(pluginPath)
+      // Copy previous pluginPackage objects
+      const oldPluginPackage = Object
+        .assign(Object.create(Object.getPrototypeOf(pluginPackage)), pluginPackage)
+
+      // Update previous cached pluginPackage objects
+      Object.assign(pluginPackage, newPluginPackage)
 
       /**
        * @summary Plugin reloaded event
@@ -410,7 +423,7 @@ export default function makePlugins (configs = Object.create(null)) {
        *
        * @type {module:plugins.PluginPackage}
        */
-      this.emit('reloaded', pluginPackage, newPluginPackage)
+      this.emit('reloaded', oldPluginPackage, newPluginPackage)
 
       return newPluginPackage
     }
