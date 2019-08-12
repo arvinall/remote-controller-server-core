@@ -460,7 +460,7 @@ describe('add Method', () => {
 
   describe('Success', () => {
     test('Must resolve PluginPackage', async () => {
-      expect.assertions(2)
+      expect.assertions(3)
 
       const packageJson = makePackageJsonTemplate()
       const pluginName = packageNameToPluginName(packageJson.name)
@@ -482,6 +482,7 @@ describe('add Method', () => {
       }))
 
       expect(helpers.object.inheritOf.call(pluginPackage.Plugin, Plugin)).toBe(true)
+      expect(new (pluginPackage.Plugin)() + '').toBe(`[object ${kebabCaseToCamelCase(packageJson.name)}]`)
 
       temporaryPluginPaths.push(packageJson.name)
     })
