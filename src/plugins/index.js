@@ -138,9 +138,15 @@ export default function makePlugins (configs = Object.create(null)) {
       // Read package.json config file
       pluginPackage.package = global.require(path.join(pluginPath, 'package.json'))
 
+      const Error = makeClassLoggable(global.Error, logObject)
+        .assignLogObject({
+          method: '#add',
+          ...this[logSymbol],
+          package: pluginPackage.package
+        })
+
       if (!isPluginPackage(pluginPackage.package.name)) {
         throw new Error('Plugin package name must ends with \'-' + Plugin.name.toLowerCase() + '\', ' + pluginPackage.package.name)
-          .setLogObject(pluginPackage.package)
       }
 
       pluginPackage.name = packageNameToPluginName(pluginPackage.package.name)
@@ -262,12 +268,14 @@ export default function makePlugins (configs = Object.create(null)) {
      *
      * @emits module:plugins~Plugins#event:added
      *
+     * @throws Will throw an error if target plugin is already exist
+     *
      * @async
      * @return {Promise<(module:plugins.PluginPackage|Error)>}
      * * Rejection
-     *  * Will throw an error if plugin package's name hasn't "-plugin" suffix
-     *  * Will throw an typeError if plugin package's default exported value doesn't function
-     *  * Will throw an typeError if plugin package's default exported return value doesn't contain a class that implements the {@link module:plugins/plugin} as Plugin key
+     *  * Will reject an error if plugin package's name hasn't "-plugin" suffix
+     *  * Will reject an typeError if plugin package's default exported value doesn't function
+     *  * Will reject an typeError if plugin package's default exported return value doesn't contain a class that implements the {@link module:plugins/plugin} as Plugin key
      */
     add (pluginName) {
       const Error = makeClassLoggable(global.Error, logObject)
