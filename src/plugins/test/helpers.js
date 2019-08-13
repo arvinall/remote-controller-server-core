@@ -139,3 +139,18 @@ export function kebabCaseToCamelCase (value) {
 
   return value
 }
+
+/**
+ * Unwrap function and convert to string
+ *
+ * @param {function} func
+ *
+ * @return {string}
+ */
+export function functionToExpressionString (func) {
+  return func
+    .toString()
+    .split('{').slice(1).join('{')
+    .split('}').slice(0, -1).join('}')
+    .trim()
+}
