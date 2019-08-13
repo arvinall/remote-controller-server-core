@@ -43,6 +43,8 @@ const packageNameToPath = _packageNameToPath.bind(null, TMP_PATH)
 const core = Object.create(null)
 const preferencesStorageName = generateId()
 const temporaryPluginPaths = []
+const globalPluginProperty = '__PLUGIN__'
+const getGlobalPlugin = () => global[globalPluginProperty]
 
 let pluginsPreference
 
@@ -177,9 +179,6 @@ describe('makePlugins', () => {
 })
 
 describe('constructor', () => {
-  const globalPluginProperty = '__PLUGIN__'
-  const getGlobalPlugin = () => global[globalPluginProperty]
-
   test('Must add pre-installed plugins without error', () => {
     for (let counter = 1; counter <= 3; counter++) {
       const packageJson = makePackageJsonTemplate()
@@ -235,8 +234,6 @@ describe('get Method', () => {
     test('Must return pluginPackage by pluginName', async () => {
       expect.assertions(1)
 
-      const globalPluginProperty = '__PLUGIN__'
-      const getGlobalPlugin = () => global[globalPluginProperty]
       const packageJson = makePackageJsonTemplate()
       const pluginName = packageNameToPluginName(packageJson.name)
       const indexJS = makeJSTemplate(pluginName)
@@ -279,9 +276,6 @@ describe('get Method', () => {
       const PLUGINS_LENGTH = 3
 
       expect.assertions(PLUGINS_LENGTH + 2)
-
-      const globalPluginProperty = '__PLUGIN__'
-      const getGlobalPlugin = () => global[globalPluginProperty]
 
       global[globalPluginProperty] = {}
 
