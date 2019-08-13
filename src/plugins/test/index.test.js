@@ -622,6 +622,63 @@ describe('remove Method', () => {
       await expect(promisify(fs.access)(packagePath, fs.constants.F_OK)).rejects.toThrow()
       expect(core.plugins.get(pluginName)).toBeUndefined()
     })
+
+    test('Must remove plugin\'s preference and storages when removeData parameter setted to true', async () => {
+      const storagesSize = 3
+
+      expect.assertions(2 + storagesSize * 2)
+
+      const packageJson = makePackageJsonTemplate()
+      const pluginName = packageNameToPluginName(packageJson.name)
+      const indexJS = makeJSTemplate(pluginName)
+      const indexJSCache = indexJS.toString()
+
+      indexJS.toString = () => indexJSCache.replace("'<CUSTOM>'", functionToExpressionString(
+        /* eslint-disable */() => {
+          // Set static method on plugin class
+          Object.assign(result[`${pluginName}Plugin`], {
+            init (storageNames = []) {
+              pluginPreferences.add()
+
+              for (const storageName of storageNames) {
+                pluginStorages.add(storageName)
+              }
+            }
+          })
+        }/* eslint-enable */
+      ))
+
+      makePluginPackage(packageJson.name, {
+        'package.json': packageJson,
+        'index.js': indexJS
+      })
+
+      const {
+        Plugin: { init },
+        pluginPreferences,
+        pluginStorages
+      } = await core.plugins.add(pluginName)
+      const storageNames = []
+
+      for (let counter = 1; counter <= storagesSize; counter++) {
+        storageNames.push(generateId().toLowerCase())
+      }
+
+      // Initial preference and storages
+      init(storageNames)
+
+      expect(pluginPreferences.get.bind(pluginPreferences)).not.toThrow()
+      for (const storageName of storageNames) {
+        expect(pluginStorages.get.bind(pluginStorages, storageName)).not.toThrow()
+      }
+
+      await core.plugins.remove(pluginName, true)
+
+      expect(pluginPreferences.get.bind(pluginPreferences)).toThrow()
+      for (const storageName of storageNames) {
+        expect(pluginStorages.get.bind(pluginStorages, storageName)).toThrow()
+      }
+    })
   })
 })
 
