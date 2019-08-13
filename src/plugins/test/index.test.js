@@ -713,6 +713,32 @@ describe('reload Method', () => {
   )
 })
 
+describe('has Method', () => {
+  describe('Success', () => {
+    test('Must return false when target plugin is not exist in list', () => {
+      expect(core.plugins.has('wrong')).toBe(false)
+    })
+
+    test('Must return true when target plugin is exist in list', async () => {
+      expect.assertions(1)
+
+      const packageJson = makePackageJsonTemplate()
+      const pluginName = packageNameToPluginName(packageJson.name)
+
+      makePluginPackage(packageJson.name, {
+        'package.json': packageJson,
+        'index.js': makeJSTemplate(pluginName)
+      })
+
+      await core.plugins.add(pluginName)
+
+      expect(core.plugins.has(pluginName)).toBe(true)
+
+      temporaryPluginPaths.push(packageJson.name)
+    })
+  })
+})
+
 afterAll(async () => {
   await core.storages.remove(preferencesStorageName)
 
