@@ -579,49 +579,31 @@ describe('remove Method', () => {
   })
 
   describe('Success', () => {
-    test('Must remove plugin package directory from disk and list with string', async () => {
-      expect.assertions(3)
+    test.each([ [ 'string' ], [ 'PluginPackage' ] ])(
+      'Must remove plugin package directory from disk and list with %s',
+      async type => {
+        expect.assertions(3)
 
-      const packageJson = makePackageJsonTemplate()
-      const pluginName = packageNameToPluginName(packageJson.name)
-      const packagePath = packageNameToPath(packageJson.name)
+        const packageJson = makePackageJsonTemplate()
+        const pluginName = packageNameToPluginName(packageJson.name)
+        const packagePath = packageNameToPath(packageJson.name)
 
-      makePluginPackage(packageJson.name, {
-        'package.json': packageJson,
-        'index.js': makeJSTemplate(pluginName)
-      })
+        makePluginPackage(packageJson.name, {
+          'package.json': packageJson,
+          'index.js': makeJSTemplate(pluginName)
+        })
 
-      await core.plugins.add(pluginName)
+        const pluginPackage = await core.plugins.add(pluginName)
 
-      expect(await promisify(fs.access)(packagePath, fs.constants.F_OK)).toBeUndefined()
+        expect(await promisify(fs.access)(packagePath, fs.constants.F_OK)).toBeUndefined()
 
-      await core.plugins.remove(pluginName)
+        if (type === 'string') await core.plugins.remove(pluginName)
+        else await core.plugins.remove(pluginPackage)
 
-      await expect(promisify(fs.access)(packagePath, fs.constants.F_OK)).rejects.toThrow()
-      expect(core.plugins.get(pluginName)).toBeUndefined()
-    })
-
-    test('Must remove plugin package directory from disk and list with PluginPackage', async () => {
-      expect.assertions(3)
-
-      const packageJson = makePackageJsonTemplate()
-      const pluginName = packageNameToPluginName(packageJson.name)
-      const packagePath = packageNameToPath(packageJson.name)
-
-      makePluginPackage(packageJson.name, {
-        'package.json': packageJson,
-        'index.js': makeJSTemplate(pluginName)
-      })
-
-      const pluginPackage = await core.plugins.add(pluginName)
-
-      expect(await promisify(fs.access)(packagePath, fs.constants.F_OK)).toBeUndefined()
-
-      await core.plugins.remove(pluginPackage)
-
-      await expect(promisify(fs.access)(packagePath, fs.constants.F_OK)).rejects.toThrow()
-      expect(core.plugins.get(pluginName)).toBeUndefined()
-    })
+        await expect(promisify(fs.access)(packagePath, fs.constants.F_OK)).rejects.toThrow()
+        expect(core.plugins.get(pluginName)).toBeUndefined()
+      }
+    )
 
     test('Must remove plugin\'s preference and storages when removeData parameter setted to true', async () => {
       const storagesSize = 3
