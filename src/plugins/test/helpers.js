@@ -91,7 +91,14 @@ export function makeJSTemplate (pluginName) {
     const pluginName = '<pluginName>'
 
     module.exports = {
-      [`setup${pluginName}Plugin`]: function ({ Plugin }) {
+      [`setup${pluginName}Plugin`]: function (
+        {
+          Plugin,
+          pluginStorages,
+          pluginPreferences,
+          pluginLogger
+        }
+      ) {
         const result = {
           [`${pluginName}Plugin`]: class extends Plugin {}
         }
