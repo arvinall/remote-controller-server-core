@@ -20,7 +20,8 @@ import {
   makePluginPackage as _makePluginPackage,
   makePackageJsonTemplate,
   makeJSTemplate,
-  kebabCaseToCamelCase
+  kebabCaseToCamelCase,
+  functionToExpressionString
 } from './helpers'
 import EventEmitter from 'events'
 import * as helpers from '../../helpers'
@@ -477,6 +478,54 @@ describe('add Method', () => {
 
       expect(helpers.object.inheritOf.call(pluginPackage.Plugin, Plugin)).toBe(true)
       expect(new (pluginPackage.Plugin)() + '').toBe(`[object ${kebabCaseToCamelCase(packageJson.name)}]`)
+
+      temporaryPluginPaths.push(packageJson.name)
+    })
+
+    test('Must pass "<pluginModules>" modules to plugin\'s setup function'
+      .replace('"<pluginModules>"', [ 'PluginStorages', 'PluginPreferences', 'PluginLogger' ]
+        .join(', ')), async () => {
+      expect.assertions(1)
+
+      global[globalPluginProperty] = getGlobalPlugin() instanceof Object
+        ? getGlobalPlugin()
+        : {}
+
+      // Set Plugin* classes to global
+      Object.assign(getGlobalPlugin(), {
+        PluginStorages,
+        PluginPreferences,
+        PluginLogger
+      })
+
+      const packageJson = makePackageJsonTemplate()
+      const pluginName = packageNameToPluginName(packageJson.name)
+      const indexJS = makeJSTemplate(pluginName)
+      const indexJSCache = indexJS.toString()
+
+      indexJS.toString = () => indexJSCache.replace("'<CUSTOM>'", functionToExpressionString(
+        /* eslint-disable */() => {
+          const globalPluginProperty = global['__PLUGIN__']
+
+          // Set static methods on plugin
+          Object.assign(result[`${pluginName}Plugin`], {
+            testModules () {
+              return ( pluginStorages instanceof globalPluginProperty.PluginStorages &&
+                pluginPreferences instanceof globalPluginProperty.PluginPreferences &&
+                pluginLogger instanceof globalPluginProperty.PluginLogger )
+            }
+          })
+        }
+        /* eslint-enable */))
+
+      makePluginPackage(packageJson.name, {
+        'package.json': packageJson,
+        'index.js': indexJS
+      })
+
+      const { Plugin: { testModules } } = await core.plugins.add(pluginName)
+
+      expect(testModules()).toBe(true)
 
       temporaryPluginPaths.push(packageJson.name)
     })
