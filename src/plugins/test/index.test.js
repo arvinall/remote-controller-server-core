@@ -1,4 +1,4 @@
-/* global describe, test, expect, generateId, afterAll, TMP_PATH, global, afterEach, process */
+/* global describe, test, expect, generateId, afterAll, TMP_PATH, global, afterEach, process, jest */
 
 import Plugin from '../plugin'
 import makePlugins, {
@@ -662,6 +662,55 @@ describe('remove Method', () => {
       }
     })
   })
+})
+
+describe('reload Method', () => {
+  test('Must throw error when pluginPackage parameter is not PluginPackage/string', () => {
+    const ERROR = 'pluginPackage parameter is required and must be PluginPackage/string'
+
+    expect(core.plugins.reload.bind(core.plugins)).toThrow(ERROR)
+    expect(core.plugins.reload.bind(core.plugins, 123)).toThrow(ERROR)
+  })
+
+  test.each([ [ 'string' ], [ 'PluginPackage' ] ])(
+    'Must reload plugin and create new PluginPackage and update previous pluginPackage %s',
+    async type => {
+      expect.assertions(4)
+
+      const packageJson = makePackageJsonTemplate()
+      const pluginName = packageNameToPluginName(packageJson.name)
+      const indexJS = makeJSTemplate(pluginName)
+
+      makePluginPackage(packageJson.name, {
+        'package.json': packageJson,
+        'index.js': indexJS
+      })
+
+      const pluginPackage = await core.plugins.add(pluginName)
+
+      // Update plugin package's version
+      packageJson.version = '0.0.2'
+      makePluginPackage(packageJson.name, {
+        'package.json': packageJson,
+        'index.js': indexJS
+      })
+
+      let newPluginPackage
+
+      // Reset jest module registry
+      jest.resetModules()
+
+      if (type === 'string') newPluginPackage = core.plugins.reload(pluginName)
+      else newPluginPackage = core.plugins.reload(pluginPackage)
+
+      expect(newPluginPackage).not.toBe(pluginPackage)
+      expect(newPluginPackage).toBe(core.plugins.get(pluginName))
+      expect(newPluginPackage.package.version).toBe(packageJson.version)
+      expect(pluginPackage.package.version).toBe(packageJson.version)
+
+      temporaryPluginPaths.push(packageJson.name)
+    }
+  )
 })
 
 afterAll(async () => {
