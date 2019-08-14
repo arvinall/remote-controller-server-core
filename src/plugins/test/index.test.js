@@ -528,7 +528,7 @@ describe('add Method', () => {
     })
   })
 
-  test('Must throw error when target plugin is already exist', async () => {
+  test('Must reject error when target plugin is already exist', async () => {
     expect.assertions(1)
 
     const packageJson = makePackageJsonTemplate()
@@ -570,11 +570,15 @@ describe('remove Method', () => {
       expect(core.plugins.remove.bind(core.plugins, 'wrong', [ 'wrong' ])).toThrow(ERROR)
     })
 
-    test('Must throw error when target plugin is not exist in list', () => {
+    test('Must reject error when target plugin is not exist in list', async () => {
       const pluginName = 'wrong'
       const ERROR = `${pluginName} is not exist in list`
 
-      expect(core.plugins.remove.bind(core.plugins, pluginName)).toThrow(ERROR)
+      try {
+        await core.plugins.remove(pluginName)
+      } catch (error) {
+        expect(error.message).toBe(ERROR)
+      }
     })
   })
 

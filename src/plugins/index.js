@@ -1,4 +1,4 @@
-/* global global, process, console */
+/* global global, process, console, setImmediate */
 
 /**
  * @module plugins
@@ -297,11 +297,10 @@ export default function makePlugins (configs = Object.create(null)) {
      *
      * @emits module:plugins~Plugins#event:added
      *
-     * @throws Will throw an error if target plugin is already exist
-     *
      * @async
      * @return {Promise<(module:plugins.PluginPackage|Error)>}
      * * Rejection
+     *  * Will reject an error if target plugin is already exist
      *  * Will reject an error if plugin package's name hasn't "-plugin" suffix
      *  * Will reject an typeError if plugin package's default exported value doesn't function
      *  * Will reject an typeError if plugin package's default exported return value doesn't contain a class that implements the {@link module:plugins/plugin} as Plugin key
@@ -311,9 +310,13 @@ export default function makePlugins (configs = Object.create(null)) {
         .assignLogObject({ method: 'add' })
 
       if (typeof pluginName !== 'string') throw new TypeError('pluginName parameter is required and must be string')
-      else if (this.get(pluginName)) throw new Error(`${pluginName} is already exist`)
 
       return (async () => {
+        if (this.get(pluginName)) throw new Error(`${pluginName} is already exist`)
+
+        // Temporary
+        await new Promise(resolve => setImmediate(resolve))
+
         const pluginPackage = this.#add(_pluginNameToPath(pluginName))
 
         /**
@@ -370,10 +373,10 @@ export default function makePlugins (configs = Object.create(null)) {
      *
      * @emits module:plugins~Plugins#event:removed
      *
-     * @throws Will throw an error if target plugin is not exist in list
-     *
      * @async
      * @return {Promise<(void|Error)>}
+     * * Rejection
+     *  * Reject an error if target plugin is not exist in list
      */
     remove (pluginPackage, removeData = false) {
       const Error = makeClassLoggable(global.Error, logObject)
@@ -388,11 +391,11 @@ export default function makePlugins (configs = Object.create(null)) {
 
       pluginPackage = this.get(pluginName)
 
-      if (!pluginPackage) throw new Error(`${pluginName} is not exist in list`)
-
       const pluginPath = _pluginNameToPath(pluginName)
 
       return (async () => {
+        if (!pluginPackage) throw new Error(`${pluginName} is not exist in list`)
+
         // Remove cache from disk
         await promisify(rimraf)(pluginPath)
 
