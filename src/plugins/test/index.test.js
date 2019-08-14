@@ -743,6 +743,94 @@ describe('has Method', () => {
   })
 })
 
+describe('Events', () => {
+  test('Must emit added event when new plugin added', async () => {
+    expect.assertions(1)
+
+    const packageJson = makePackageJsonTemplate()
+    const pluginName = packageNameToPluginName(packageJson.name)
+    const indexJS = makeJSTemplate(pluginName)
+
+    makePluginPackage(packageJson.name, {
+      'package.json': packageJson,
+      'index.js': indexJS
+    })
+
+    const pluginPackagePromise = core.plugins.add(pluginName)
+
+    await new Promise(resolve => core.plugins.once('added', async _pluginPackage => {
+      const pluginPackage = await pluginPackagePromise
+
+      expect(pluginPackage).toBe(_pluginPackage)
+
+      resolve()
+    }))
+
+    temporaryPluginPaths.push(packageJson.name)
+  })
+
+  test('Must emit removed event when plugin removed', async () => {
+    expect.assertions(1)
+
+    const packageJson = makePackageJsonTemplate()
+    const pluginName = packageNameToPluginName(packageJson.name)
+    const indexJS = makeJSTemplate(pluginName)
+
+    makePluginPackage(packageJson.name, {
+      'package.json': packageJson,
+      'index.js': indexJS
+    })
+
+    const pluginPackage = await core.plugins.add(pluginName)
+
+    core.plugins.remove(pluginName)
+
+    await new Promise(resolve => core.plugins.once('removed', async _pluginPackage => {
+      expect(pluginPackage).toBe(_pluginPackage)
+
+      resolve()
+    }))
+  })
+
+  test('Must emit reloaded event when plugin reloaded', async () => {
+    expect.assertions(5)
+
+    const packageJson = makePackageJsonTemplate()
+    const pluginName = packageNameToPluginName(packageJson.name)
+    const indexJS = makeJSTemplate(pluginName)
+
+    makePluginPackage(packageJson.name, {
+      'package.json': packageJson,
+      'index.js': indexJS
+    })
+
+    const pluginPackage = await core.plugins.add(pluginName)
+    const oldVersion = packageJson.version
+
+    // Update plugin package's version
+    packageJson.version = '0.0.2'
+    makePluginPackage(packageJson.name, {
+      'package.json': packageJson,
+      'index.js': indexJS
+    })
+
+    core.plugins.once('reloaded', async (newPluginPackage, oldPluginPackage) => {
+      expect(pluginPackage).not.toBe(newPluginPackage)
+      expect(pluginPackage).not.toBe(oldPluginPackage)
+      expect(pluginPackage).toEqual(newPluginPackage)
+      expect(newPluginPackage.package.version).toBe(packageJson.version)
+      expect(oldPluginPackage.package.version).toBe(oldVersion)
+    })
+
+    // Reset jest module registry
+    jest.resetModules()
+
+    core.plugins.reload(pluginPackage)
+
+    temporaryPluginPaths.push(packageJson.name)
+  })
+})
+
 afterAll(async () => {
   await core.storages.remove(preferencesStorageName)
 
