@@ -673,7 +673,7 @@ describe('reload Method', () => {
   })
 
   test.each([ [ 'string' ], [ 'PluginPackage' ] ])(
-    'Must reload plugin and create new PluginPackage and update previous pluginPackage %s',
+    'Must reload plugin and create new PluginPackage and update previous pluginPackage with %s',
     async type => {
       expect.assertions(4)
 
