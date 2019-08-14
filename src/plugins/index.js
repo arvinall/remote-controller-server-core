@@ -447,13 +447,13 @@ export default function makePlugins (configs = Object.create(null)) {
 
       /**
        * @summary Plugin reloaded event
-       * @description Old PluginPackage pass as first parameter, and new PluginPackage pass as second parameter
+       * @description New PluginPackage pass as first parameter, and old PluginPackage pass as second parameter
        *
        * @event module:plugins~Plugins#event:reloaded
        *
        * @type {module:plugins.PluginPackage}
        */
-      this.emit('reloaded', oldPluginPackage, newPluginPackage)
+      this.emit('reloaded', newPluginPackage, oldPluginPackage)
 
       return newPluginPackage
     }
@@ -529,7 +529,7 @@ export default function makePlugins (configs = Object.create(null)) {
         event: 'removed'
       }, pluginPackage))
 
-    plugins.on('reloaded', (oldPluginPackage, newPluginPackage) => logger
+    plugins.on('reloaded', (newPluginPackage, oldPluginPackage) => logger
       .info('makePlugins', {
         module: 'plugins',
         event: 'reloaded'
