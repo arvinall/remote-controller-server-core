@@ -43,11 +43,8 @@ const CONFIG = {
 }
 
 // Clear source maps links
-CONFIG.output.devtoolModuleFilenameTemplate = info => {
-  let context = CONFIG.context.split('/')
-  context = context[context.length - 1]
-
-  return path.join(context, info.resourcePath)
-}
+CONFIG.output.devtoolModuleFilenameTemplate = info => (
+  path.join(CONFIG.context.split('/').slice(-1)[0], info.resourcePath)
+)
 
 module.exports = CONFIG

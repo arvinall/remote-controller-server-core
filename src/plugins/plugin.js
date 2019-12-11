@@ -11,6 +11,8 @@ import { logSymbol } from '../logger'
  * Interface for plugins
  *
  * @interface
+ *
+ * @mixes module:remote-controller-server-core~external:EventEmitter
  */
 export default class Plugin extends EventEmitter {
   /**
