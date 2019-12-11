@@ -88,6 +88,7 @@ import makePreferences from './preferences'
 import makeEngine from './engine'
 import makeConnections from './connections'
 import makePlugins from './plugins'
+import makeActivities from './activities'
 
 // Error classes
 const logObject = {
@@ -284,6 +285,25 @@ export default function makeCore (configs = Object.create(null)) {
     throw error
   }
 
+  // activities
+  try {
+    /**
+     * Activities manager module
+     *
+     * @name activities
+     * @memberOf module:remote-controller-server-core~core
+     *
+     * @type {module:activities~activities}
+     */
+    core.activities = makeActivities.call(core)
+  } catch (error) {
+    core.logger.error('core', { module: 'activities' }, error)
+
+    error._dontLog = true
+
+    throw error
+  }
+
   return Object.freeze(core)
 }
 
@@ -323,3 +343,4 @@ export * as asyncEventEmitter from './asyncEventEmitter'
 export * as helpers from './helpers'
 export * as logger from './logger'
 export * as plugins from './plugins'
+export * as activities from './activities'
