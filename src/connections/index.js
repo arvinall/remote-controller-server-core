@@ -423,7 +423,7 @@ export default function makeConnections () {
      * @return {boolean}
      */
     has (connectionId) {
-      return connectionsList.get(connectionId)
+      return connectionsList.has(connectionId)
     }
 
     /**
