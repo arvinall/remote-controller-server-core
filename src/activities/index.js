@@ -9,6 +9,15 @@ import * as helpers from '../helpers'
 import Activity from './activity'
 import Connection from '../connections/connection'
 import Plugin from '../plugins/plugin'
+import { makeClassLoggable } from '../logger'
+
+// Error classes
+const logObject = {
+  scope: 'makeActivities',
+  module: 'activities',
+  event: undefined
+}
+const TypeError = makeClassLoggable(global.TypeError, logObject)
 
 /**
  * makeActivities creates activities module
@@ -223,6 +232,17 @@ export default function makeActivities (configs = Object.create(null)) {
       if (result) this.emit('removed', activity)
 
       return result
+    }
+
+    /**
+     * Check Activity is already exist
+     *
+     * @param {string} activityId Activity's id to check
+     *
+     * @return {boolean}
+     */
+    has (activityId) {
+      return activitiesList.hasOwnProperty(activityId)
     }
   }
 
