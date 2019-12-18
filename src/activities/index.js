@@ -1,4 +1,4 @@
-/** global setTimeout */
+/** global global, setTimeout */
 
 /**
  * @module activities
@@ -42,7 +42,7 @@ export default function makeActivities (configs = Object.create(null)) {
 
       const self = this
 
-      function connectionsOnNewActivity (configs) {
+      async function connectionsOnAddActivity (configs) {
         let Plugin = plugins.get(configs.plugin)
         let activity
         let result
@@ -55,7 +55,9 @@ export default function makeActivities (configs = Object.create(null)) {
             id: configs.id
           }
 
-          this.send('newActivity', result).then(() => self.emit('newActivity', result))
+          await this.send('addActivity', result)
+
+          self.emit('addActivity', result)
         } else {
           Plugin = Plugin.Plugin
           activity = activitiesList[configs.id]
@@ -68,7 +70,9 @@ export default function makeActivities (configs = Object.create(null)) {
               id: configs.id
             }
 
-            this.send('newActivity', result).then(() => self.emit('newActivity', result))
+            await this.send('addActivity', result)
+
+            self.emit('addActivity', result)
           } else {
             switch (configs.status) {
               case 0:
@@ -80,7 +84,9 @@ export default function makeActivities (configs = Object.create(null)) {
                   plugin: configs.plugin
                 }
 
-                this.send('newActivity', result).then(() => self.emit('newActivity', result))
+                await this.send('addActivity', result)
+
+                self.emit('addActivity', result)
                 break
               case 1:
                 activity.emit('init')
@@ -91,10 +97,10 @@ export default function makeActivities (configs = Object.create(null)) {
                   plugin: configs.plugin
                 }
 
-                this.send('newActivity', result).then(() => {
-                  self.emit('newActivity', result)
-                  activity.emit('ready')
-                })
+                this.send('addActivity', result)
+                  .then(() => self.emit('addActivity', result))
+
+                activity.emit('ready')
                 break
               case 2:
                 self.remove(activity)
@@ -103,25 +109,100 @@ export default function makeActivities (configs = Object.create(null)) {
           }
         }
       }
+      async function connectionsOnRemoveActivity (configs) {
+        let activity = activitiesList[configs.id]
+        let result
+
+        if (activity === undefined) {
+          result = {
+            status: 2,
+            error: 'Activity not found',
+            id: configs.id
+          }
+
+          await this.send('removeActivity', result)
+
+          self.emit('removeActivity', result)
+        } else {
+          switch (configs.status) {
+            case 0:
+              activity.emit('cleanup')
+
+              result = {
+                status: 0,
+                id: activity.id
+              }
+
+              await this.send('removeActivity', result)
+
+              self.emit('removeActivity', result)
+              break
+            case 1:
+              self.remove(activity)
+
+              result = {
+                status: 1,
+                id: activity.id
+              }
+
+              await this.send('removeActivity', result)
+
+              self.emit('removeActivity', result)
+              break
+            case 2:
+              self.remove(activity)
+              break
+          }
+        }
+      }
 
       connections.on('connected', connection => {
-        const onNewActivity = connectionsOnNewActivity.bind(connection)
+        const onAddActivity = connectionsOnAddActivity.bind(connection)
+        const onRemoveActivity = connectionsOnRemoveActivity.bind(connection)
 
-        connection.on('newActivity', onNewActivity)
-        connection.once('disconnected', () => {
-          if (connection.listenerCount('newActivity')) {
-            connection.off('newActivity', onNewActivity)
+        connection.on('authentication', ({ status, factor }) => {
+          if (!factor) {
+            switch (status) {
+              case 1:
+                connection.on('addActivity', onAddActivity)
+                connection.on('removeActivity', onRemoveActivity)
 
-            setTimeout(() => {
-              if (!connection.isConnect) {
-                for (const activityId in activitiesList) {
-                  if (!activitiesList.hasOwnProperty(activityId) ||
-                    activitiesList[activityId].connection !== connection) continue
+                connection.once('disconnected', () => {
+                  if (connection.listenerCount('addActivity')) {
+                    connection.off('addActivity', onAddActivity)
+                    connection.off('removeActivity', onRemoveActivity)
 
-                  this.remove(activitiesList[activityId])
-                }
-              }
-            }, connections.removeTimeout)
+                    // Close connection's activities on disconnected event
+                    for (const activityId in activitiesList) {
+                      const activity = activitiesList[activityId]
+
+                      if (!activitiesList.hasOwnProperty(activityId) ||
+                        activity.connection !== connection) continue
+
+                      if (activity.status === 'init' ||
+                        activity.status === 'ready') activity.emit('cleanup')
+                      if (activity.status !== 'close') activity.emit('close')
+                    }
+
+                    // Remove connection's activities base-on connections removeTimeout
+                    setTimeout(() => {
+                      if (!connection.isConnect) {
+                        for (const activityId in activitiesList) {
+                          if (!activitiesList.hasOwnProperty(activityId) ||
+                            activitiesList[activityId].connection !== connection) continue
+
+                          this.remove(activitiesList[activityId])
+                        }
+                      }
+                    }, connections.removeTimeout)
+                  }
+                })
+                break
+              case 2:
+                connection.off('addActivity', onAddActivity)
+                connection.off('removeActivity', onRemoveActivity)
+                break
+            }
           }
         })
       })
