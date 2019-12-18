@@ -515,7 +515,7 @@ export default function makePlugins (configs = Object.create(null)) {
 
   const plugins = new Plugins()
 
-    // Logging
+  // Logging
   ;(() => {
     plugins.on('added', pluginPackage => logger
       .info('makePlugins', {

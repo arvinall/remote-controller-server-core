@@ -14,7 +14,7 @@ import { makeClassLoggable } from '../logger'
 // Error classes
 const logObject = {
   scope: 'makeActivities',
-  module: 'activities',
+  module: undefined,
   event: undefined
 }
 const TypeError = makeClassLoggable(global.TypeError, logObject)
@@ -31,7 +31,12 @@ export default function makeActivities (configs = Object.create(null)) {
 
   const connections = this.connections
   const plugins = this.plugins
+  const logger = this.logger
   const activitiesList = {}
+
+  logObject.module = 'activities'
+
+  TypeError.setLogObject(logObject)
 
   class Activities extends EventEmitter {
     /**
@@ -330,7 +335,23 @@ export default function makeActivities (configs = Object.create(null)) {
   // Set string tag
   helpers.decorator.setStringTag()(Activities)
 
-  return new Activities()
+  const activities = new Activities()
+
+  // Logging
+  ;(() => {
+    activities.on('added', activity => logger
+      .info('makeActivities', {
+        module: 'activities',
+        event: 'added'
+      }, activity))
+    activities.on('removed', activity => logger
+      .info('makeActivities', {
+        module: 'activities',
+        event: 'removed'
+      }, activity))
+  })()
+
+  return activities
 }
 
 export Activity from './activity'

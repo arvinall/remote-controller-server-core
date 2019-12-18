@@ -75,8 +75,7 @@ export default class Plugin extends EventEmitter {
   get [logSymbol] () {
     return {
       plugin: {
-        activityId: this.activityId,
-        activityConnection: this.activityConnection[logSymbol]
+        activityId: this.activityId
       }
     }
   }

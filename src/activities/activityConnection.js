@@ -40,6 +40,8 @@ export default class ActivityConnection extends EventEmitter {
   #connection
 
   /**
+   * Transfer events
+   *
    * @param {object} configs
    * @param {module:activities/activity} configs.activity Activity that use for create Connection instance
    * @param {module:connections/connection} configs.connection
