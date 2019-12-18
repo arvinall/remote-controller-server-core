@@ -13,6 +13,7 @@ import {
 } from '../logger'
 import Connection from '../connections/connection'
 import Plugin from '../plugins/plugin'
+import ActivityConnection from './activityConnection'
 
 // Error classes
 const logObject = {
@@ -72,7 +73,10 @@ export default class Activity extends EventEmitter {
     this.#Plugin = configs.Plugin
     this.#plugin = new this.#Plugin({
       activityId: this.#id,
-      activityConnection: configs.connection
+      activityConnection: new ActivityConnection({
+        connection: configs.connection,
+        activity: this
+      })
     })
 
     this.on('init', () => (
