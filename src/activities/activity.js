@@ -7,7 +7,10 @@
 import EventEmitter from 'events'
 import * as helpers from '../helpers'
 import idGenerator from '../idGenerator'
-import { makeClassLoggable } from '../logger'
+import {
+  makeClassLoggable,
+  logSymbol
+} from '../logger'
 import Connection from '../connections/connection'
 import Plugin from '../plugins/plugin'
 
@@ -49,22 +52,7 @@ export default class Activity extends EventEmitter {
    */
   #plugin
 
-  #init = function activityOnReady () {
-    return this.plugin.emit('plugging')
-  }
-  #ready = function activityOnReady () {
-    return this.plugin.emit('plugged')
-  }
-  #cleanup = function activityOnCleanup () {
-    return this.plugin.emit('unplugging')
-  }
-  #close = function activityOnClose () {
-    return this.plugin.emit('unplugged')
-  }
-
   /**
-   * Transfer events
-   *
    * @param {object} configs
    * @param {module:connections/connection} configs.connection
    * @param {module:plugins/plugin} configs.Plugin Plugin extended class
@@ -74,8 +62,8 @@ export default class Activity extends EventEmitter {
     else if (!(configs.connection instanceof Connection)) throw new TypeError('configs.connection is required and must be Connection')
     else if (Object.getPrototypeOf(configs.Plugin) !== Plugin) throw new TypeError('configs.plugin is required and must be Plugin extended class')
 
-    else if (!configs.connection.isConnect) throw new Error('connection is not connect')
-    else if (!configs.connection.isAuthenticate) throw new Error('connection is not authenticate')
+    else if (!configs.connection.isConnect) throw new Error('Connection is not connect')
+    else if (!configs.connection.isAuthenticate) throw new Error('Connection is not authenticate')
 
     super()
 
@@ -87,17 +75,17 @@ export default class Activity extends EventEmitter {
       activityConnection: configs.connection
     })
 
-    this.once('init', () => (
-      (this.#status = 'init') && this.#init()
+    this.on('init', () => (
+      (this.#status = 'init') && this.plugin.emit('plugging')
     ))
-    this.once('ready', () => (
-      (this.#status = 'ready') && this.#ready()
+    this.on('ready', () => (
+      (this.#status = 'ready') && this.plugin.emit('plugged')
     ))
-    this.once('cleanup', () => (
-      (this.#status = 'cleanup') && this.#cleanup()
+    this.on('cleanup', () => (
+      (this.#status = 'cleanup') && this.plugin.emit('unplugging')
     ))
-    this.once('close', () => (
-      (this.#status = 'close') && this.#close()
+    this.on('close', () => (
+      (this.#status = 'close') && this.plugin.emit('unplugged')
     ))
   }
 
@@ -115,6 +103,17 @@ export default class Activity extends EventEmitter {
 
   get status () {
     return this.#status
+  }
+
+  get [logSymbol] () {
+    return {
+      activity: {
+        id: this.id,
+        status: this.status,
+        connection: this.connection[logSymbol],
+        plugin: this.plugin[logSymbol]
+      }
+    }
   }
 }
 

@@ -40,7 +40,7 @@ export default class Plugin extends EventEmitter {
 
     for (const state of states) {
       // Call state methods event base
-      this.once(state, this[state].bind(this))
+      this.on(state, this[state].bind(this))
     }
   }
 

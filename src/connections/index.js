@@ -416,6 +416,17 @@ export default function makeConnections () {
     }
 
     /**
+     * Check Connection is already exist
+     *
+     * @param {string} connectionId Connection's id to check
+     *
+     * @return {boolean}
+     */
+    has (connectionId) {
+      return connectionsList.get(connectionId)
+    }
+
+    /**
      * Send broadcast message to clients (connected and authenticated connections)
      *
      * @param {string} name Message's name

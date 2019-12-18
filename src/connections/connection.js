@@ -318,7 +318,7 @@ export default class Connection extends AsyncEventEmitter {
   /**
    * @summary Send message to client
    * @description
-   * If every element of body is instanceof Buffer <br>
+   * If each element of body is instanceof Buffer <br>
    * convert to Uint8Array then convert to pure array <br>
    * then send as {@link module:connections/connection~Uint8ArrayLike|Uint8ArrayLike} . <br>
    * This method create an array and push name and body to it like this <br>
